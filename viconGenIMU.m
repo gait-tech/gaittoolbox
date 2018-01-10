@@ -237,6 +237,7 @@ end
     
     if nargout >=3
         gfr.acc = gfr_acc;
+        gfr.bod_acc = gfrBodyAcc;
         gfr.vel = gfrBodyVel;
         gfr.gyr = gfr_gyr;
         gfr.mag = gfr_mag;

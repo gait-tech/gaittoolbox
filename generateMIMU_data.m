@@ -24,7 +24,6 @@ userDir = char(java.lang.System.getProperty('user.home'));
 % addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\EllipsoidFit\']);
 % addpath(genpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\viconFunctions\']));
 % addpath(genpath([pwd,'\SensorsSupplementaryMaterial\SensorsSupplementaryMaterial\']));
-
 %% function [] = main()
 % clear all;clc;close all;
 clc; clear all;close all
@@ -349,18 +348,6 @@ gfrLankleEstMag = rotateVecsByQuats( [imuLankle.mag+imuLankle.mag_dis],...
 mag_perb_detect = (gfrLankleEstMag-gfrLankle.mag);
 gyr_norm = sqrt(sum(imuLankle.gyr.^2,2));
 
-[mag_var,mag_avg]=welford_var((sum([imuLankle.mag+imuLankle.mag_dis].^2,2)),25);
-
-figure;hold on; 
-% plot(bsxfun(@times,mag_perb_detect,gyr_norm),':');
-plot(mag_var,'--k');
-plot(sqrt(mag_avg),':k');
-plot([sqrt(sum(gfrLankleEstMag.^2,2))],'-.');
-% plot(abs(gradient(gfrLankleEstMag(:,1),1/fs)),'b')
-% plot(abs(gradient(gfrLankleEstMag(:,2),1/fs)),'g')
-% plot(abs(gradient(gfrLankleEstMag(:,3),1/fs)),'r')
-
-
 gfr_acc_LA = rotateVecsByQuats( imuLankle.acc,qLankleEst );
 gfrLankleEstGyr = rotateVecsByQuats( imuLankle.gyr,qLankleEst );
 
@@ -499,7 +486,7 @@ plot3(xLA(allIdx,1),yLA(allIdx,1),zLA(allIdx,1),'.b');
 plot3(xRA(allIdx,1),yRA(allIdx,1),zRA(allIdx,1),'.r');
 
 % KF with UWB
-plot3(x_pos(allIdx,1), x_pos(allIdx,2), x_pos(allIdx,3),'ok','Color',matlabColors('darkGrey'));
+plot3(x_pos(allIdx,1), x_pos(allIdx,2), x_pos(allIdx,3),'ok');
 plot3(x_pos(allIdx,7), x_pos(allIdx,8), x_pos(allIdx,9),'oc');
 plot3(x_pos(allIdx,13),x_pos(allIdx,14),x_pos(allIdx,15),'om');
 
