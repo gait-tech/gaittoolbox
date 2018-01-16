@@ -1,4 +1,4 @@
-clc; clear all;close all;
+% clc; clear all; close all;
 userDir = char(java.lang.System.getProperty('user.home'));
 % addpath(genpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\QuaternionWrappers']));
 % addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS']);
@@ -26,7 +26,7 @@ userDir = char(java.lang.System.getProperty('user.home'));
 % addpath(genpath([pwd,'\SensorsSupplementaryMaterial\SensorsSupplementaryMaterial\']));
 %% function [] = main()
 % clear all;clc;close all;
-clc; clear all;close all
+% clc; clear all;close all
 
 % testfile = '50F0702.mat';
 testfile = '50F0706.mat';
@@ -445,10 +445,24 @@ x0_vel_RA = gfrRankle.vel(1,:);
 %     x0_pos_LA, x0_vel_LA, gfrSegment.Left_Tibia.bod_acc, bIsStationaryLA,...
 %     x0_pos_RA, x0_vel_RA, gfrSegment.Right_Tibia.bod_acc, bIsStationaryRA, uwb_mea);
 
-[ x_pri,x_pos ] = kf_3_kmus(fs, sigma_acc, ...
+[ x_pri, x_pos ] = kf_3_kmus(fs, sigma_acc, ...
     x0_pos_MP, x0_vel_MP, gfr_acc_MP, bIsStatMP,...
     x0_pos_LA, x0_vel_LA, gfr_acc_LA, bIsStatLA,...
     x0_pos_RA, x0_vel_RA, gfr_acc_RA, bIsStatRA, uwb_mea);
+
+d_pelvis = norm(tbl_markers.RFEP(1,:)-tbl_markers.LFEP(1,:));
+d_rfemur = norm(tbl_markers.RFEP(1,:)-tbl_markers.RFEO(1,:));
+d_lfemur = norm(tbl_markers.LFEP(1,:)-tbl_markers.LFEO(1,:));
+d_rtibia = norm(tbl_markers.RFEO(1,:)-tbl_markers.RTIO(1,:));
+d_ltibia = norm(tbl_markers.LFEO(1,:)-tbl_markers.LTIO(1,:));
+
+[ x_pri_v2, x_pos_v2 ] = kf_3_kmus_v2(fs, ...
+    sigma_acc, sigma_acc, sigma_acc, ...
+    x0_pos_MP, x0_vel_MP, gfr_acc_MP, bIsStatMP, qPelvisEst, ...
+    x0_pos_LA, x0_vel_LA, gfr_acc_LA, bIsStatLA, qLankleEst, ...
+    x0_pos_RA, x0_vel_RA, gfr_acc_RA, bIsStatRA, qRankleEst, ...
+    d_pelvis, d_rfemur, d_lfemur, d_rtibia, d_ltibia, uwb_mea, ...
+    true, false, false, true);
 
 % Visualise Trajectories for sanity check
 figure('name','Animation Vicon Bone Segments');
@@ -481,14 +495,19 @@ vicZ = reshape(arr_markers(allIdx,3:3:end),[],1); ZLIM = [min(vicZ),max(vicZ)];
 xlim(XLIM);ylim(YLIM);zlim(ZLIM);
 
 % KF estimates
-plot3(xMP(allIdx,1),yMP(allIdx,1),zMP(allIdx,1),'.k');
+p1 = plot3(xMP(allIdx,1),yMP(allIdx,1),zMP(allIdx,1),'.k');
 plot3(xLA(allIdx,1),yLA(allIdx,1),zLA(allIdx,1),'.b');
 plot3(xRA(allIdx,1),yRA(allIdx,1),zRA(allIdx,1),'.r');
 
-% KF with UWB
-plot3(x_pos(allIdx,1), x_pos(allIdx,2), x_pos(allIdx,3),'ok');
-plot3(x_pos(allIdx,7), x_pos(allIdx,8), x_pos(allIdx,9),'oc');
-plot3(x_pos(allIdx,13),x_pos(allIdx,14),x_pos(allIdx,15),'om');
+% % KF with UWB
+% p2 = plot3(x_pos(allIdx,1), x_pos(allIdx,2), x_pos(allIdx,3),'ok');
+% plot3(x_pos(allIdx,7), x_pos(allIdx,8), x_pos(allIdx,9),'oc');
+% plot3(x_pos(allIdx,13),x_pos(allIdx,14),x_pos(allIdx,15),'om');
+
+% KF v2
+p3 = plot3(x_pos_v2(allIdx,1), x_pos_v2(allIdx,2), x_pos_v2(allIdx,3),'+k');
+plot3(x_pos_v2(allIdx,7), x_pos_v2(allIdx,8), x_pos_v2(allIdx,9),'+c');
+plot3(x_pos_v2(allIdx,13),x_pos_v2(allIdx,14),x_pos_v2(allIdx,15),'+m');
 
 % TRUE positions
 h_mp_mea = plot3(PMid(allIdx,1),PMid(allIdx,2),PMid(allIdx,3),'-k');
@@ -567,6 +586,9 @@ line([RFOO(i,1),RFOP(i,1)],[RFOO(i,2), RFOP(i,2)],[RFOO(i,3), RFOP(i,3)],...
 hand.fill2=fill([-3,3,3,-3],[-4,-4,2,2],[0,0,0,0]);
 set(hand.fill2,'facealpha',0.51);
 set(hand.fill2,'edgealpha',0.1);
+
+legend('off')
+legend([p1, p3, h_mp_mea], 'ekf', 'ekf v2', 'true pos');
 
 % video = VideoWriter('ViconWalk.avi','Motion JPEG AVI');
 % open(video);

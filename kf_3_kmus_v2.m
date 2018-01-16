@@ -1,10 +1,14 @@
-function [ varargout ] = kf_3_kmus(fs, sigma_acc, ...
-    x0_pos_MP, x0_vel_MP, gfr_acc_MP, bIsStatMP,...
-    x0_pos_LA, x0_vel_LA, gfr_acc_LA, bIsStatLA,...
-    x0_pos_RA, x0_vel_RA, gfr_acc_RA, bIsStatRA, uwb_mea)
-%KF_3_KMUS Kalman Filter for performing sensor fusion on the trajectory of
-%three KMUs presumably worn on the body in the following configuration: mid
-%pelvis, left ankle, right ankle
+function [ varargout ] = kf_3_kmus_v2(fs, ...
+    sigma_acc_MP, sigma_acc_LA, sigma_acc_RA, ...
+    x0_pos_MP, x0_vel_MP, gfr_acc_MP, bIsStatMP, q_MP, ...
+    x0_pos_LA, x0_vel_LA, gfr_acc_LA, bIsStatLA, q_LA, ...
+    x0_pos_RA, x0_vel_RA, gfr_acc_RA, bIsStatRA, q_RA, ...
+    d_pelvis, d_rfemur, d_lfemur, d_rtibia, d_ltibia, uwb_mea, ...
+    zerovel_update, uwb_update, kneecoplanar_constraint, ...
+    femurdist_constraint)
+% KF_3_KMUS Kalman Filter for performing sensor fusion on the trajectory of
+% three KMUs presumably worn on the body in the following configuration: mid
+% pelvis, left ankle, right ankle
 % In this state space model, the position and velocity of each kinematic
 % measurement unit (KMU) is estimated in 3D space by combining the
 % information from each KMU in a kalman filter. NOTE: pay special attention 
@@ -14,7 +18,7 @@ function [ varargout ] = kf_3_kmus(fs, sigma_acc, ...
 % acceleration (m/2^2)
 % uwb_mea (meters)
 %
-% Author: Michael Del Rosario 
+% Author: Michael Del Rosario, Luke Wicent Sy
 %
 % Inputs::
 %   fs - sampling frequency of the magnetic and inertial measurement units
@@ -50,7 +54,14 @@ function [ varargout ] = kf_3_kmus(fs, sigma_acc, ...
 %   bIsStatRA  - a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_RA(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-%
+%   q_MP       - mid  pelvis orientation in the GFR (quaternion)
+%   q_LA       - left  ankle orientation in the GFR (quaternion)
+%   q_RA       - right ankle orientation in the GFR (quaternion)
+%   d_pelvis   - pelvis width
+%   d_rfemur   - right femur length
+%   d_lfemur   - left femur length
+%   d_rtibia   - right tibia length
+%   d_ltibia   - left tibia length
 %   uwb_mea    - a structure containing the range measurements (m) between 
 
 idx_pos_MP = 1:3; % column idx corresponding to the mid-pelvis position
@@ -120,8 +131,16 @@ B(10:12,4:6) = dt .*eye(3);
 B(13:15,7:9) = dt2.*eye(3);
 B(16:18,7:9) = dt .*eye(3);
 
+% Constraint
+D = [-eye(3,3) zeros(3,3) eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3);
+     -eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) eye(3,3) zeros(3,3)];
+
 % Initialise process noise covariance
-Q = B * B' * sigma_acc^2;
+Q = zeros(9,9);
+Q(1:3,1:3) = eye(3,3)*sigma_acc_MP^2;
+Q(4:6,4:6) = eye(3,3)*sigma_acc_LA^2;
+Q(7:9,7:9) = eye(3,3)*sigma_acc_RA^2;
+Q = B * Q * B';
 
 % initialise covariance in the state estimate
 P = Q;
@@ -144,6 +163,8 @@ P_pri    = nan(N_STATES, N_STATES, N_MP);
 
 xhat_pos = nan(N_MP,     N_STATES);
 P_pos    = nan(N_STATES, N_STATES, N_MP);
+
+tmp_pos  = nan(N_MP,     6);
 
 for n = 1:N_MP
 %% -----------------------------------------------------------------------
@@ -178,7 +199,7 @@ for n = 1:N_MP
     end
     
     N_PSEUDO_MEA = 3*ctrZUPT; % the number of pseudo measurements
-    if ctrZUPT > 0
+    if ctrZUPT > 0 && zerovel_update
         H_zup = [H_MP;H_LA;H_RA];
         z_zup = zeros(N_PSEUDO_MEA,1);
         y_zup = z_zup - H_zup*xhat;
@@ -191,51 +212,139 @@ for n = 1:N_MP
         xhat = xhat + K_zup*y_zup;
         P_min = (I_18 - K_zup*H_zup)*P_min;
     end
+    
 %% ---- Kalman Filter Update Step using UWB measurements ---- 
 % this correction step should be done last
-    diff_MP_LA = xhat(idx_pos_MP)'-xhat(idx_pos_LA)';
-    diff_MP_RA = xhat(idx_pos_MP)'-xhat(idx_pos_RA)';
-    diff_LA_RA = xhat(idx_pos_LA)'-xhat(idx_pos_RA)';
-    % the observation model
-    h_uwb_est = [vecnormalize( diff_MP_LA );
-                 vecnormalize( diff_MP_RA );
-                 vecnormalize( diff_LA_RA );];
-    % calculate the measurement residual, i.e., the difference between the
-    % predicted measurements from the observation model, h(xhat), and the
-    % measurements obtained directly from the UWB sensors.
-    y_innovation = uwb_MP_LA_RA(n,:)' - h_uwb_est;
+    if uwb_update
+        diff_MP_LA = xhat(idx_pos_MP)'-xhat(idx_pos_LA)';
+        diff_MP_RA = xhat(idx_pos_MP)'-xhat(idx_pos_RA)';
+        diff_LA_RA = xhat(idx_pos_LA)'-xhat(idx_pos_RA)';
+        % the observation model
+        h_uwb_est = [vecnormalize( diff_MP_LA );
+                     vecnormalize( diff_MP_RA );
+                     vecnormalize( diff_LA_RA );];
+        % calculate the measurement residual, i.e., the difference between the
+        % predicted measurements from the observation model, h(xhat), and the
+        % measurements obtained directly from the UWB sensors.
+        y_innovation = uwb_MP_LA_RA(n,:)' - h_uwb_est;
 
-    H = zeros(3, N_STATES);
-    % Jacobian of observation model with respect to elements of the state
-    % estimate xhat, the order of these matrix elements MUST be preserved
-    H(1,1) = diff_MP_LA(1)/h_uwb_est(1);
-    H(1,2) = diff_MP_LA(2)/h_uwb_est(1);
-    H(1,3) = diff_MP_LA(3)/h_uwb_est(1);
-    H(1,7) = -diff_MP_LA(1)/h_uwb_est(1);
-    H(1,8) = -diff_MP_LA(2)/h_uwb_est(1);
-    H(1,9) = -diff_MP_LA(3)/h_uwb_est(1);    
+        H = zeros(3, N_STATES);
+        % Jacobian of observation model with respect to elements of the state
+        % estimate xhat, the order of these matrix elements MUST be preserved
+        H(1,1) = diff_MP_LA(1)/h_uwb_est(1);
+        H(1,2) = diff_MP_LA(2)/h_uwb_est(1);
+        H(1,3) = diff_MP_LA(3)/h_uwb_est(1);
+        H(1,7) = -diff_MP_LA(1)/h_uwb_est(1);
+        H(1,8) = -diff_MP_LA(2)/h_uwb_est(1);
+        H(1,9) = -diff_MP_LA(3)/h_uwb_est(1);    
 
-    H(2,1)  =  diff_MP_RA(1)/h_uwb_est(2);
-    H(2,2)  =  diff_MP_RA(2)/h_uwb_est(2);
-    H(2,3)  =  diff_MP_RA(3)/h_uwb_est(2);
-    H(2,13) = -diff_MP_RA(1)/h_uwb_est(2);
-    H(2,14) = -diff_MP_RA(2)/h_uwb_est(2);
-    H(2,15) = -diff_MP_RA(3)/h_uwb_est(2);
+        H(2,1)  =  diff_MP_RA(1)/h_uwb_est(2);
+        H(2,2)  =  diff_MP_RA(2)/h_uwb_est(2);
+        H(2,3)  =  diff_MP_RA(3)/h_uwb_est(2);
+        H(2,13) = -diff_MP_RA(1)/h_uwb_est(2);
+        H(2,14) = -diff_MP_RA(2)/h_uwb_est(2);
+        H(2,15) = -diff_MP_RA(3)/h_uwb_est(2);
+
+        H(3,7)  =  diff_LA_RA(1)/h_uwb_est(3);
+        H(3,8)  =  diff_LA_RA(2)/h_uwb_est(3);
+        H(3,9)  =  diff_LA_RA(3)/h_uwb_est(3);
+        H(3,13) = -diff_LA_RA(1)/h_uwb_est(3);
+        H(3,14) = -diff_LA_RA(2)/h_uwb_est(3);
+        H(3,15) = -diff_LA_RA(3)/h_uwb_est(3);    
+        % Calculate the covariance in the measurement residual
+        S    = ((H * P_min) * H') + R_uwb; % scalar
+        % Calculate the kalman gain
+        K    = P_min * H' * S^(-1);
+        % Update state estimate
+        xhat = xhat + K * y_innovation;
+        % Update Covariance in the state estimate
+        P    = (I_18 - K * H) * P_min;
+    else
+        P = P_min;
+    end
     
-    H(3,7)  =  diff_LA_RA(1)/h_uwb_est(3);
-    H(3,8)  =  diff_LA_RA(2)/h_uwb_est(3);
-    H(3,9)  =  diff_LA_RA(3)/h_uwb_est(3);
-    H(3,13) = -diff_LA_RA(1)/h_uwb_est(3);
-    H(3,14) = -diff_LA_RA(2)/h_uwb_est(3);
-    H(3,15) = -diff_LA_RA(3)/h_uwb_est(3);    
-    % Calculate the covariance in the measurement residual
-    S    = ((H * P_min) * H') + R_uwb; % scalar
-    % Calculate the kalman gain
-    K    = P_min * H' * S^(-1);
-    % Update state estimate
-    xhat = xhat + K * y_innovation;
-    % Update Covariance in the state estimate
-    P    = (I_18 - K * H) * P_min;
+%% -----------------------------------------------------------------------
+%  ---- Constraint update step using anthropometric measurement ----  
+    % calculate the location of the knee
+    if kneecoplanar_constraint
+        LTIB_CS = quat2rotm(q_LA(n,:));
+        LKNE = xhat(7:9,1) + d_ltibia*LTIB_CS(:,3);
+        RTIB_CS = quat2rotm(q_RA(n,:));
+        RKNE = xhat(13:15,1) + d_rtibia*RTIB_CS(:,3);
+        PELV_CS = quat2rotm(q_MP(n,:));
+
+        % calculate the z axis of the femur
+        LFEM_z = xhat(1:3,1)+d_pelvis/2*PELV_CS(:,2)-LKNE;
+        RFEM_z = xhat(1:3,1)-d_pelvis/2*PELV_CS(:,2)-RKNE;
+
+        % calculate the z axis of the tibia
+        LTIB_z = LTIB_CS(:,3);
+        RTIB_z = RTIB_CS(:,3);
+
+        % calculate alpha_lk and alpha_rk
+        alpha_lk = acos(dot(LFEM_z, LTIB_z)/(norm(LFEM_z)*norm(LTIB_z)));
+        alpha_rk = acos(dot(RFEM_z, RTIB_z)/(norm(RFEM_z)*norm(RTIB_z)));
+
+        tmp_pos(n,1:3) = LKNE;
+        tmp_pos(n,4:6) = RKNE;
+        tmp_pos(n,7:9) = xhat(1:3,1)+d_pelvis/2*PELV_CS(:,2);
+        tmp_pos(n,10:12) = xhat(1:3,1)-d_pelvis/2*PELV_CS(:,2);
+        
+        % setup the constraint equations
+        d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
+                 -d_lfemur*cos(alpha_lk)*LTIB_CS(:,3) ...
+                 +d_lfemur*sin(alpha_lk)*LTIB_CS(:,1) ...
+                 -d_ltibia*LTIB_CS(:,3)) ; ...
+                (-d_pelvis/2*PELV_CS(:,2)+ ...
+                 -d_rfemur*cos(alpha_rk)*RTIB_CS(:,3) ...
+                 +d_rfemur*sin(alpha_rk)*RTIB_CS(:,1) ...
+                 -d_rtibia*RTIB_CS(:,3)) ];
+
+        dx = P*D'*(D*P*D')^(-1)*(d_k-D*xhat);
+        xhat = xhat + dx;
+    end
+    
+    if femurdist_constraint
+        LTIB_CS = quat2rotm(q_LA(n,:));
+        RTIB_CS = quat2rotm(q_RA(n,:));
+        PELV_CS = quat2rotm(q_MP(n,:));
+        
+        diff_LH_LK = xhat(idx_pos_MP)+d_pelvis/2*PELV_CS(:,2)...
+            -xhat(idx_pos_LA)-d_ltibia*LTIB_CS(:,3);
+        diff_RH_RK = xhat(idx_pos_MP)-d_pelvis/2*PELV_CS(:,2)...
+            -xhat(idx_pos_RA)-d_rtibia*RTIB_CS(:,3);
+        
+        % the observation model
+        dist_est = [norm(diff_LH_LK);
+                    norm(diff_RH_RK)];
+
+        D = zeros(2, N_STATES);
+        % Jacobian of observation model with respect to elements of the state
+        % estimate xhat, the order of these matrix elements MUST be preserved
+        D(1,1) = diff_LH_LK(1)/dist_est(1);
+        D(1,2) = diff_LH_LK(2)/dist_est(1);
+        D(1,3) = diff_LH_LK(3)/dist_est(1);
+        D(1,7) = -diff_LH_LK(1)/dist_est(1);
+        D(1,8) = -diff_LH_LK(2)/dist_est(1);
+        D(1,9) = -diff_LH_LK(3)/dist_est(1);    
+
+        D(2,1)  =  diff_RH_RK(1)/dist_est(2);
+        D(2,2)  =  diff_RH_RK(2)/dist_est(2);
+        D(2,3)  =  diff_RH_RK(3)/dist_est(2);
+        D(2,13) = -diff_RH_RK(1)/dist_est(2);
+        D(2,14) = -diff_RH_RK(2)/dist_est(2);
+        D(2,15) = -diff_RH_RK(3)/dist_est(2);
+        
+        d_k = [d_lfemur; d_rfemur] - dist_est + D*xhat;
+        
+        dx = P*D'*(D*P*D')^(-1)*(d_k-D*xhat);
+        xhat = xhat + dx;
+        
+        tmp_pos(n,1:3) = xhat(idx_pos_LA)+d_ltibia*LTIB_CS(:,3);
+        tmp_pos(n,4:6) = xhat(idx_pos_RA)+d_rtibia*RTIB_CS(:,3);
+        tmp_pos(n,7:9) = xhat(idx_pos_MP)+d_pelvis/2*PELV_CS(:,2);
+        tmp_pos(n,10:12) = xhat(idx_pos_MP)-d_pelvis/2*PELV_CS(:,2);
+    end
     
     xhat_pos(n,:) = xhat;
     P_pos(:,:,n)  = P;
@@ -254,8 +363,23 @@ vicZ = reshape(arr_markers(allIdx,3:3:end),[],1); ZLIM = [min(vicZ),max(vicZ)];
 % plot3(xhat_pos(:,1),xhat_pos(:,2),xhat_pos(:,3),'k');
 % plot3(xhat_pos(:,7),xhat_pos(:,8),xhat_pos(:,9),'b');
 % plot3(xhat_pos(:,13),xhat_pos(:,14),xhat_pos(:,15),'r');
+% plot3(tmp_pos(:,1),tmp_pos(:,2),tmp_pos(:,3),'g');
+% plot3(tmp_pos(:,4),tmp_pos(:,5),tmp_pos(:,6),'v');
 % xlim(XLIM);ylim(YLIM);zlim(ZLIM);
 
+figure; grid on;
+for i=1:20:N_MP
+    p = line([xhat_pos(i,7) tmp_pos(i,1) tmp_pos(i,7)...
+        xhat_pos(i,1) tmp_pos(i,10) tmp_pos(i,4)...
+        xhat_pos(i,13)],...
+        [xhat_pos(i,8) tmp_pos(i,2) tmp_pos(i,8)...
+        xhat_pos(i,2) tmp_pos(i,11) tmp_pos(i,5)...
+        xhat_pos(i,14)],...
+        [xhat_pos(i,9) tmp_pos(i,3) tmp_pos(i,9)...
+        xhat_pos(i,3) tmp_pos(i,12) tmp_pos(i,6)...
+        xhat_pos(i,15)]);
+    p.Marker = '.';
+end
 if nargout >=1
     varargout{1} = xhat_pri;    
 end
