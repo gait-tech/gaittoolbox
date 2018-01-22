@@ -164,7 +164,7 @@ P_pri    = nan(N_STATES, N_STATES, N_MP);
 xhat_pos = nan(N_MP,     N_STATES);
 P_pos    = nan(N_STATES, N_STATES, N_MP);
 
-tmp_pos  = nan(N_MP,     6);
+tmp_dat  = nan(N_MP,     6);
 
 for n = 1:N_MP
 %% -----------------------------------------------------------------------
@@ -265,13 +265,15 @@ for n = 1:N_MP
     
 %% -----------------------------------------------------------------------
 %  ---- Constraint update step using anthropometric measurement ----  
-    % calculate the location of the knee
+    % CS initializations
+    LTIB_CS = quat2rotm(q_LA(n,:));
+    RTIB_CS = quat2rotm(q_RA(n,:));
+    PELV_CS = quat2rotm(q_MP(n,:));
+    
     if kneecoplanar_constraint
-        LTIB_CS = quat2rotm(q_LA(n,:));
+        % calculate the location of the knee
         LKNE = xhat(7:9,1) + d_ltibia*LTIB_CS(:,3);
-        RTIB_CS = quat2rotm(q_RA(n,:));
         RKNE = xhat(13:15,1) + d_rtibia*RTIB_CS(:,3);
-        PELV_CS = quat2rotm(q_MP(n,:));
 
         % calculate the z axis of the femur
         LFEM_z = xhat(1:3,1)+d_pelvis/2*PELV_CS(:,2)-LKNE;
@@ -284,11 +286,6 @@ for n = 1:N_MP
         % calculate alpha_lk and alpha_rk
         alpha_lk = acos(dot(LFEM_z, LTIB_z)/(norm(LFEM_z)*norm(LTIB_z)));
         alpha_rk = acos(dot(RFEM_z, RTIB_z)/(norm(RFEM_z)*norm(RTIB_z)));
-
-        tmp_pos(n,1:3) = LKNE;
-        tmp_pos(n,4:6) = RKNE;
-        tmp_pos(n,7:9) = xhat(1:3,1)+d_pelvis/2*PELV_CS(:,2);
-        tmp_pos(n,10:12) = xhat(1:3,1)-d_pelvis/2*PELV_CS(:,2);
         
         % setup the constraint equations
         d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
@@ -305,10 +302,6 @@ for n = 1:N_MP
     end
     
     if femurdist_constraint
-        LTIB_CS = quat2rotm(q_LA(n,:));
-        RTIB_CS = quat2rotm(q_RA(n,:));
-        PELV_CS = quat2rotm(q_MP(n,:));
-        
         diff_LH_LK = xhat(idx_pos_MP)+d_pelvis/2*PELV_CS(:,2)...
             -xhat(idx_pos_LA)-d_ltibia*LTIB_CS(:,3);
         diff_RH_RK = xhat(idx_pos_MP)-d_pelvis/2*PELV_CS(:,2)...
@@ -339,12 +332,20 @@ for n = 1:N_MP
         
         dx = P*D'*(D*P*D')^(-1)*(d_k-D*xhat);
         xhat = xhat + dx;
-        
-        tmp_pos(n,1:3) = xhat(idx_pos_LA)+d_ltibia*LTIB_CS(:,3);
-        tmp_pos(n,4:6) = xhat(idx_pos_RA)+d_rtibia*RTIB_CS(:,3);
-        tmp_pos(n,7:9) = xhat(idx_pos_MP)+d_pelvis/2*PELV_CS(:,2);
-        tmp_pos(n,10:12) = xhat(idx_pos_MP)-d_pelvis/2*PELV_CS(:,2);
     end
+    
+    tmp_dat(n,1:3) = xhat(idx_pos_LA)+d_ltibia*LTIB_CS(:,3);
+    tmp_dat(n,4:6) = xhat(idx_pos_RA)+d_rtibia*RTIB_CS(:,3);
+    tmp_dat(n,7:9) = xhat(idx_pos_MP)+d_pelvis/2*PELV_CS(:,2);
+    tmp_dat(n,10:12) = xhat(idx_pos_MP)-d_pelvis/2*PELV_CS(:,2);
+    LFEM_z = (tmp_dat(n,7:9)-tmp_dat(n,1:3))';
+    LFEM_y = LTIB_CS(:,2);
+    LFEM_x = cross(LFEM_y, LFEM_z);
+    RFEM_z = (tmp_dat(n,10:12)-tmp_dat(n,4:6))';
+    RFEM_y = RTIB_CS(:,2);
+    RFEM_x = cross(RFEM_y, RFEM_z);
+    tmp_dat(n,13:16) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
+    tmp_dat(n,17:20) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
     
     xhat_pos(n,:) = xhat;
     P_pos(:,:,n)  = P;
@@ -363,23 +364,10 @@ vicZ = reshape(arr_markers(allIdx,3:3:end),[],1); ZLIM = [min(vicZ),max(vicZ)];
 % plot3(xhat_pos(:,1),xhat_pos(:,2),xhat_pos(:,3),'k');
 % plot3(xhat_pos(:,7),xhat_pos(:,8),xhat_pos(:,9),'b');
 % plot3(xhat_pos(:,13),xhat_pos(:,14),xhat_pos(:,15),'r');
-% plot3(tmp_pos(:,1),tmp_pos(:,2),tmp_pos(:,3),'g');
-% plot3(tmp_pos(:,4),tmp_pos(:,5),tmp_pos(:,6),'v');
+% plot3(tmp_dat(:,1),tmp_dat(:,2),tmp_dat(:,3),'g');
+% plot3(tmp_dat(:,4),tmp_dat(:,5),tmp_dat(:,6),'v');
 % xlim(XLIM);ylim(YLIM);zlim(ZLIM);
 
-figure; grid on;
-for i=1:20:N_MP
-    p = line([xhat_pos(i,7) tmp_pos(i,1) tmp_pos(i,7)...
-        xhat_pos(i,1) tmp_pos(i,10) tmp_pos(i,4)...
-        xhat_pos(i,13)],...
-        [xhat_pos(i,8) tmp_pos(i,2) tmp_pos(i,8)...
-        xhat_pos(i,2) tmp_pos(i,11) tmp_pos(i,5)...
-        xhat_pos(i,14)],...
-        [xhat_pos(i,9) tmp_pos(i,3) tmp_pos(i,9)...
-        xhat_pos(i,3) tmp_pos(i,12) tmp_pos(i,6)...
-        xhat_pos(i,15)]);
-    p.Marker = '.';
-end
 if nargout >=1
     varargout{1} = xhat_pri;    
 end
@@ -388,6 +376,9 @@ if nargout >=2
     varargout{2} = xhat_pos;
 end
 
+if nargout >=3
+    varargout{3} = tmp_dat;
+end
 
 
 end

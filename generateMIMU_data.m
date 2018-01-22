@@ -1,32 +1,6 @@
-% clc; clear all; close all;
-userDir = char(java.lang.System.getProperty('user.home'));
-% addpath(genpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\QuaternionWrappers']));
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\RealTimeMovingAvgVar\']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\activityIdentifiers']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\FrequencyAnalysis']);
-% addpath(genpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\plots']));
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\Classes']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\Classes\MARG']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\Classes\MARG\CAHRS']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\dspFilters']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\quaternion_library\']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\SensorAxesTransformations']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\SmartPhoneDataParser']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\MinMaxFilterFolder']);
-% addpath([userDir,'\Dropbox\PostGrad\2015\ActClassAhrs\Step1_GenerateFeaturesActivity']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\kalman_filters']);
-% addpath([userDir,'\Dropbox\PostGrad\2016\AccBarSimpleFusion\RobotArmFunctions']);
-% addpath([userDir,'\Dropbox\PostGrad\2016\AccBarSimpleFusion\MIMU_Baro_Fusion\']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\AHRS\']);
-% addpath([userDir,'\Dropbox\PostGrad\2016\AccBarSimpleFusion\']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\quaternionClassLib\']);
-% addpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\EllipsoidFit\']);
-% addpath(genpath([userDir,'\Dropbox\PostGrad\MatlabLIBS\viconFunctions\']));
-% addpath(genpath([pwd,'\SensorsSupplementaryMaterial\SensorsSupplementaryMaterial\']));
+clc; clear all; close all;
+
 %% function [] = main()
-% clear all;clc;close all;
-% clc; clear all;close all
 
 % testfile = '50F0702.mat';
 testfile = '50F0706.mat';
@@ -164,6 +138,7 @@ for r = 1:N_SEGMENTS
     imuSegment.(sensorSegmentNames{r}) = imu;
     gfrSegment.(sensorSegmentNames{r}) = gfr;
 end
+
 %% -----------------------------------------------------------------------
 %  Simulate uwb measurement by generating pairwise combinations, using the
 %  origin of each bone segment as the root point
@@ -187,29 +162,29 @@ end
 %% -----------------------------------------------------------------------
 %  compare the magnetometer measurements with and without magnetic
 %  interference
-figure('name','Simulated Magnetometer Measurements GFR');
-hs(1)=subplot(3,1,1);
-plot([gfrSegment.Left_Foot.mag])
-title('Local Magnetic Field');
-hs(2)=subplot(3,1,2);
-plot([gfrSegment.Left_Foot.mag_dis])
-title('Local Magnetic Field Disturbance');
-hs(3)=subplot(3,1,3);
-plot([gfrSegment.Left_Foot.mag + gfrSegment.Left_Foot.mag_dis]);
-title('Local Magnetic Field + Disturbance');
-linkaxes(hs,'x');
+% figure('name','Simulated Magnetometer Measurements GFR');
+% hs(1)=subplot(3,1,1);
+% plot([gfrSegment.Left_Foot.mag])
+% title('Local Magnetic Field');
+% hs(2)=subplot(3,1,2);
+% plot([gfrSegment.Left_Foot.mag_dis])
+% title('Local Magnetic Field Disturbance');
+% hs(3)=subplot(3,1,3);
+% plot([gfrSegment.Left_Foot.mag + gfrSegment.Left_Foot.mag_dis]);
+% title('Local Magnetic Field + Disturbance');
+% linkaxes(hs,'x');
 
-figure('name','Simulated Magnetometer Measurements IMU');
-hs(1)=subplot(3,1,1);
-plot([imuSegment.Left_Foot.mag])
-title('Local Magnetic Field');
-hs(2)=subplot(3,1,2);
-plot([imuSegment.Left_Foot.mag_dis])
-title('Local Magnetic Field Disturbance');
-hs(3)=subplot(3,1,3);
-plot([imuSegment.Left_Foot.mag + imuSegment.Left_Foot.mag_dis]);
-title('Local Magnetic Field + Disturbance');
-linkaxes(hs,'x');
+% figure('name','Simulated Magnetometer Measurements IMU');
+% hs(1)=subplot(3,1,1);
+% plot([imuSegment.Left_Foot.mag])
+% title('Local Magnetic Field');
+% hs(2)=subplot(3,1,2);
+% plot([imuSegment.Left_Foot.mag_dis])
+% title('Local Magnetic Field Disturbance');
+% hs(3)=subplot(3,1,3);
+% plot([imuSegment.Left_Foot.mag + imuSegment.Left_Foot.mag_dis]);
+% title('Local Magnetic Field + Disturbance');
+% linkaxes(hs,'x');
 % -------------------------------------------------------------------------
 
 % -------------------------------------------------------------------------
@@ -304,26 +279,27 @@ gfrMagPelvisEst=rotateVecsByQuats(imuPelvis.mag+imuPelvis.mag_dis,qPelvisEst);
 %     quatmultiply(quatnormalize(qPelvisEst),...
 %     [zeros(N_TIME_PTS,1), imuPelvis.mag]), quatinv(quatnormalize(qPelvisEst)));
 
-figure('name','euler angles');hold on;
-plot(quaternion2nautical(qPelvis),':');
-plot(quaternion2nautical(qPelvisEst),'*');
-
-figure('name','Quaternions');
-subplot(4,1,1);hold on;
-plot((qPelvis(:,1)),':');
-plot((qPelvisEst(:,1)),'*');
-
-subplot(4,1,2);hold on;
-plot((qPelvis(:,2)),':');
-plot((qPelvisEst(:,2)),'*');
-
-subplot(4,1,3);hold on;
-plot((qPelvis(:,3)),':');
-plot((qPelvisEst(:,3)),'*');
-
-subplot(4,1,4);hold on;
-plot((qPelvis(:,4)),':');
-plot((qPelvisEst(:,4)),'*');
+% Plot pelvis euler angles and quaternions
+% figure('name','euler angles');hold on;
+% plot(quaternion2nautical(qPelvis),':');
+% plot(quaternion2nautical(qPelvisEst),'*');
+% 
+% figure('name','Quaternions');
+% subplot(4,1,1);hold on;
+% plot((qPelvis(:,1)),':');
+% plot((qPelvisEst(:,1)),'*');
+% 
+% subplot(4,1,2);hold on;
+% plot((qPelvis(:,2)),':');
+% plot((qPelvisEst(:,2)),'*');
+% 
+% subplot(4,1,3);hold on;
+% plot((qPelvis(:,3)),':');
+% plot((qPelvisEst(:,3)),'*');
+% 
+% subplot(4,1,4);hold on;
+% plot((qPelvis(:,4)),':');
+% plot((qPelvisEst(:,4)),'*');
 
 
 gfr_acc_MP = rotateVecsByQuats(imuPelvis.acc,qPelvisEst );
@@ -385,18 +361,19 @@ bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
 accMagRA = vecnormalize(imuRankle.acc);
 gyrMagRA = vecnormalize(imuRankle.gyr);
 
-figure('name','Stationary Detector');
-subplot(2,1,1);hold on;hp=[];lgstr={};
-hp(end+1)=plot(accMagMP,'k');lgstr{end+1}='mid-pelvis';
-hp(end+1)=plot(accMagLA,'b');lgstr{end+1}='left ankle';
-hp(end+1)=plot(accMagRA,'r');lgstr{end+1}='right ankle';
-legend(hp,lgstr);
-
-subplot(2,1,2);hold on;hp=[];lgstr={};
-hp(end+1)=plot(movVarAcc_pelvis,'k');lgstr{end+1}='mid-pelvis';
-hp(end+1)=plot(movVarAcc_lankle,'b');lgstr{end+1}='left ankle';
-hp(end+1)=plot(movVarAcc_rankle,'r');lgstr{end+1}='right ankle';
-legend(hp,lgstr);
+% Plot Stationary Detector
+% figure('name','Stationary Detector');
+% subplot(2,1,1);hold on;hp=[];lgstr={};
+% hp(end+1)=plot(accMagMP,'k');lgstr{end+1}='mid-pelvis';
+% hp(end+1)=plot(accMagLA,'b');lgstr{end+1}='left ankle';
+% hp(end+1)=plot(accMagRA,'r');lgstr{end+1}='right ankle';
+% legend(hp,lgstr);
+% 
+% subplot(2,1,2);hold on;hp=[];lgstr={};
+% hp(end+1)=plot(movVarAcc_pelvis,'k');lgstr{end+1}='mid-pelvis';
+% hp(end+1)=plot(movVarAcc_lankle,'b');lgstr{end+1}='left ankle';
+% hp(end+1)=plot(movVarAcc_rankle,'r');lgstr{end+1}='right ankle';
+% legend(hp,lgstr);
 
 % define boolean vectors for x,y,z components of zero velocity update
 bIsStationaryMP = repmat(bIsStatMP,1,3);
@@ -456,14 +433,56 @@ d_lfemur = norm(tbl_markers.LFEP(1,:)-tbl_markers.LFEO(1,:));
 d_rtibia = norm(tbl_markers.RFEO(1,:)-tbl_markers.RTIO(1,:));
 d_ltibia = norm(tbl_markers.LFEO(1,:)-tbl_markers.LTIO(1,:));
 
-[ x_pri_v2, x_pos_v2 ] = kf_3_kmus_v2(fs, ...
+[ x_pri_v2, x_pos_v2, t_dat_v2 ] = kf_3_kmus_v2(fs, ...
     sigma_acc, sigma_acc, sigma_acc, ...
     x0_pos_MP, x0_vel_MP, gfr_acc_MP, bIsStatMP, qPelvisEst, ...
     x0_pos_LA, x0_vel_LA, gfr_acc_LA, bIsStatLA, qLankleEst, ...
     x0_pos_RA, x0_vel_RA, gfr_acc_RA, bIsStatRA, qRankleEst, ...
     d_pelvis, d_rfemur, d_lfemur, d_rtibia, d_ltibia, uwb_mea, ...
-    true, false, false, true);
+    true, false, true, false);
 
+% ------------------------------------------------------------------------
+% Quantitatively validate the results
+
+% Position error
+idx = 1:50;
+figure('name', 'Position Error');
+subplot(3,2,1); 
+plotPositionError(x_pos_v2(idx,1:3), PMid(idx,:)); 
+title('Pelvis'); ylabel('Error (m)');
+subplot(3,2,2);
+plotPositionError(t_dat_v2(idx,1:3), LFEO(idx,:)); 
+title('Left Knee'); ylabel('Error (m)');
+subplot(3,2,3);
+plotPositionError(t_dat_v2(idx,4:6), RFEO(idx,:)); 
+title('Right Knee'); ylabel('Error (m)');
+subplot(3,2,4); 
+plotPositionError(x_pos_v2(idx,7:9), LTIO(idx,:)); 
+title('Left Ankle'); ylabel('Error (m)');
+subplot(3,2,5); 
+plotPositionError(x_pos_v2(idx,13:15), RTIO(idx,:)); 
+title('Right Ankle'); ylabel('Error (m)');
+
+% Orientation error
+figure('name', 'Orientation Error');
+subplot(2,1,1);
+plotOrientationError(t_dat_v2(:,13:16), quatSegment.Left_Femur);
+title('Left Femur');
+subplot(2,1,2);
+plotOrientationError(t_dat_v2(:,17:20), quatSegment.Right_Femur);
+title('Right Femur');
+
+% ------------------------------------------------------------------------
+% Qualitatively validate the results
+
+figure; grid on;
+for i=1:20:60
+    plotLowerBody(x_pos_v2(i,1:3), ...
+                  t_dat_v2(i,7:9), t_dat_v2(i,1:3), x_pos_v2(i,7:9),...
+                  t_dat_v2(i,10:12), t_dat_v2(i,4:6), x_pos_v2(i,13:15));
+end
+
+% ------------------------------------------------------------------------
 % Visualise Trajectories for sanity check
 figure('name','Animation Vicon Bone Segments');
 xlabel('x - Forward (m)');ylabel('y - East (m)');zlabel('z - Vertical (m)');
