@@ -37,6 +37,24 @@ classdef Body < handle
         qLTibia
     end
     
+    properties (Constant)
+        ptList = {'SACR', 'LFEP', 'LFEO', 'LTIO', 'RFEP', 'RFEO', 'RTIO'};
+    end
+    
+    methods (Hidden)
+        function out = lim(obj, idx)
+            low = inf; high = -inf;
+            
+            for i=1:length(obj.ptList)
+                data = obj.(obj.ptList{i});
+                low = min([low; data(:,idx)]);
+                high = max([high;, data(:,idx)]);
+            end
+            
+            out = [low high];
+        end
+    end
+    
     methods
         % ======================================================================
         %> @brief Class constructor
@@ -53,7 +71,16 @@ classdef Body < handle
             obj.nSamples = length(obj.SACR(:,1));
         end
         
-        function calcJointAngles()
+        function out = xlim(obj)
+            out = lim(obj, 1);
+        end
+        
+        function out = ylim(obj)
+            out = lim(obj, 2);
+        end
+        
+        function out = zlim(obj)
+            out = lim(obj, 3);
         end
     end
     

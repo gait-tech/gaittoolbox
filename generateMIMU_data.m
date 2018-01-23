@@ -440,7 +440,7 @@ d_ltibia = norm(tbl_markers.LFEO(1,:)-tbl_markers.LTIO(1,:));
     x0_pos_MP, x0_vel_MP, gfr_acc_MP, bIsStatMP, qPelvisEst, ...
     x0_pos_LA, x0_vel_LA, gfr_acc_LA, bIsStatLA, qLankleEst, ...
     x0_pos_RA, x0_vel_RA, gfr_acc_RA, bIsStatRA, qRankleEst, ...
-    d_pelvis, d_rfemur, d_lfemur, d_rtibia, d_ltibia, uwb_mea, ...
+    d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, uwb_mea, ...
     true, false, true, false);
 
 % ------------------------------------------------------------------------
@@ -463,112 +463,112 @@ PMid = [mean([RFEP(:,1), LFEP(:,1)],2),...
         mean([RFEP(:,2), LFEP(:,2)],2),...
         mean([RFEP(:,3), LFEP(:,3)],2)];
 
-% modify this if you want to focus on a smaller time period of the
-% trajectory
-allIdx = 1:N_TIME_PTS; 
-arr_markers = [table2array(tbl_markers), ...
-    x_pos(:,[1:3,7:9,13:15]),xMP,yMP,zMP, xLA,yLA,zLA, xRA,yRA,zRA];
-
-vicX = reshape(arr_markers(allIdx,1:3:end),[],1); XLIM = [min(vicX),max(vicX)];
-vicY = reshape(arr_markers(allIdx,2:3:end),[],1); YLIM = [min(vicY),max(vicY)];
-vicZ = reshape(arr_markers(allIdx,3:3:end),[],1); ZLIM = [min(vicZ),max(vicZ)];
-xlim(XLIM);ylim(YLIM);zlim(ZLIM);
-
-% KF estimates
-p1 = plot3(xMP(allIdx,1),yMP(allIdx,1),zMP(allIdx,1),'.k');
-plot3(xLA(allIdx,1),yLA(allIdx,1),zLA(allIdx,1),'.b');
-plot3(xRA(allIdx,1),yRA(allIdx,1),zRA(allIdx,1),'.r');
-
-% % KF with UWB
-% p2 = plot3(x_pos(allIdx,1), x_pos(allIdx,2), x_pos(allIdx,3),'ok');
-% plot3(x_pos(allIdx,7), x_pos(allIdx,8), x_pos(allIdx,9),'oc');
-% plot3(x_pos(allIdx,13),x_pos(allIdx,14),x_pos(allIdx,15),'om');
-
-% KF v2
-p3 = plot3(x_pos_v2(allIdx,1), x_pos_v2(allIdx,2), x_pos_v2(allIdx,3),'+k');
-plot3(x_pos_v2(allIdx,7), x_pos_v2(allIdx,8), x_pos_v2(allIdx,9),'+c');
-plot3(x_pos_v2(allIdx,13),x_pos_v2(allIdx,14),x_pos_v2(allIdx,15),'+m');
-
-% TRUE positions
-h_mp_mea = plot3(PMid(allIdx,1),PMid(allIdx,2),PMid(allIdx,3),'-k');
-h_la_mea = plot3(LTIO(allIdx,1),LTIO(allIdx,2),LTIO(allIdx,3),'-b');
-h_ra_mea = plot3(RTIO(allIdx,1),RTIO(allIdx,2),RTIO(allIdx,3),'-r');
-
-% updateFigureContents('Animation');
-
-% %%
-% updateFigureContents('Animation Vicon Bone Segments');
-% xlabel('x - Forward (m)');ylabel('y - East (m)');zlabel('z - Vertical (m)');
-% hold on;grid on;axis('equal');view([-51 12]);%view([0 0]);
+% % modify this if you want to focus on a smaller time period of the
+% % trajectory
+% allIdx = 1:N_TIME_PTS; 
+% arr_markers = [table2array(tbl_markers), ...
+%     x_pos(:,[1:3,7:9,13:15]),xMP,yMP,zMP, xLA,yLA,zLA, xRA,yRA,zRA];
+% 
+% vicX = reshape(arr_markers(allIdx,1:3:end),[],1); XLIM = [min(vicX),max(vicX)];
+% vicY = reshape(arr_markers(allIdx,2:3:end),[],1); YLIM = [min(vicY),max(vicY)];
+% vicZ = reshape(arr_markers(allIdx,3:3:end),[],1); ZLIM = [min(vicZ),max(vicZ)];
 % xlim(XLIM);ylim(YLIM);zlim(ZLIM);
 % 
-% fctr=1;
+% % KF estimates
+% p1 = plot3(xMP(allIdx,1),yMP(allIdx,1),zMP(allIdx,1),'.k');
+% plot3(xLA(allIdx,1),yLA(allIdx,1),zLA(allIdx,1),'.b');
+% plot3(xRA(allIdx,1),yRA(allIdx,1),zRA(allIdx,1),'.r');
 % 
-% % for i=N_TIME_PTS
-%     
-% cla;
-i=N_TIME_PTS;
-% -------- Pelvis --------
-plot3(PELO(i,1),PELO(i,2),PELO(i,3),'ok','MarkerFaceColor','k');
-plot3(PELP(i,1),PELP(i,2),PELP(i,3),'ok','MarkerFaceColor','none');
-line([PELO(i,1), PELP(i,1)],...
-     [PELO(i,2), PELP(i,2)],...
-     [PELO(i,3), PELP(i,3)],...
-'Color','k','LineWidth',2);
-line([LFEP(i,1), RFEP(i,1)],...
-     [LFEP(i,2), RFEP(i,2)],...
-     [LFEP(i,3), RFEP(i,3)],...
-'Color','k','LineWidth',3);
-
-% Left Femur
-plot3(LFEO(i,1),LFEO(i,2),LFEO(i,3),'ob','MarkerFaceColor','b');
-plot3(LFEP(i,1),LFEP(i,2),LFEP(i,3),'ob','MarkerFaceColor','none');
-line([LFEO(i,1),LFEP(i,1)],[LFEO(i,2), LFEP(i,2)],[LFEO(i,3), LFEP(i,3)],...
-'Color','c','LineWidth',2,'LineStyle','--');
-
-% Left Tibia
-plot3(LTIO(i,1),LTIO(i,2),LTIO(i,3),'ob','MarkerFaceColor','b');
-plot3(LTIP(i,1),LTIP(i,2),LTIP(i,3),'ob','MarkerFaceColor','none');
-line([LTIO(i,1),LTIP(i,1)],[LTIO(i,2), LTIP(i,2)],[LTIO(i,3), LTIP(i,3)],...
-'Color','c','LineWidth',2);
-
-% Left Foot
-plot3(LFOO(i,1),LFOO(i,2),LFOO(i,3),'ob','MarkerFaceColor','b');
-plot3(LFOP(i,1),LFOP(i,2),LFOP(i,3),'ob','MarkerFaceColor','none');
-line([LFOO(i,1),LFOP(i,1)],[LFOO(i,2), LFOP(i,2)],[LFOO(i,3), LFOP(i,3)],...
-'Color','c','LineWidth',2,'LineStyle','--');
-
-% Right Femur
-plot3(RFEO(i,1),RFEO(i,2),RFEO(i,3),'or','MarkerFaceColor','r');
-plot3(RFEP(i,1),RFEP(i,2),RFEP(i,3),'or','MarkerFaceColor','none');
-line([RFEO(i,1), RFEP(i,1)],[RFEO(i,2), RFEP(i,2)],[RFEO(i,3), RFEP(i,3)],...
-'Color','m','LineWidth',2,'LineStyle','--');
-
-% Right Tibia
-plot3(RTIO(i,1),RTIO(i,2),RTIO(i,3),'or','MarkerFaceColor','r');
-plot3(RTIP(i,1),RTIP(i,2),RTIP(i,3),'or','MarkerFaceColor','none');
-line([RTIO(i,1), RTIP(i,1)],[RTIO(i,2), RTIP(i,2)],[RTIO(i,3), RTIP(i,3)],...
-'Color','m','LineWidth',2);
-
-% Right Foot
-plot3(RFOO(i,1),RFOO(i,2),RFOO(i,3),'or','MarkerFaceColor','r');
-plot3(RFOP(i,1),RFOP(i,2),RFOP(i,3),'or','MarkerFaceColor','none');
-line([RFOO(i,1),RFOP(i,1)],[RFOO(i,2), RFOP(i,2)],[RFOO(i,3), RFOP(i,3)],...
-'Color','m','LineWidth',2,'LineStyle','--');
+% % % KF with UWB
+% % p2 = plot3(x_pos(allIdx,1), x_pos(allIdx,2), x_pos(allIdx,3),'ok');
+% % plot3(x_pos(allIdx,7), x_pos(allIdx,8), x_pos(allIdx,9),'oc');
+% % plot3(x_pos(allIdx,13),x_pos(allIdx,14),x_pos(allIdx,15),'om');
 % 
-% title(['Time:= ', num2str(i/fs)]);
-% % drawnow;
-% % F(fctr) = getframe(gcf);
-% fctr = fctr+1;
+% % KF v2
+% p3 = plot3(x_pos_v2(allIdx,1), x_pos_v2(allIdx,2), x_pos_v2(allIdx,3),'+k');
+% plot3(x_pos_v2(allIdx,7), x_pos_v2(allIdx,8), x_pos_v2(allIdx,9),'+c');
+% plot3(x_pos_v2(allIdx,13),x_pos_v2(allIdx,14),x_pos_v2(allIdx,15),'+m');
 % 
-% pause(0.5);
-% end
-hand.fill2=fill([-3,3,3,-3],[-4,-4,2,2],[0,0,0,0]);
-set(hand.fill2,'facealpha',0.51);
-set(hand.fill2,'edgealpha',0.1);
-
-legend('off')
-legend([p1, p3, h_mp_mea], 'ekf', 'ekf v2', 'true pos');
+% % TRUE positions
+% h_mp_mea = plot3(PMid(allIdx,1),PMid(allIdx,2),PMid(allIdx,3),'-k');
+% h_la_mea = plot3(LTIO(allIdx,1),LTIO(allIdx,2),LTIO(allIdx,3),'-b');
+% h_ra_mea = plot3(RTIO(allIdx,1),RTIO(allIdx,2),RTIO(allIdx,3),'-r');
+% 
+% % updateFigureContents('Animation');
+% 
+% % %%
+% % updateFigureContents('Animation Vicon Bone Segments');
+% % xlabel('x - Forward (m)');ylabel('y - East (m)');zlabel('z - Vertical (m)');
+% % hold on;grid on;axis('equal');view([-51 12]);%view([0 0]);
+% % xlim(XLIM);ylim(YLIM);zlim(ZLIM);
+% % 
+% % fctr=1;
+% % 
+% % % for i=N_TIME_PTS
+% %     
+% % cla;
+% i=N_TIME_PTS;
+% % -------- Pelvis --------
+% plot3(PELO(i,1),PELO(i,2),PELO(i,3),'ok','MarkerFaceColor','k');
+% plot3(PELP(i,1),PELP(i,2),PELP(i,3),'ok','MarkerFaceColor','none');
+% line([PELO(i,1), PELP(i,1)],...
+%      [PELO(i,2), PELP(i,2)],...
+%      [PELO(i,3), PELP(i,3)],...
+% 'Color','k','LineWidth',2);
+% line([LFEP(i,1), RFEP(i,1)],...
+%      [LFEP(i,2), RFEP(i,2)],...
+%      [LFEP(i,3), RFEP(i,3)],...
+% 'Color','k','LineWidth',3);
+% 
+% % Left Femur
+% plot3(LFEO(i,1),LFEO(i,2),LFEO(i,3),'ob','MarkerFaceColor','b');
+% plot3(LFEP(i,1),LFEP(i,2),LFEP(i,3),'ob','MarkerFaceColor','none');
+% line([LFEO(i,1),LFEP(i,1)],[LFEO(i,2), LFEP(i,2)],[LFEO(i,3), LFEP(i,3)],...
+% 'Color','c','LineWidth',2,'LineStyle','--');
+% 
+% % Left Tibia
+% plot3(LTIO(i,1),LTIO(i,2),LTIO(i,3),'ob','MarkerFaceColor','b');
+% plot3(LTIP(i,1),LTIP(i,2),LTIP(i,3),'ob','MarkerFaceColor','none');
+% line([LTIO(i,1),LTIP(i,1)],[LTIO(i,2), LTIP(i,2)],[LTIO(i,3), LTIP(i,3)],...
+% 'Color','c','LineWidth',2);
+% 
+% % Left Foot
+% plot3(LFOO(i,1),LFOO(i,2),LFOO(i,3),'ob','MarkerFaceColor','b');
+% plot3(LFOP(i,1),LFOP(i,2),LFOP(i,3),'ob','MarkerFaceColor','none');
+% line([LFOO(i,1),LFOP(i,1)],[LFOO(i,2), LFOP(i,2)],[LFOO(i,3), LFOP(i,3)],...
+% 'Color','c','LineWidth',2,'LineStyle','--');
+% 
+% % Right Femur
+% plot3(RFEO(i,1),RFEO(i,2),RFEO(i,3),'or','MarkerFaceColor','r');
+% plot3(RFEP(i,1),RFEP(i,2),RFEP(i,3),'or','MarkerFaceColor','none');
+% line([RFEO(i,1), RFEP(i,1)],[RFEO(i,2), RFEP(i,2)],[RFEO(i,3), RFEP(i,3)],...
+% 'Color','m','LineWidth',2,'LineStyle','--');
+% 
+% % Right Tibia
+% plot3(RTIO(i,1),RTIO(i,2),RTIO(i,3),'or','MarkerFaceColor','r');
+% plot3(RTIP(i,1),RTIP(i,2),RTIP(i,3),'or','MarkerFaceColor','none');
+% line([RTIO(i,1), RTIP(i,1)],[RTIO(i,2), RTIP(i,2)],[RTIO(i,3), RTIP(i,3)],...
+% 'Color','m','LineWidth',2);
+% 
+% % Right Foot
+% plot3(RFOO(i,1),RFOO(i,2),RFOO(i,3),'or','MarkerFaceColor','r');
+% plot3(RFOP(i,1),RFOP(i,2),RFOP(i,3),'or','MarkerFaceColor','none');
+% line([RFOO(i,1),RFOP(i,1)],[RFOO(i,2), RFOP(i,2)],[RFOO(i,3), RFOP(i,3)],...
+% 'Color','m','LineWidth',2,'LineStyle','--');
+% % 
+% % title(['Time:= ', num2str(i/fs)]);
+% % % drawnow;
+% % % F(fctr) = getframe(gcf);
+% % fctr = fctr+1;
+% % 
+% % pause(0.5);
+% % end
+% hand.fill2=fill([-3,3,3,-3],[-4,-4,2,2],[0,0,0,0]);
+% set(hand.fill2,'facealpha',0.51);
+% set(hand.fill2,'edgealpha',0.1);
+% 
+% legend('off')
+% legend([p1, p3, h_mp_mea], 'ekf', 'ekf v2', 'true pos');
 
 % video = VideoWriter('ViconWalk.avi','Motion JPEG AVI');
 % open(video);
@@ -577,8 +577,9 @@ legend([p1, p3, h_mp_mea], 'ekf', 'ekf v2', 'true pos');
 
 % ------------------------------------------------------------------------
 % Result Validations / Debugging
-idx = 1:50;
-estBody = Body('name', 'est', 'posUnit', 'mm', 'oriUnit', 'deg', ...
+idx = 1:length(qPelvisEst(:,1));
+
+estBody = Body('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                'lnSymbol', '--', 'ptSymbol', 'o', ...
                'SACR', x_pos_v2(idx,1:3), 'LFEP', t_dat_v2(idx,7:9), ...
                'LFEO', t_dat_v2(idx,1:3), 'LTIO', x_pos_v2(idx,7:9), ...
@@ -587,7 +588,7 @@ estBody = Body('name', 'est', 'posUnit', 'mm', 'oriUnit', 'deg', ...
                'qPelvis', qPelvisEst(idx,:), 'qRFemur', t_dat_v2(idx,13:16), ...
                'qLFemur', t_dat_v2(idx,17:20), 'qRTibia', qRankleEst(idx,:), ...
                'qLTibia', qLankleEst(idx,:));
-actBody = Body('name', 'act', 'posUnit', 'mm', 'oriUnit', 'deg', ...
+actBody = Body('name', 'act', 'posUnit', 'm', 'oriUnit', 'deg', ...
                'lnSymbol', '-', 'ptSymbol', '.', ...
                'SACR', PMid(idx,:), 'LFEP', LFEP(idx,:), ...
                'LFEO', LFEO(idx,:), 'LTIO', LTIO(idx,:), ...
@@ -599,32 +600,60 @@ actBody = Body('name', 'act', 'posUnit', 'mm', 'oriUnit', 'deg', ...
                'qRTibia', quatSegment.Right_Tibia(idx,:), ...
                'qLTibia', quatSegment.Left_Tibia(idx,:));
            
-% Position error
-updateFigureContents('Position (1)');
-plotPosition({estBody, actBody}, {'SACR'});
-updateFigureContents('Position (2)');
-plotPosition({estBody, actBody}, {'LTIO', 'RTIO'});
-updateFigureContents('Position (3)');
-plotPosition({estBody, actBody}, {'LFEO', 'RFEO'});
-
-updateFigureContents('Position Error');
-plotPositionDiff(actBody, estBody, {'SACR', 'LTIO', 'RTIO'});
-
-% Orientation Error
-updateFigureContents('Orientation (1)');
-plotOrientation({estBody, actBody}, {'qPelvis', 'qRTibia', 'qLTibia'});
-updateFigureContents('Orientation (2)');
-plotOrientation({estBody, actBody}, {'qRFemur', 'qLFemur'});
-
-updateFigureContents('Orientation Error');
-plotOrientationDiff(actBody, estBody, {'qRFemur', 'qLFemur'});
-
-% ------------------------------------------------------------------------
-% Qualitatively validate the results
+% % Position error
+% updateFigureContents('Position (1)');
+% plotPosition({estBody, actBody}, {'SACR'});
+% updateFigureContents('Position (2)');
+% plotPosition({estBody, actBody}, {'LTIO', 'RTIO'});
+% updateFigureContents('Position (3)');
+% plotPosition({estBody, actBody}, {'LFEO', 'RFEO'});
 % 
-% figure; grid on;
+% updateFigureContents('Position Error');
+% plotPositionDiff(actBody, estBody, {'SACR', 'LTIO', 'RTIO'});
+% 
+% % Orientation Error
+% updateFigureContents('Orientation (1)');
+% plotOrientation({estBody, actBody}, {'qPelvis', 'qRTibia', 'qLTibia'});
+% updateFigureContents('Orientation (2)');
+% plotOrientation({estBody, actBody}, {'qRFemur', 'qLFemur'});
+% 
+% updateFigureContents('Orientation Error');
+% plotOrientationDiff(actBody, estBody, {'qRFemur', 'qLFemur'});
+% 
+% Segment Length Error
+updateFigureContents('Segment Length Error');
+plotLowerBodySegmentLengthError(estBody, d_pelvis, d_lfemur, d_rfemur, ...
+    d_ltibia, d_rtibia)
+
+% Position and Velocity
+updateFigureContents('State Comparison');
+plotPosition({estBody, actBody}, {'SACR', 'LTIO', 'RTIO'});
+
+updateFigureContents('Velocity Comparison'); hold on;
+for i=1:3
+    subplot(3,1,i); hold on;
+    plot(idx, x_pos_v2(idx, 3+i), ...
+         strcat(estBody.xyzColor{1}, estBody.lnSymbol));
+    plot(idx, ...
+         [0; actBody.SACR(idx(2:end), i)-actBody.SACR(idx(1:end-1), i)], ...
+         strcat(actBody.xyzColor{1}, actBody.lnSymbol));
+end
+
+% % Snapshots
+% updateFigureContents('Lower Body'); grid on;
+% xlabel('x'); ylabel('y'); zlabel('z');
 % for i=1:20:60
-%     plotLowerBody(x_pos_v2(i,1:3), ...
-%                   t_dat_v2(i,7:9), t_dat_v2(i,1:3), x_pos_v2(i,7:9),...
-%                   t_dat_v2(i,10:12), t_dat_v2(i,4:6), x_pos_v2(i,13:15));
+%     plotLowerBody(estBody, i);
+% end
+% 
+% estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
+% % Animation
+% for i=idx
+%     clf;
+%     xlim(estBodyLimits(1:2)); 
+%     ylim(estBodyLimits(3:4)); 
+%     zlim(estBodyLimits(5:6));  
+%     view(90, 0);
+%     plotLowerBody(estBody, i);
+%     pause(1/1000);
 % end
