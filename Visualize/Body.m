@@ -9,6 +9,13 @@ classdef Body < handle
         name
         nSamples
         
+        % Plot specifications
+        posUnit = 'mm';
+        oriUnit = 'deg';
+        xyzColor = {'r', 'g', 'b'};
+        lnSymbol = '-';
+        ptSymbol = '.';
+        
         %> SACR position (n x 3)
         SACR
         LFEP

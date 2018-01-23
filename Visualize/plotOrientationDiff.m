@@ -1,12 +1,12 @@
 % ======================================================================
-%> @brief plot body position difference (body2 - body1)
+%> @brief Plot body orientation (body2 - body1)
 %>
 %> @param body1 Base Body instance
 %> @param body2 Body instance(s) to be compared to
 %> @param parts String(s) of body point(s) to be plotted.
 %>
 % ======================================================================
-function plotPositionDiff(body1, body2, parts)
+function plotOrientationDiff(body1, body2, parts)
     if ~iscell(body2)
         body2 = {body2};
     end
@@ -17,14 +17,20 @@ function plotPositionDiff(body1, body2, parts)
     n = length(parts);
     
     for i=1:n
-        actl = body1.(parts{i});
+        actl = quat2eul(body1.(parts{i}));
+        if body1.oriUnit == 'deg'
+            actl = actl * 180 / pi;
+        end
         t = 1:length(actl(:,1));
         
         subplot(n,1,i); hold on;
         
         for j=1:length(body2)
-            pred = body2{j}.(parts{i});
-
+            pred = quat2eul(body2{j}.(parts{i}));
+            if body1.oriUnit == 'deg'
+                pred = pred * 180 / pi;
+            end
+            
             xErr = (actl(:,1)-pred(:,1));
             yErr = (actl(:,2)-pred(:,2));
             zErr = (actl(:,3)-pred(:,3));
@@ -37,7 +43,7 @@ function plotPositionDiff(body1, body2, parts)
         end
         title(parts{i});
         xlabel('Time');
-        ylabel(strcat('Error (', body2{1}.posUnit, ')'));
+        ylabel(strcat('Error (', body2{1}.oriUnit, ')'));
         legend('x','y','z','total');
     end
 end

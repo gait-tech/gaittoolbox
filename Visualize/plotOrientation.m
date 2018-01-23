@@ -1,11 +1,11 @@
 % ======================================================================
-%> @brief Plot body position
+%> @brief Plot body orientation
 %>
 %> @param bodys Body instance(s) to be plotted
 %> @param parts String(s) of body point(s) to be plotted.
 %>
 % ======================================================================
-function plotPosition(bodys, parts)
+function plotOrientation(bodys, parts)
     if ~iscell(bodys)
         bodys = {bodys};
     end
@@ -18,7 +18,11 @@ function plotPosition(bodys, parts)
     
     for i=1:length(parts)
         for j=1:length(bodys)
-            data = bodys{j}.(parts{i});
+            data = quat2eul(bodys{j}.(parts{i}));
+            if bodys{j}.oriUnit == 'deg'
+                data = data * 180 / pi;
+            end
+            
             t = (1:length(data(:,1)))';
 
             subplot(n,1,plotIndex); hold on;
@@ -33,19 +37,19 @@ function plotPosition(bodys, parts)
         end
         
         subplot(n,1,plotIndex);
-        title(strcat(parts{i}, ' x'));
+        title(strcat(parts{i}, ' Z'));
         legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
-        ylabel(bodys{1}.posUnit);
+        ylabel(bodys{1}.oriUnit);
         
         subplot(n,1,plotIndex+1);
-        title(strcat(parts{i}, ' y'));
+        title(strcat(parts{i}, ' Y'));
         legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
-        ylabel(bodys{1}.posUnit);
+        ylabel(bodys{1}.oriUnit);
         
         subplot(n,1,plotIndex+2);
-        title(strcat(parts{i}, ' z'));
+        title(strcat(parts{i}, ' X'));
         legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
-        ylabel(bodys{1}.posUnit);
+        ylabel(bodys{1}.oriUnit);
         
         plotIndex = plotIndex + 3;
     end

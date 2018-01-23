@@ -1,4 +1,6 @@
 clc; clear all; close all;
+addpath ./Visualize;
+
 
 %% function [] = main()
 
@@ -442,47 +444,6 @@ d_ltibia = norm(tbl_markers.LFEO(1,:)-tbl_markers.LTIO(1,:));
     true, false, true, false);
 
 % ------------------------------------------------------------------------
-% Quantitatively validate the results
-
-% Position error
-idx = 1:50;
-figure('name', 'Position Error');
-subplot(3,2,1); 
-plotPositionError(x_pos_v2(idx,1:3), PMid(idx,:)); 
-title('Pelvis'); ylabel('Error (m)');
-subplot(3,2,2);
-plotPositionError(t_dat_v2(idx,1:3), LFEO(idx,:)); 
-title('Left Knee'); ylabel('Error (m)');
-subplot(3,2,3);
-plotPositionError(t_dat_v2(idx,4:6), RFEO(idx,:)); 
-title('Right Knee'); ylabel('Error (m)');
-subplot(3,2,4); 
-plotPositionError(x_pos_v2(idx,7:9), LTIO(idx,:)); 
-title('Left Ankle'); ylabel('Error (m)');
-subplot(3,2,5); 
-plotPositionError(x_pos_v2(idx,13:15), RTIO(idx,:)); 
-title('Right Ankle'); ylabel('Error (m)');
-
-% Orientation error
-figure('name', 'Orientation Error');
-subplot(2,1,1);
-plotOrientationError(t_dat_v2(:,13:16), quatSegment.Left_Femur);
-title('Left Femur');
-subplot(2,1,2);
-plotOrientationError(t_dat_v2(:,17:20), quatSegment.Right_Femur);
-title('Right Femur');
-
-% ------------------------------------------------------------------------
-% Qualitatively validate the results
-
-figure; grid on;
-for i=1:20:60
-    plotLowerBody(x_pos_v2(i,1:3), ...
-                  t_dat_v2(i,7:9), t_dat_v2(i,1:3), x_pos_v2(i,7:9),...
-                  t_dat_v2(i,10:12), t_dat_v2(i,4:6), x_pos_v2(i,13:15));
-end
-
-% ------------------------------------------------------------------------
 % Visualise Trajectories for sanity check
 figure('name','Animation Vicon Bone Segments');
 xlabel('x - Forward (m)');ylabel('y - East (m)');zlabel('z - Vertical (m)');
@@ -613,3 +574,57 @@ legend([p1, p3, h_mp_mea], 'ekf', 'ekf v2', 'true pos');
 % open(video);
 % writeVideo(video,F);
 % close(video);
+
+% ------------------------------------------------------------------------
+% Result Validations / Debugging
+idx = 1:50;
+estBody = Body('name', 'est', 'posUnit', 'mm', 'oriUnit', 'deg', ...
+               'lnSymbol', '--', 'ptSymbol', 'o', ...
+               'SACR', x_pos_v2(idx,1:3), 'LFEP', t_dat_v2(idx,7:9), ...
+               'LFEO', t_dat_v2(idx,1:3), 'LTIO', x_pos_v2(idx,7:9), ...
+               'RFEP', t_dat_v2(idx,10:12), 'RFEO', t_dat_v2(idx,4:6), ...
+               'RTIO', x_pos_v2(idx,13:15), ...
+               'qPelvis', qPelvisEst(idx,:), 'qRFemur', t_dat_v2(idx,13:16), ...
+               'qLFemur', t_dat_v2(idx,17:20), 'qRTibia', qRankleEst(idx,:), ...
+               'qLTibia', qLankleEst(idx,:));
+actBody = Body('name', 'act', 'posUnit', 'mm', 'oriUnit', 'deg', ...
+               'lnSymbol', '-', 'ptSymbol', '.', ...
+               'SACR', PMid(idx,:), 'LFEP', LFEP(idx,:), ...
+               'LFEO', LFEO(idx,:), 'LTIO', LTIO(idx,:), ...
+               'RFEP', RFEP(idx,:), 'RFEO', RFEO(idx,:), ...
+               'RTIO', RTIO(idx,:), ...
+               'qPelvis', quatSegment.Mid_Pelvis(idx,:), ...
+               'qRFemur', quatSegment.Right_Femur(idx,:), ...
+               'qLFemur', quatSegment.Left_Femur(idx,:), ...
+               'qRTibia', quatSegment.Right_Tibia(idx,:), ...
+               'qLTibia', quatSegment.Left_Tibia(idx,:));
+           
+% Position error
+updateFigureContents('Position (1)');
+plotPosition({estBody, actBody}, {'SACR'});
+updateFigureContents('Position (2)');
+plotPosition({estBody, actBody}, {'LTIO', 'RTIO'});
+updateFigureContents('Position (3)');
+plotPosition({estBody, actBody}, {'LFEO', 'RFEO'});
+
+updateFigureContents('Position Error');
+plotPositionDiff(actBody, estBody, {'SACR', 'LTIO', 'RTIO'});
+
+% Orientation Error
+updateFigureContents('Orientation (1)');
+plotOrientation({estBody, actBody}, {'qPelvis', 'qRTibia', 'qLTibia'});
+updateFigureContents('Orientation (2)');
+plotOrientation({estBody, actBody}, {'qRFemur', 'qLFemur'});
+
+updateFigureContents('Orientation Error');
+plotOrientationDiff(actBody, estBody, {'qRFemur', 'qLFemur'});
+
+% ------------------------------------------------------------------------
+% Qualitatively validate the results
+% 
+% figure; grid on;
+% for i=1:20:60
+%     plotLowerBody(x_pos_v2(i,1:3), ...
+%                   t_dat_v2(i,7:9), t_dat_v2(i,1:3), x_pos_v2(i,7:9),...
+%                   t_dat_v2(i,10:12), t_dat_v2(i,4:6), x_pos_v2(i,13:15));
+% end
