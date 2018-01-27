@@ -1,4 +1,4 @@
-clc; clear all; close all;
+% clc; clear all; close all;
 addpath ./Visualize;
 
 
@@ -72,6 +72,8 @@ arr_markers(unique_rows,:) = [];
 
 % iterate over columns and convert from mm to m
 tbl_markers{:,:} = tbl_markers{:,:}./1000;
+% add padding to give kf some time to converge
+% tbl_markers = [tbl_markers(ones(299,1),:); tbl_markers];
 
 % specify noise level in the accelerometer (m/s^2)
 sigma_acc = 0.5;
@@ -132,7 +134,7 @@ for r = 1:N_SEGMENTS
 
     [quat,imu,gfr] = viconGenIMU('fs',fs,...
         'origin',oPos,'anterior',aPos,'proximal',pPos,'lateral',lPos,...
-        'sigma_acc',sigma_acc,'sigma_mag',sigma_mag,'sigma_gyr',sigma_gyr,...
+        'sigma_acc',0,'sigma_mag',sigma_mag,'sigma_gyr',sigma_gyr,...
         'qViconGfr',qViconGfr,'gRef',gRef,'mRef',mRef,'dipoleOrigin',dipoleObj,...
         'bOutputTable',false);    
 
@@ -436,18 +438,18 @@ d_rtibia = norm(tbl_markers.RFEO(1,:)-tbl_markers.RTIO(1,:));
 d_ltibia = norm(tbl_markers.LFEO(1,:)-tbl_markers.LTIO(1,:));
 
 [ x_pri_v2, x_pos_v2, t_dat_v2 ] = kf_3_kmus_v2(fs, ...
-    sigma_acc, sigma_acc, sigma_acc, ...
+    sigma_acc, sigma_acc, sigma_acc, false, ...
     x0_pos_MP, x0_vel_MP, gfr_acc_MP, bIsStatMP, qPelvisEst, ...
     x0_pos_LA, x0_vel_LA, gfr_acc_LA, bIsStatLA, qLankleEst, ...
     x0_pos_RA, x0_vel_RA, gfr_acc_RA, bIsStatRA, qRankleEst, ...
     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, uwb_mea, ...
-    true, false, true, false);
+    true, false, true, false, false);
 
 % ------------------------------------------------------------------------
 % Visualise Trajectories for sanity check
-figure('name','Animation Vicon Bone Segments');
-xlabel('x - Forward (m)');ylabel('y - East (m)');zlabel('z - Vertical (m)');
-hold on;grid on;axis('equal');view([-51 12]);%view([0 0]);
+% figure('name','Animation Vicon Bone Segments');
+% xlabel('x - Forward (m)');ylabel('y - East (m)');zlabel('z - Vertical (m)');
+% hold on;grid on;axis('equal');view([-51 12]);%view([0 0]);
 
 PELO = tbl_markers.PELO; PELP = tbl_markers.PELP;
 
@@ -581,13 +583,17 @@ idx = 1:length(qPelvisEst(:,1));
 
 estBody = Body('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                'lnSymbol', '--', 'ptSymbol', 'o', ...
-               'SACR', x_pos_v2(idx,1:3), 'LFEP', t_dat_v2(idx,7:9), ...
-               'LFEO', t_dat_v2(idx,1:3), 'LTIO', x_pos_v2(idx,7:9), ...
-               'RFEP', t_dat_v2(idx,10:12), 'RFEO', t_dat_v2(idx,4:6), ...
+               'SACR', x_pos_v2(idx,1:3), 'LFEP', t_dat_v2.LFEP(idx,:), ...
+               'LFEO', t_dat_v2.LFEO(idx,:), 'LTIO', x_pos_v2(idx,7:9), ...
+               'RFEP', t_dat_v2.RFEP(idx,:), ...
+               'RFEO', t_dat_v2.RFEO(idx,:), ...
                'RTIO', x_pos_v2(idx,13:15), ...
-               'qPelvis', qPelvisEst(idx,:), 'qRFemur', t_dat_v2(idx,13:16), ...
-               'qLFemur', t_dat_v2(idx,17:20), 'qRTibia', qRankleEst(idx,:), ...
+               'qPelvis', qPelvisEst(idx,:), ...
+               'qRFemur', t_dat_v2.qRFemur(idx,:), ...
+               'qLFemur', t_dat_v2.qLFemur(idx,:), ...
+               'qRTibia', qRankleEst(idx,:), ...
                'qLTibia', qLankleEst(idx,:));
+           
 actBody = Body('name', 'act', 'posUnit', 'm', 'oriUnit', 'deg', ...
                'lnSymbol', '-', 'ptSymbol', '.', ...
                'SACR', PMid(idx,:), 'LFEP', LFEP(idx,:), ...
@@ -599,7 +605,12 @@ actBody = Body('name', 'act', 'posUnit', 'm', 'oriUnit', 'deg', ...
                'qLFemur', quatSegment.Left_Femur(idx,:), ...
                'qRTibia', quatSegment.Right_Tibia(idx,:), ...
                'qLTibia', quatSegment.Left_Tibia(idx,:));
-           
+
+actMPVel = [0 0 0; actBody.SACR(2:end, :)-actBody.SACR(1:end-1, :)]*fs;
+actLAVel = [0 0 0; actBody.LTIO(2:end, :)-actBody.LTIO(1:end-1, :)]*fs;
+actRAVel = [0 0 0; actBody.RTIO(2:end, :)-actBody.RTIO(1:end-1, :)]*fs;
+actState = [PMid actMPVel LTIO actLAVel RTIO actRAVel];
+
 % % Position error
 % updateFigureContents('Position (1)');
 % plotPosition({estBody, actBody}, {'SACR'});
@@ -620,24 +631,51 @@ actBody = Body('name', 'act', 'posUnit', 'm', 'oriUnit', 'deg', ...
 % updateFigureContents('Orientation Error');
 % plotOrientationDiff(actBody, estBody, {'qRFemur', 'qLFemur'});
 % 
-% Segment Length Error
-updateFigureContents('Segment Length Error');
-plotLowerBodySegmentLengthError(estBody, d_pelvis, d_lfemur, d_rfemur, ...
-    d_ltibia, d_rtibia)
+% % Segment Length Error
+% updateFigureContents('Segment Length Error');
+% plotLowerBodySegmentLengthError(estBody, d_pelvis, d_lfemur, d_rfemur, ...
+%     d_ltibia, d_rtibia)
+% 
+% % Position and Velocity
+% updateFigureContents('State Comparison');
+% plotPosition({estBody, actBody}, {'SACR', 'LTIO', 'RTIO'});
+% 
+% updateFigureContents('Pelvis Velocity Comparison'); hold on;
+% for i=1:3
+%     subplot(3,1,i); hold on;
+%     title(strcat('Pelvis ', 'w'+i));
+%     plot(idx, x_pos_v2(idx, 3+i), ...
+%          strcat(estBody.xyzColor{1}, estBody.lnSymbol));
+%     plot(idx, actMPVel(idx,i), ...
+%          strcat(actBody.xyzColor{1}, actBody.lnSymbol));
+% end
+% 
+% updateFigureContents('LTIO Velocity Comparison'); hold on;
+% for i=1:3
+%     subplot(3,1,i); hold on;
+%     title(strcat('LTIO ', 'w'+i));
+%     plot(idx, x_pos_v2(idx, 9+i), ...
+%          strcat(estBody.xyzColor{1}, estBody.lnSymbol));
+%     plot(idx, actLAVel(idx,i), ...
+%          strcat(actBody.xyzColor{1}, actBody.lnSymbol));
+% end
+% 
+% updateFigureContents('RTIO Velocity Comparison'); hold on;
+% for i=1:3
+%     subplot(3,1,i); hold on;
+%     title(strcat('RTIO ', 'w'+i));
+%     plot(idx, x_pos_v2(idx, 15+i), ...
+%          strcat(estBody.xyzColor{1}, estBody.lnSymbol));
+%     plot(idx, actRAVel(idx,i), ...
+%          strcat(actBody.xyzColor{1}, actBody.lnSymbol));
+% end
 
-% Position and Velocity
-updateFigureContents('State Comparison');
-plotPosition({estBody, actBody}, {'SACR', 'LTIO', 'RTIO'});
+% % state progress
+updateFigureContents('State Progress');
+plotStateComparison(t_dat_v2, actState, 10);
 
-updateFigureContents('Velocity Comparison'); hold on;
-for i=1:3
-    subplot(3,1,i); hold on;
-    plot(idx, x_pos_v2(idx, 3+i), ...
-         strcat(estBody.xyzColor{1}, estBody.lnSymbol));
-    plot(idx, ...
-         [0; actBody.SACR(idx(2:end), i)-actBody.SACR(idx(1:end-1), i)], ...
-         strcat(actBody.xyzColor{1}, actBody.lnSymbol));
-end
+% Why are there instances of "big changes" in the velocity of the MP, LA,
+% and RA?
 
 % % Snapshots
 % updateFigureContents('Lower Body'); grid on;
@@ -646,14 +684,17 @@ end
 %     plotLowerBody(estBody, i);
 % end
 % 
-% estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
+
 % % Animation
-% for i=idx
+% updateFigureContents('Animation');
+% estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
+% grid
+% for i=1:613
 %     clf;
 %     xlim(estBodyLimits(1:2)); 
 %     ylim(estBodyLimits(3:4)); 
 %     zlim(estBodyLimits(5:6));  
-%     view(90, 0);
+%     view(0, 0);
 %     plotLowerBody(estBody, i);
-%     pause(1/1000);
+%     pause(1/10);
 % end

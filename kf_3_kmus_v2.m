@@ -1,11 +1,11 @@
 function [ varargout ] = kf_3_kmus_v2(fs, ...
-    sigma_acc_MP, sigma_acc_LA, sigma_acc_RA, ...
+    sigma_acc_MP, sigma_acc_LA, sigma_acc_RA, P0, ...
     x0_pos_MP, x0_vel_MP, gfr_acc_MP, bIsStatMP, q_MP, ...
     x0_pos_LA, x0_vel_LA, gfr_acc_LA, bIsStatLA, q_LA, ...
     x0_pos_RA, x0_vel_RA, gfr_acc_RA, bIsStatRA, q_RA, ...
     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, uwb_mea, ...
     zerovel_update, uwb_update, kneecoplanar_constraint, ...
-    femurdist_constraint)
+    femurdist_constraint, kneeangle_constraint)
 % KF_3_KMUS Kalman Filter for performing sensor fusion on the trajectory of
 % three KMUs presumably worn on the body in the following configuration: mid
 % pelvis, left ankle, right ankle
@@ -143,7 +143,11 @@ Q(7:9,7:9) = eye(3,3)*sigma_acc_RA^2;
 Q = B * Q * B';
 
 % initialise covariance in the state estimate
-P = Q;
+if islogical(P0) && ~P0
+    P = Q;
+else
+    P = P0;
+end
 
 % check that all accelerometer measurements are equal dimensions
 [N_MP,~] = size(gfr_acc_MP);
@@ -164,7 +168,26 @@ P_pri    = nan(N_STATES, N_STATES, N_MP);
 xhat_pos = nan(N_MP,     N_STATES);
 P_pos    = nan(N_STATES, N_STATES, N_MP);
 
-tmp_dat  = nan(N_MP,     6);
+tmp_dat = struct;
+tmp_dat.LFEO = nan(N_MP, 3); tmp_dat.RFEO = nan(N_MP, 3);
+tmp_dat.LFEP = nan(N_MP, 3); tmp_dat.RFEP = nan(N_MP, 3);
+tmp_dat.qLFemur = nan(N_MP, 4); tmp_dat.qRFemur = nan(N_MP, 4);
+tmp_dat.predState = nan(N_MP, N_STATES);
+if zerovel_update
+    tmp_dat.zuptStateL = nan(N_MP, N_STATES);
+    tmp_dat.zuptStateR = nan(N_MP, N_STATES);
+end
+if uwb_update
+    tmp_dat.uwbuptState = nan(N_MP, N_STATES);
+end
+if kneecoplanar_constraint
+    tmp_dat.cpkneeState = nan(N_MP, N_STATES);
+    tmp_dat.cpkneeStateKk = nan(N_STATES, 6, N_MP);
+    tmp_dat.cpkneeStateRes = nan(N_MP, 6);
+end
+if femurdist_constraint
+    tmp_dat.femdistState = nan(N_MP, N_STATES);
+end
 
 for n = 1:N_MP
 %% -----------------------------------------------------------------------
@@ -173,46 +196,58 @@ for n = 1:N_MP
     P_min= A * P * A' + Q;
     xhat_pri(n,:) = xhat;
     P_pri(:,:,n)  = P_min;
+    
+    tmp_dat.predState(n,:) = xhat;
+    
 %% ------------------------------------------------------------------------
 %  ---- Implement the zero velocity update step
 %  matrices beginnning with 'H_' are the 'observation matrices' that map
 %  the variables in the state estimate vector, xhat, to the measurement
 %  domain. In this case we are using
-    ctrZUPT = 0;
-    H_MP=[];
-    if bIsStatMP(n), 
-        ctrZUPT = ctrZUPT+1; 
-        H_MP = zeros(3,N_STATES);
-        H_MP(:,idx_vel_MP) = eye(3);
-    end
-    H_LA=[];
-    if bIsStatLA(n), 
-        ctrZUPT = ctrZUPT+1; 
-        H_LA = zeros(3,N_STATES);
-        H_LA(:,idx_vel_LA) = eye(3);
-    end
-    H_RA=[];
-    if bIsStatRA(n), 
-        ctrZUPT = ctrZUPT+1; 
-        H_RA = zeros(3,N_STATES);
-        H_RA(:,idx_vel_RA) = eye(3);
-    end
-    
-    N_PSEUDO_MEA = 3*ctrZUPT; % the number of pseudo measurements
-    if ctrZUPT > 0 && zerovel_update
-        H_zup = [H_MP;H_LA;H_RA];
-        z_zup = zeros(N_PSEUDO_MEA,1);
-        y_zup = z_zup - H_zup*xhat;
+    if zerovel_update
+        ctrZUPT = 0;
+        H_MP=[];
+        if bIsStatMP(n), 
+            ctrZUPT = ctrZUPT+1; 
+            H_MP = zeros(3,N_STATES);
+            H_MP(:,idx_vel_MP) = eye(3);
+        end
+        H_LA=[];
+        if bIsStatLA(n), 
+            ctrZUPT = ctrZUPT+1; 
+            H_LA = zeros(3,N_STATES);
+            H_LA(:,idx_vel_LA) = eye(3);
+        end
+        H_RA=[];
+        if bIsStatRA(n), 
+            ctrZUPT = ctrZUPT+1; 
+            H_RA = zeros(3,N_STATES);
+            H_RA(:,idx_vel_RA) = eye(3);
+        end
+
+        N_PSEUDO_MEA = 3*ctrZUPT; % the number of pseudo measurements
+        if ctrZUPT > 0
+            H_zup = [H_MP;H_LA;H_RA];
+            z_zup = zeros(N_PSEUDO_MEA,1);
+            y_zup = z_zup - H_zup*xhat;
+
+            R_zup = eye(N_PSEUDO_MEA).*sigma_vel^2;
+
+            S_zup = H_zup*P_min*H_zup'+ R_zup;
+            K_zup = P_min*H_zup' /(S_zup);%P_min*H_zup' * inv(S_zup);
+
+            xhat = xhat + K_zup*y_zup;
+            P_min = (I_18 - K_zup*H_zup)*P_min;
+            
+        end
         
-        R_zup = eye(N_PSEUDO_MEA).*sigma_vel^2;
-        
-        S_zup = H_zup*P_min*H_zup'+ R_zup;
-        K_zup = P_min*H_zup' /(S_zup);%P_min*H_zup' * inv(S_zup);
-        
-        xhat = xhat + K_zup*y_zup;
-        P_min = (I_18 - K_zup*H_zup)*P_min;
+        if bIsStatLA(n)
+            tmp_dat.zuptStateL(n,:) = xhat;
+        end
+        if bIsStatRA(n)
+            tmp_dat.zuptStateR(n,:) = xhat;
+        end
     end
-    
 %% ---- Kalman Filter Update Step using UWB measurements ---- 
 % this correction step should be done last
     if uwb_update
@@ -259,6 +294,8 @@ for n = 1:N_MP
         xhat = xhat + K * y_innovation;
         % Update Covariance in the state estimate
         P    = (I_18 - K * H) * P_min;
+        
+        tmp_dat.uwbuptState(n,:) = xhat;
     else
         P = P_min;
     end
@@ -297,8 +334,14 @@ for n = 1:N_MP
                  +d_rfemur*sin(alpha_rk)*RTIB_CS(:,1) ...
                  -d_rtibia*RTIB_CS(:,3)) ];
 
-        dx = P*D'*(D*P*D')^(-1)*(d_k-D*xhat);
+        res = d_k-D*xhat;
+        Kk = P*D'*(D*P*D')^(-1);
+        dx = Kk*(res);
         xhat = xhat + dx;
+        
+        tmp_dat.cpkneeState(n,:) = xhat;
+        tmp_dat.cpkneeStateRes(n,:) = res;
+        tmp_dat.cpkneeStateKk(:,:,n) = Kk;
     end
     
     if femurdist_constraint
@@ -329,23 +372,29 @@ for n = 1:N_MP
         D(2,15) = -diff_RH_RK(3)/dist_est(2);
         
         d_k = [d_lfemur; d_rfemur] - dist_est + D*xhat;
-        
+
         dx = P*D'*(D*P*D')^(-1)*(d_k-D*xhat);
         xhat = xhat + dx;
+        
+        tmp_dat.femdistState(n,:) = xhat;
     end
     
-    tmp_dat(n,1:3) = xhat(idx_pos_LA)+d_ltibia*LTIB_CS(:,3);
-    tmp_dat(n,4:6) = xhat(idx_pos_RA)+d_rtibia*RTIB_CS(:,3);
-    tmp_dat(n,7:9) = xhat(idx_pos_MP)+d_pelvis/2*PELV_CS(:,2);
-    tmp_dat(n,10:12) = xhat(idx_pos_MP)-d_pelvis/2*PELV_CS(:,2);
-    LFEM_z = (tmp_dat(n,7:9)-tmp_dat(n,1:3))';
+    if kneeangle_constraint
+        
+    end
+    
+    tmp_dat.LFEO(n,:) = xhat(idx_pos_LA)+d_ltibia*LTIB_CS(:,3);
+    tmp_dat.RFEO(n,:) = xhat(idx_pos_RA)+d_rtibia*RTIB_CS(:,3);
+    tmp_dat.LFEP(n,:) = xhat(idx_pos_MP)+d_pelvis/2*PELV_CS(:,2);
+    tmp_dat.RFEP(n,:) = xhat(idx_pos_MP)-d_pelvis/2*PELV_CS(:,2);
+    LFEM_z = (tmp_dat.LFEP(n,:)-tmp_dat.LFEO(n,:))';
     LFEM_y = LTIB_CS(:,2);
     LFEM_x = cross(LFEM_y, LFEM_z);
-    RFEM_z = (tmp_dat(n,10:12)-tmp_dat(n,4:6))';
+    RFEM_z = (tmp_dat.RFEP(n,:)-tmp_dat.RFEO(n,:))';
     RFEM_y = RTIB_CS(:,2);
     RFEM_x = cross(RFEM_y, RFEM_z);
-    tmp_dat(n,13:16) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
-    tmp_dat(n,17:20) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
+    tmp_dat.qLFemur(n,:) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
+    tmp_dat.qRFemur(n,:) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
     
     xhat_pos(n,:) = xhat;
     P_pos(:,:,n)  = P;
