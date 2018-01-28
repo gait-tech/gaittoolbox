@@ -21,20 +21,26 @@ classdef Body < handle
         LFEP
         LFEO
         LTIO
+        LTOE
         RFEP
         RFEO
         RTIO
+        RTOE
         
-        %> pelvis orientation (n x 4 OR n x 3 x 3)
+        %> pelvis orientation (n x 4 OR 3 x 3 x n)
         qPelvis
-        %> right femur orientation (n x 4 OR n x 3 x 3)
+        %> right femur orientation (n x 4 OR 3 x 3 x n)
         qRFemur
-        %> left femur orientation (n x 4 OR n x 3 x 3)
+        %> left femur orientation (n x 4 OR 3 x 3 x n)
         qLFemur
-        %> right tibia orientation (n x 4 OR n x 3 x 3)
+        %> right tibia orientation (n x 4 OR 3 x 3 x n)
         qRTibia
-        %> left tibia orientation (n x 4 OR n x 3 x 3)
+        %> left tibia orientation (n x 4 OR 3 x 3 x n)
         qLTibia
+        %> right foot orientation (n x 4 OR 3 x 3 x n)
+        qRFoot
+        %> left foot orientation (n x 4 OR 3 x 3 x n)
+        qLFoot
     end
     
     properties (Constant)
@@ -67,8 +73,9 @@ classdef Body < handle
             for i = 1:2:nargin
                obj.(varargin{i}) = varargin{i+1};
             end
-            
-            obj.nSamples = length(obj.SACR(:,1));
+            if obj.SACR
+                obj.nSamples = length(obj.SACR(:,1));
+            end
         end
         
         function out = xlim(obj)
