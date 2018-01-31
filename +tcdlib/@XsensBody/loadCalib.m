@@ -7,12 +7,13 @@
 %>
 %> @retval output TCDBody with calibration data
 % ======================================================================
-function output = loadCalib(fname)
+function obj = loadCalib(fname)
     %% Check function input
     validateattributes(fname, {'char'}, {});
 
     %% Variable initialization
-    output = struct();
+    obj = tcdlib.XsensBody('srcFileName', fname, 'nSamples', 1, ...
+                           'frame', 'Calib');
     
     %% Load calibration data
     fileID = fopen(fname, 'r');
@@ -22,7 +23,7 @@ function output = loadCalib(fname)
         rname = fscanf(fileID, '%s', 1);
         rval = fscanf(fileID, '%f', [1,4]);
         rval = [rval(4) rval(1:3)];
-        output = setfield(output, rname, rval);
+        obj.(rname) = table(rval, 'VariableNames', {'ori'});
     end
     fclose(fileID);
 end

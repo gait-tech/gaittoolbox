@@ -3,7 +3,7 @@
 %> @brief Body class used to animate body and obtain gait parameters
 % ======================================================================
 
-classdef Body < handle
+classdef grBody < handle
     properties
         %> name of body
         name
@@ -17,7 +17,7 @@ classdef Body < handle
         ptSymbol = '.';
         
         %> SACR position (n x 3)
-        SACR
+        MIDPEL
         LFEP
         LFEO
         LTIO
@@ -28,23 +28,23 @@ classdef Body < handle
         RTOE
         
         %> pelvis orientation (n x 4 OR 3 x 3 x n)
-        qPelvis
+        qRPV
         %> right femur orientation (n x 4 OR 3 x 3 x n)
-        qRFemur
+        qRTH
         %> left femur orientation (n x 4 OR 3 x 3 x n)
-        qLFemur
+        qLTH
         %> right tibia orientation (n x 4 OR 3 x 3 x n)
-        qRTibia
+        qRSK
         %> left tibia orientation (n x 4 OR 3 x 3 x n)
-        qLTibia
+        qLSK
         %> right foot orientation (n x 4 OR 3 x 3 x n)
-        qRFoot
+        qRFT
         %> left foot orientation (n x 4 OR 3 x 3 x n)
-        qLFoot
+        qLFT
     end
     
     properties (Constant)
-        ptList = {'SACR', 'LFEP', 'LFEO', 'LTIO', 'RFEP', 'RFEO', 'RTIO'};
+        ptList = {'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'RFEP', 'RFEO', 'RTIO'};
     end
     
     methods (Hidden)
@@ -69,12 +69,12 @@ classdef Body < handle
         %>
         %> @return instance of Body class.
         % ======================================================================
-        function obj = Body(varargin)
+        function obj = grBody(varargin)
             for i = 1:2:nargin
                obj.(varargin{i}) = varargin{i+1};
             end
-            if obj.SACR
-                obj.nSamples = length(obj.SACR(:,1));
+            if obj.MIDPEL
+                obj.nSamples = length(obj.MIDPEL(:,1));
             end
         end
         
@@ -88,17 +88,6 @@ classdef Body < handle
         
         function out = zlim(obj)
             out = lim(obj, 3);
-        end
-    end
-    
-    methods (Static)
-        function plotPosComparison(varargin)
-        end
-        function plotPosDiff()
-        end
-        function plotOriComparison(varargin)
-        end
-        function plotOriDiff()
         end
     end
 end

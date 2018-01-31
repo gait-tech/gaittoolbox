@@ -393,8 +393,8 @@ for n = 1:N_MP
     RFEM_z = (tmp_dat.RFEP(n,:)-tmp_dat.RFEO(n,:))';
     RFEM_y = RTIB_CS(:,2);
     RFEM_x = cross(RFEM_y, RFEM_z);
-    tmp_dat.qLFemur(n,:) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
-    tmp_dat.qRFemur(n,:) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
+    tmp_dat.qLTH(n,:) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
+    tmp_dat.qRTH(n,:) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
     
     xhat_pos(n,:) = xhat;
     P_pos(:,:,n)  = P;

@@ -12,7 +12,7 @@
 %>
 %> @retval data struct with the fields (dim N x 13) described. 
 % ======================================================================
-function data = loadSensors(fname)
+function obj = loadSensorFile(fname)
     fileID = fopen(fname, 'r');
     buf = fscanf(fileID, "%d %d", 2);
     nSensors = buf(1);
@@ -23,6 +23,9 @@ function data = loadSensors(fname)
         data0{i} = [];
     end
     
+    obj = tcdlib.XsensBody('srcFileName', fname, 'nSamples', nFrames, ...
+                           'frame', 'Sensor');
+                           
     field = {};
     fscanf(fileID, "%d", 1);
     for i=1:nSensors
@@ -40,6 +43,12 @@ function data = loadSensors(fname)
            data0{j}(i,:) = buf';
        end
     end
-    
-    data = cell2struct(data0, field, 2);
     fclose(fileID);
+    
+    for i=1:nSensors
+        obj.(field{i}) = table(data0{i}(:,1:4), data0{i}(:,5:7), ...
+                               data0{i}(:,8:10), data0{i}(:,11:13), ...
+                               'VariableNames', ...
+                               {'ori', 'acc', 'gyr', 'mag'});
+    end 
+end
