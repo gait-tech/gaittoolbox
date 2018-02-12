@@ -44,15 +44,17 @@ classdef grBody < handle
     end
     
     properties (Constant)
-        ptList = {'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'RFEP', 'RFEO', 'RTIO'};
+        posList = {'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'RFEP', 'RFEO', ...
+                   'RTIO'};
+        oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'};
     end
     
     methods (Hidden)
         function out = lim(obj, idx)
             low = inf; high = -inf;
             
-            for i=1:length(obj.ptList)
-                data = obj.(obj.ptList{i});
+            for i=1:length(obj.posList)
+                data = obj.(obj.posList{i});
                 low = min([low; data(:,idx)]);
                 high = max([high;, data(:,idx)]);
             end
@@ -89,5 +91,7 @@ classdef grBody < handle
         function out = zlim(obj)
             out = lim(obj, 3);
         end
+        out = diff(obj1, obj2, seq);
+        out = diffRMSE(obj1, obj2, seq);
     end
 end

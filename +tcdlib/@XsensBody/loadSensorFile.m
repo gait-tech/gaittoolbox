@@ -24,7 +24,7 @@ function obj = loadSensorFile(fname)
     end
     
     obj = tcdlib.XsensBody('srcFileName', fname, 'nSamples', nFrames, ...
-                           'frame', 'Sensor');
+                           'frame', 'World');
                            
     field = {};
     fscanf(fileID, "%d", 1);

@@ -7,7 +7,7 @@ classdef XsensBody < handle
     properties
         %> body is loaded from this source file name
         srcFileName
-        %> data are in this frame of reference (Vicon or IMU or Calib)
+        %> data are in this frame of reference (Vicon or World or Calib)
         frame
         %> number of samples
         nSamples

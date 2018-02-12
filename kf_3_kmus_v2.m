@@ -173,18 +173,18 @@ tmp_dat.LFEO = nan(N_MP, 3); tmp_dat.RFEO = nan(N_MP, 3);
 tmp_dat.LFEP = nan(N_MP, 3); tmp_dat.RFEP = nan(N_MP, 3);
 tmp_dat.qLFemur = nan(N_MP, 4); tmp_dat.qRFemur = nan(N_MP, 4);
 tmp_dat.predState = nan(N_MP, N_STATES);
-if zerovel_update
+% if zerovel_update
     tmp_dat.zuptStateL = nan(N_MP, N_STATES);
     tmp_dat.zuptStateR = nan(N_MP, N_STATES);
-end
-if uwb_update
+% end
+% if uwb_update
     tmp_dat.uwbuptState = nan(N_MP, N_STATES);
-end
-if kneecoplanar_constraint
+% end
+% if kneecoplanar_constraint
     tmp_dat.cpkneeState = nan(N_MP, N_STATES);
     tmp_dat.cpkneeStateKk = nan(N_STATES, 6, N_MP);
     tmp_dat.cpkneeStateRes = nan(N_MP, 6);
-end
+% end
 if femurdist_constraint
     tmp_dat.femdistState = nan(N_MP, N_STATES);
 end
