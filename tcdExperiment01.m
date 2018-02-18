@@ -173,7 +173,7 @@
     d_rtibia = norm(dataV.RightLeg(sIdx,:) - dataV.RightFoot(sIdx,:));
     d_ltibia = norm(dataV.LeftLeg(sIdx,:) - dataV.LeftFoot(sIdx,:));
     
-    P = eye(18, 18)*100;
+    P = eye(27, 27)*100;
     Q_acc = sigma_acc*100;
 %     Q_acc = 0;
     % validation initialization
@@ -399,7 +399,8 @@
     % Hinge Knee Joint + ZUPT
     % 2: least squares, 3: max likelihood + constraint projection
     % 4: least squares + constraint projection
-    for hjcIdx = 2:4
+    % for hjcIdx = 2:4
+    for hjcIdx = 2:2
         % Hinge Knee Joint (special) + ZUPT, Vicon pos, Vicon ori
         [ x_pri_v2, x_pos_v2, t_dat_v2 ] = kf_3_kmus_v2(fs, ...
             Q_acc, Q_acc, Q_acc, P, ...

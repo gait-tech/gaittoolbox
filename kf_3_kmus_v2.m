@@ -79,6 +79,9 @@ idx_pos_LA = 7:9; % column idx corresponding to the left ankle position
 idx_vel_LA = 10:12; % column idx corresponding to the left ankle velocity
 idx_pos_RA = 13:15; % column idx corresponding to the right ankle position
 idx_vel_RA = 16:18; % column idx corresponding to the right ankle velocity
+idx_acb_MP = 19:21; % column idx corresponding to the mid-pelvis acc bias
+idx_acb_LA = 22:24; % column idx corresponding to the left ankle acc bias
+idx_acb_RA = 25:27; % column idx corresponding to the right ankle acc bias
 
 % pseudo UWB measurements corresponding to the euclidean distance between
 % pairs of KMUs.
@@ -93,7 +96,9 @@ uwb_MP_LA_RA = [uwb_mea.left_tibia_mid_pelvis,...
                 uwb_mea.left_tibia_right_tibia];
 
 % initialise state vector (must be column)
-x0 = [x0_pos_MP, x0_vel_MP, x0_pos_LA, x0_vel_LA, x0_pos_RA, x0_vel_RA]';
+% initial acc bias is zero
+x0 = [x0_pos_MP, x0_vel_MP, x0_pos_LA, x0_vel_LA, x0_pos_RA, x0_vel_RA ...
+      zeros(1,9) ]';
 xhat = x0;
 
 % specify the measurement noise in the UWB measurements, these may be
@@ -118,8 +123,8 @@ sigma_vel = 0.5; % (units m/s)
 
 dt = 1/fs;        % assume constant sampling interval
 dt2 = 0.5*dt*dt;  % local variable for readability
-N_STATES = 18;
-I_18 = eye(N_STATES);
+N_STATES = 18+9;
+I_N = eye(N_STATES);
 % state transition matrix encodes the relationship between previous state
 % estimate and current state estimate
 A = eye(N_STATES,N_STATES);
@@ -128,11 +133,19 @@ A = eye(N_STATES,N_STATES);
 A(1:3,4:6)     = dt.*eye(3); % mid pelvis
 A(7:9,10:12)   = dt.*eye(3); % left ankle
 A(13:15,16:18) = dt.*eye(3); % right ankle
+
+A(idx_pos_MP,idx_acb_MP) = -dt2.*eye(3);
+A(idx_pos_LA,idx_acb_LA) = -dt2.*eye(3);
+A(idx_pos_RA,idx_acb_RA) = -dt2.*eye(3);
+A(idx_vel_MP,idx_acb_MP) = -dt.*eye(3);
+A(idx_vel_LA,idx_acb_LA) = -dt.*eye(3);
+A(idx_vel_RA,idx_acb_RA) = -dt.*eye(3);
+
 % calculate the control input model, B, i.e., the matrix applied to the
 % control/input vector, in this case the accelerometer measurements in 3D
 % x = x(t-1) + v(t-1)*dt + 0.5*a(t)*dt^2
 %    [  A * xhat       ] + [ B * acc]
-B            = zeros(18,9);
+B            = zeros(N_STATES,9);
 B(1:3,1:3)   = dt2.*eye(3);
 B(4:6,1:3)   = dt .*eye(3);
 B(7:9,4:6)   = dt2.*eye(3);
@@ -141,8 +154,10 @@ B(13:15,7:9) = dt2.*eye(3);
 B(16:18,7:9) = dt .*eye(3);
 
 % Constraint
-D = [-eye(3,3) zeros(3,3) eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3);
-     -eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) eye(3,3) zeros(3,3)];
+D = [-eye(3,3) zeros(3,3) eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) ...
+     zeros(3,3) zeros(3,3) zeros(3,3);
+     -eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) eye(3,3) zeros(3,3) ...
+     zeros(3,3) zeros(3,3) zeros(3,3)];
 
 % Initialise process noise covariance
 Q = zeros(9,9);
@@ -200,7 +215,20 @@ end
 
 for n = 1:N_MP
 %% -----------------------------------------------------------------------
+% CS initializations
+    LTIB_CS = quat2rotm(q_LA(n,:));
+    RTIB_CS = quat2rotm(q_RA(n,:));
+    PELV_CS = quat2rotm(q_MP(n,:));
+    
+%% -----------------------------------------------------------------------
 %  ---- Prediction Step using accelerometer measurements ----    
+    A(idx_pos_MP,idx_acb_MP) = -dt2.*PELV_CS;
+    A(idx_pos_LA,idx_acb_LA) = -dt2.*LTIB_CS;
+    A(idx_pos_RA,idx_acb_RA) = -dt2.*RTIB_CS;
+    A(idx_vel_MP,idx_acb_MP) = -dt.*PELV_CS;
+    A(idx_vel_LA,idx_acb_LA) = -dt.*LTIB_CS;
+    A(idx_vel_RA,idx_acb_RA) = -dt.*RTIB_CS;
+
     xhat = A * xhat + B * acc(n,:)' ;
     P_min= A * P * A' + Q;
     xhat_pri(n,:) = xhat;
@@ -246,7 +274,7 @@ for n = 1:N_MP
             K_zup = P_min*H_zup' /(S_zup);%P_min*H_zup' * inv(S_zup);
 
             xhat = xhat + K_zup*y_zup;
-            P_min = (I_18 - K_zup*H_zup)*P_min;
+            P_min = (I_N - K_zup*H_zup)*P_min;
             
         end
         
@@ -302,7 +330,7 @@ for n = 1:N_MP
         % Update state estimate
         xhat = xhat + K * y_innovation;
         % Update Covariance in the state estimate
-        P    = (I_18 - K * H) * P_min;
+        P    = (I_N - K * H) * P_min;
         
         tmp_dat.uwbuptState(n,:) = xhat;
     else
@@ -311,10 +339,6 @@ for n = 1:N_MP
     
 %% -----------------------------------------------------------------------
 %  ---- Constraint update step using anthropometric measurement ----  
-    % CS initializations
-    LTIB_CS = quat2rotm(q_LA(n,:));
-    RTIB_CS = quat2rotm(q_RA(n,:));
-    PELV_CS = quat2rotm(q_MP(n,:));
     
     if kneecoplanar_constraint
         % calculate the location of the knee
@@ -350,10 +374,10 @@ for n = 1:N_MP
             Kk = D'*(D*D')^(-1);
         elseif kneecoplanar_constraint == 3
             Kk = P*D'*(D*P*D')^(-1);
-            A = (I_18-Kk*D)*A;
+            A = (I_N-Kk*D)*A;
         else
             Kk = D'*(D*D')^(-1);
-            A = (I_18-Kk*D)*A;
+            A = (I_N-Kk*D)*A;
         end
         
         dx = Kk*(res);
