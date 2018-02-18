@@ -13,11 +13,25 @@ function out = diffRMSE(obj1, obj2, seq)
     end
     
     rawDiff = obj1.diff(obj2, seq);
-    fields = fieldnames(rawDiff);
-    out = struct;
+    posFields = obj1.posList;
     
-    for i=1:length(fields)
-        d = rawDiff.(fields{i});
-        out.(fields{i}) = sqrt(nanmean(d.^2, 1));
+    out = struct;
+    out.posMeanRMSE = 0.0;
+    out.oriMeanRMSE = 0.0;
+    
+    val = [];
+    for i=1:length(posFields)
+        d = rawDiff.(posFields{i});
+        val(end+1,:) = sqrt(nanmean(d.^2, 1));
+        out.(posFields{i}) = val(end,:);
+    end
+    out.posMeanRMSE = mean(val(:));
+    
+    oriFields = obj1.oriList;
+    val = [];
+    for i=1:length(oriFields)
+        d = rawDiff.(oriFields{i});
+        val(end+1,:) = sqrt(nanmean(d.^2, 1));
+        out.(oriFields{i}) = val(end,:);
     end
 end

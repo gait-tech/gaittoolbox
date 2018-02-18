@@ -62,7 +62,16 @@ function [ varargout ] = kf_3_kmus_v2(fs, ...
 %   d_lfemur   - left femur length
 %   d_rtibia   - right tibia length
 %   d_ltibia   - left tibia length
-%   uwb_mea    - a structure containing the range measurements (m) between 
+%   uwb_mea    - a structure containing the range measurements (m) between
+%   zerovel_update - turn on/off zero velocity update. boolean
+%   uwb_update - turn on/off uwb measurement update. boolean
+%   kneecoplanar_constraint - turn on/off knee coplanar constraint.
+%        1: maximum probability estimate
+%        2: least squares estimate
+%        3: maximum probability estimate + constrained projection
+%        4: least squares estimate + constrained projection
+%   femurdist_constraint - turn on/off femur distance constraint
+%   kneeangle_constraint - turn on/off knee angle constraint
 
 idx_pos_MP = 1:3; % column idx corresponding to the mid-pelvis position
 idx_vel_MP = 4:6; % column idx corresponding to the mid-pelvis velocity
@@ -309,12 +318,12 @@ for n = 1:N_MP
     
     if kneecoplanar_constraint
         % calculate the location of the knee
-        LKNE = xhat(7:9,1) + d_ltibia*LTIB_CS(:,3);
-        RKNE = xhat(13:15,1) + d_rtibia*RTIB_CS(:,3);
+        LKNE = xhat(idx_pos_LA,1) + d_ltibia*LTIB_CS(:,3);
+        RKNE = xhat(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
 
         % calculate the z axis of the femur
-        LFEM_z = xhat(1:3,1)+d_pelvis/2*PELV_CS(:,2)-LKNE;
-        RFEM_z = xhat(1:3,1)-d_pelvis/2*PELV_CS(:,2)-RKNE;
+        LFEM_z = xhat(idx_pos_MP,1)+d_pelvis/2*PELV_CS(:,2)-LKNE;
+        RFEM_z = xhat(idx_pos_MP,1)-d_pelvis/2*PELV_CS(:,2)-RKNE;
 
         % calculate the z axis of the tibia
         LTIB_z = LTIB_CS(:,3);
@@ -335,7 +344,18 @@ for n = 1:N_MP
                  -d_rtibia*RTIB_CS(:,3)) ];
 
         res = d_k-D*xhat;
-        Kk = P*D'*(D*P*D')^(-1);
+        if kneecoplanar_constraint == 1
+            Kk = P*D'*(D*P*D')^(-1);
+        elseif kneecoplanar_constraint == 2
+            Kk = D'*(D*D')^(-1);
+        elseif kneecoplanar_constraint == 3
+            Kk = P*D'*(D*P*D')^(-1);
+            A = (I_18-Kk*D)*A;
+        else
+            Kk = D'*(D*D')^(-1);
+            A = (I_18-Kk*D)*A;
+        end
+        
         dx = Kk*(res);
         xhat = xhat + dx;
         
