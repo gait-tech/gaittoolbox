@@ -291,7 +291,7 @@
         resultsIdx = resultsIdx + 1;
     end
     
-    grlib.struct2csvstr(results)
+    grlib.struct2csvstr(results, true)
     
 %     [ x_pri_v2, x_pos_v2, t_dat_v2 ] = kf_3_kmus_v2(fs, ...
 %         sigma_acc, sigma_acc, sigma_acc, P, ...
