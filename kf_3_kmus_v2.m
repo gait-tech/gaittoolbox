@@ -4,8 +4,8 @@ function [ varargout ] = kf_3_kmus_v2(fs, ...
     x0_pos_LA, x0_vel_LA, gfr_acc_LA, bIsStatLA, q_LA, ...
     x0_pos_RA, x0_vel_RA, gfr_acc_RA, bIsStatRA, q_RA, ...
     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, uwb_mea, ...
-    zerovel_update, uwb_update, kneecoplanar_constraint, ...
-    femurdist_constraint, kneeangle_constraint)
+    zerovel_update, uwb_update, hingejoint_constraint, ...
+    femurdist_constraint, kneeangle_constraint, model_acc_bias)
 % KF_3_KMUS Kalman Filter for performing sensor fusion on the trajectory of
 % three KMUs presumably worn on the body in the following configuration: mid
 % pelvis, left ankle, right ankle
@@ -65,11 +65,17 @@ function [ varargout ] = kf_3_kmus_v2(fs, ...
 %   uwb_mea    - a structure containing the range measurements (m) between
 %   zerovel_update - turn on/off zero velocity update. boolean
 %   uwb_update - turn on/off uwb measurement update. boolean
-%   kneecoplanar_constraint - turn on/off knee coplanar constraint.
-%        1: maximum probability estimate
-%        2: least squares estimate
-%        3: maximum probability estimate + constrained projection
-%        4: least squares estimate + constrained projection
+%   hingejoint_constraint - turn on/off knee coplanar constraint.
+%        1: maximum probability estimate + no P update
+%        2: least squares estimate + no P update
+%        3: maximum probability estimate + constrained projection + no P update
+%        4: least squares estimate + constrained projection + no P update
+%        5: maximum probability estimate
+%        6: least squares estimate
+%        7: maximum probability estimate + constrained projection
+%        8: least squares estimate + constrained projection
+%        9: maximum probability estimate w/out knee lock + no P update
+%        10: maximum probability estimate w/out knee lock
 %   femurdist_constraint - turn on/off femur distance constraint
 %   kneeangle_constraint - turn on/off knee angle constraint
 
@@ -79,9 +85,12 @@ idx_pos_LA = 7:9; % column idx corresponding to the left ankle position
 idx_vel_LA = 10:12; % column idx corresponding to the left ankle velocity
 idx_pos_RA = 13:15; % column idx corresponding to the right ankle position
 idx_vel_RA = 16:18; % column idx corresponding to the right ankle velocity
-idx_acb_MP = 19:21; % column idx corresponding to the mid-pelvis acc bias
-idx_acb_LA = 22:24; % column idx corresponding to the left ankle acc bias
-idx_acb_RA = 25:27; % column idx corresponding to the right ankle acc bias
+
+if model_acc_bias
+    idx_acb_MP = 19:21; % column idx corresponding to the mid-pelvis acc bias
+    idx_acb_LA = 22:24; % column idx corresponding to the left ankle acc bias
+    idx_acb_RA = 25:27; % column idx corresponding to the right ankle acc bias
+end
 
 % pseudo UWB measurements corresponding to the euclidean distance between
 % pairs of KMUs.
@@ -97,8 +106,10 @@ uwb_MP_LA_RA = [uwb_mea.left_tibia_mid_pelvis,...
 
 % initialise state vector (must be column)
 % initial acc bias is zero
-x0 = [x0_pos_MP, x0_vel_MP, x0_pos_LA, x0_vel_LA, x0_pos_RA, x0_vel_RA ...
-      zeros(1,9) ]';
+x0 = [x0_pos_MP, x0_vel_MP, x0_pos_LA, x0_vel_LA, x0_pos_RA, x0_vel_RA]';
+if model_acc_bias
+     x0 = [x0; zeros(9,1)];
+end
 xhat = x0;
 
 % specify the measurement noise in the UWB measurements, these may be
@@ -123,8 +134,15 @@ sigma_vel = 0.5; % (units m/s)
 
 dt = 1/fs;        % assume constant sampling interval
 dt2 = 0.5*dt*dt;  % local variable for readability
-N_STATES = 18+9;
+
+N_STATES = 18;
+if model_acc_bias
+    N_STATES = N_STATES + 9;
+end
+
 I_N = eye(N_STATES);
+I_N2 = eye(30);
+
 % state transition matrix encodes the relationship between previous state
 % estimate and current state estimate
 A = eye(N_STATES,N_STATES);
@@ -134,12 +152,14 @@ A(1:3,4:6)     = dt.*eye(3); % mid pelvis
 A(7:9,10:12)   = dt.*eye(3); % left ankle
 A(13:15,16:18) = dt.*eye(3); % right ankle
 
-A(idx_pos_MP,idx_acb_MP) = -dt2.*eye(3);
-A(idx_pos_LA,idx_acb_LA) = -dt2.*eye(3);
-A(idx_pos_RA,idx_acb_RA) = -dt2.*eye(3);
-A(idx_vel_MP,idx_acb_MP) = -dt.*eye(3);
-A(idx_vel_LA,idx_acb_LA) = -dt.*eye(3);
-A(idx_vel_RA,idx_acb_RA) = -dt.*eye(3);
+if model_acc_bias
+    A(idx_pos_MP,idx_acb_MP) = -dt2.*eye(3);
+    A(idx_pos_LA,idx_acb_LA) = -dt2.*eye(3);
+    A(idx_pos_RA,idx_acb_RA) = -dt2.*eye(3);
+    A(idx_vel_MP,idx_acb_MP) = -dt.*eye(3);
+    A(idx_vel_LA,idx_acb_LA) = -dt.*eye(3);
+    A(idx_vel_RA,idx_acb_RA) = -dt.*eye(3);
+end
 
 % calculate the control input model, B, i.e., the matrix applied to the
 % control/input vector, in this case the accelerometer measurements in 3D
@@ -154,10 +174,13 @@ B(13:15,7:9) = dt2.*eye(3);
 B(16:18,7:9) = dt .*eye(3);
 
 % Constraint
-D = [-eye(3,3) zeros(3,3) eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) ...
-     zeros(3,3) zeros(3,3) zeros(3,3);
-     -eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) eye(3,3) zeros(3,3) ...
-     zeros(3,3) zeros(3,3) zeros(3,3)];
+D = [-eye(3,3) zeros(3,3) eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3);
+     -eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) eye(3,3) zeros(3,3)];
+D_N = length(D(:,1)); 
+
+if model_acc_bias
+    D = [D zeros(6,9)];
+end
 
 % Initialise process noise covariance
 Q = zeros(9,9);
@@ -204,10 +227,10 @@ tmp_dat.predState = nan(N_MP, N_STATES);
 % if uwb_update
     tmp_dat.uwbuptState = nan(N_MP, N_STATES);
 % end
-% if kneecoplanar_constraint
+% if hingejoint_constraint
     tmp_dat.cpkneeState = nan(N_MP, N_STATES);
-    tmp_dat.cpkneeStateKk = nan(N_STATES, 6, N_MP);
-    tmp_dat.cpkneeStateRes = nan(N_MP, 6);
+    tmp_dat.cpkneeStateKk = nan(N_STATES, D_N, N_MP);
+    tmp_dat.cpkneeStateRes = nan(N_MP, D_N);
 % end
 if femurdist_constraint
     tmp_dat.femdistState = nan(N_MP, N_STATES);
@@ -222,13 +245,15 @@ for n = 1:N_MP
     
 %% -----------------------------------------------------------------------
 %  ---- Prediction Step using accelerometer measurements ----    
-    A(idx_pos_MP,idx_acb_MP) = -dt2.*PELV_CS;
-    A(idx_pos_LA,idx_acb_LA) = -dt2.*LTIB_CS;
-    A(idx_pos_RA,idx_acb_RA) = -dt2.*RTIB_CS;
-    A(idx_vel_MP,idx_acb_MP) = -dt.*PELV_CS;
-    A(idx_vel_LA,idx_acb_LA) = -dt.*LTIB_CS;
-    A(idx_vel_RA,idx_acb_RA) = -dt.*RTIB_CS;
-
+    if model_acc_bias
+        A(idx_pos_MP,idx_acb_MP) = -dt2.*PELV_CS;
+        A(idx_pos_LA,idx_acb_LA) = -dt2.*LTIB_CS;
+        A(idx_pos_RA,idx_acb_RA) = -dt2.*RTIB_CS;
+        A(idx_vel_MP,idx_acb_MP) = -dt.*PELV_CS;
+        A(idx_vel_LA,idx_acb_LA) = -dt.*LTIB_CS;
+        A(idx_vel_RA,idx_acb_RA) = -dt.*RTIB_CS;
+    end
+    
     xhat = A * xhat + B * acc(n,:)' ;
     P_min= A * P * A' + Q;
     xhat_pri(n,:) = xhat;
@@ -243,33 +268,55 @@ for n = 1:N_MP
 %  domain. In this case we are using
     if zerovel_update
         ctrZUPT = 0;
-        H_MP=[];
+        
+        H_zup = []; z_zup = []; R_zup = [];
         if bIsStatMP(n), 
             ctrZUPT = ctrZUPT+1; 
-            H_MP = zeros(3,N_STATES);
-            H_MP(:,idx_vel_MP) = eye(3);
+            H_zup(end+1:end+3,:) = zeros(3,N_STATES);
+            H_zup(end-2:end,idx_vel_MP) = eye(3);
+            z_zup(end+1:end+3,:) = zeros(3,1);
+            R_zup(end+1:end+3,:) = ones(3,1).*sigma_vel^2;
         end
-        H_LA=[];
         if bIsStatLA(n), 
             ctrZUPT = ctrZUPT+1; 
-            H_LA = zeros(3,N_STATES);
-            H_LA(:,idx_vel_LA) = eye(3);
+            H_zup(end+1:end+3,:) = zeros(3,N_STATES);
+            H_zup(end-2:end,idx_vel_LA) = eye(3);
+            z_zup(end+1:end+3,:) = zeros(3,1);
+            R_zup(end+1:end+3,:) = ones(3,1).*sigma_vel^2;
         end
-        H_RA=[];
         if bIsStatRA(n), 
             ctrZUPT = ctrZUPT+1; 
-            H_RA = zeros(3,N_STATES);
-            H_RA(:,idx_vel_RA) = eye(3);
+            H_zup(end+1:end+3,:) = zeros(3,N_STATES);
+            H_zup(end-2:end,idx_vel_RA) = eye(3);
+            z_zup(end+1:end+3,:) = zeros(3,1);
+            R_zup(end+1:end+3,:) = ones(3,1).*sigma_vel^2;
         end
 
+        if model_acc_bias == 2
+           if bIsStatMP(n), 
+                H_zup(end+1:end+3,:) = zeros(3,N_STATES);
+                H_zup(end-2:end,idx_acb_MP) = eye(3);
+                z_zup(end+1:end+3,:) = acc(n,1:3)';
+                R_zup(end+1:end+3,:) = ones(3,1).*sigma_acc_MP^2;
+            end
+            if bIsStatLA(n), 
+                H_zup(end+1:end+3,:) = zeros(3,N_STATES);
+                H_zup(end-2:end,idx_acb_LA) = eye(3);
+                z_zup(end+1:end+3,:) = acc(n,4:6)';
+                R_zup(end+1:end+3,:) = ones(3,1).*sigma_acc_LA^2;
+            end
+            if bIsStatRA(n), 
+                H_zup(end+1:end+3,:) = zeros(3,N_STATES);
+                H_zup(end-2:end,idx_acb_RA) = eye(3);
+                z_zup(end+1:end+3,:) = acc(n,7:9)';
+                R_zup(end+1:end+3,:) = ones(3,1).*sigma_acc_RA^2;
+            end
+        end
+            
         N_PSEUDO_MEA = 3*ctrZUPT; % the number of pseudo measurements
         if ctrZUPT > 0
-            H_zup = [H_MP;H_LA;H_RA];
-            z_zup = zeros(N_PSEUDO_MEA,1);
+            R_zup = diag(R_zup);
             y_zup = z_zup - H_zup*xhat;
-
-            R_zup = eye(N_PSEUDO_MEA).*sigma_vel^2;
-
             S_zup = H_zup*P_min*H_zup'+ R_zup;
             K_zup = P_min*H_zup' /(S_zup);%P_min*H_zup' * inv(S_zup);
 
@@ -340,7 +387,7 @@ for n = 1:N_MP
 %% -----------------------------------------------------------------------
 %  ---- Constraint update step using anthropometric measurement ----  
     
-    if kneecoplanar_constraint
+    if hingejoint_constraint > 0 && hingejoint_constraint <= 8
         % calculate the location of the knee
         LKNE = xhat(idx_pos_LA,1) + d_ltibia*LTIB_CS(:,3);
         RKNE = xhat(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
@@ -368,16 +415,34 @@ for n = 1:N_MP
                  -d_rtibia*RTIB_CS(:,3)) ];
 
         res = d_k-D*xhat;
-        if kneecoplanar_constraint == 1
-            Kk = P*D'*(D*P*D')^(-1);
-        elseif kneecoplanar_constraint == 2
-            Kk = D'*(D*D')^(-1);
-        elseif kneecoplanar_constraint == 3
-            Kk = P*D'*(D*P*D')^(-1);
-            A = (I_N-Kk*D)*A;
-        else
-            Kk = D'*(D*D')^(-1);
-            A = (I_N-Kk*D)*A;
+      
+        switch (hingejoint_constraint)
+            case 1 % maximum probability estimate + no P update
+                Kk = P*D'*(D*P*D')^(-1);
+            case 2 % least squares estimate + no P update
+                Kk = D'*(D*D')^(-1);
+            case 3 % maximum probability estimate + constrained projection + no P update
+                Kk = P*D'*(D*P*D')^(-1);
+                A = (I_N-Kk*D)*A;
+            case 4 % least squares estimate + constrained projection + no P update
+                Kk = D'*(D*D')^(-1);
+                A = (I_N-Kk*D)*A;
+            case 5 % maximum probability estimate
+                Kk = P*D'*(D*P*D')^(-1);
+                P = (I_N-Kk*D)*P;
+            case 6 % least squares estimate
+                Kk = D'*(D*D')^(-1);
+                P = (I_N-Kk*D)*P;
+            case 7 % maximum probability estimate + constrained projection
+                Kk = P*D'*(D*P*D')^(-1);
+                A = (I_N-Kk*D)*A;
+                P = (I_N-Kk*D)*P;
+            case 8 % least squares estimate + constrained projection
+                Kk = D'*(D*D')^(-1);
+                A = (I_N-Kk*D)*A;
+                P = (I_N-Kk*D)*P;
+            otherwise
+                Kk = 0;
         end
         
         dx = Kk*(res);
@@ -388,7 +453,85 @@ for n = 1:N_MP
         tmp_dat.cpkneeStateKk(:,:,n) = Kk;
     end
     
-    if femurdist_constraint
+    if hingejoint_constraint >=9 && hingejoint_constraint <= 10
+        % calculate the location of the knee
+        LKNE = xhat(idx_pos_LA,1) + d_ltibia*LTIB_CS(:,3);
+        RKNE = xhat(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
+        
+        % technically I must solve for the velocity of the knee, but I
+        % don't need it anyway and it won't show up in xhat so I am
+        % ignoring it for now.
+        xtilde = [xhat(idx_pos_MP); xhat(idx_vel_MP); ...
+            LKNE; zeros(3, 1); RKNE; zeros(3, 1); ...
+            xhat(idx_pos_LA); xhat(idx_vel_LA); ...
+            xhat(idx_pos_RA); xhat(idx_vel_RA)];
+        
+        % calculate the z axis of femur and tibia
+        LFEM_z = xtilde(1:3,1)+d_pelvis/2*PELV_CS(:,2)-xtilde(7:9,1);
+        RFEM_z = xtilde(1:3,1)-d_pelvis/2*PELV_CS(:,2)-xtilde(13:15,1);
+        LTIB_z = xtilde(7:9,1)-xtilde(19:21,1);
+        RTIB_z = xtilde(13:15,1)-xtilde(25:27,1);
+        
+        g_dlfem = norm(LFEM_z, 2);
+        g_drfem = norm(RFEM_z, 2);
+        g_dltib = norm(LTIB_z, 2);
+        g_drtib = norm(RTIB_z, 2);
+        
+        D_k = zeros(6, length(xtilde));
+        D_k(1,1:3) = LFEM_z'/g_dlfem;
+        D_k(1,7:9) = -LFEM_z'/g_dlfem;
+        D_k(2,1:3) = RFEM_z'/g_drfem;
+        D_k(2,13:15) = -RFEM_z'/g_drfem;
+        D_k(3,7:9) = LTIB_z'/g_dltib;
+        D_k(3,19:21) = -LTIB_z'/g_dltib;
+        D_k(4,13:15) = RTIB_z'/g_drtib;
+        D_k(4,25:27) = -RTIB_z'/g_drtib;
+        D_k(5,1:3) = LTIB_CS(:,2)';
+        D_k(5,7:9) = -LTIB_CS(:,2)';
+        D_k(6,1:3) = RTIB_CS(:,2)';
+        D_k(6,13:15) = -RTIB_CS(:,2)';
+        
+        d_k = [d_lfemur-g_dlfem+D_k(1,:)*xtilde;...
+               d_rfemur-g_drfem+D_k(2,:)*xtilde;...
+               d_ltibia-g_dltib+D_k(3,:)*xtilde;...
+               d_rtibia-g_drtib+D_k(4,:)*xtilde;...
+               -d_pelvis/2*PELV_CS(:,2)'*LTIB_CS(:,2);...
+               d_pelvis/2*PELV_CS(:,2)'*RTIB_CS(:,2) ];
+        
+        P_k = zeros(length(xtilde));
+        P_k(1:6,1:6) = P(1:6,1:6);
+        P_k(19:30,1:6) = P(7:18,1:6);
+        P_k(1:6,19:30) = P(1:6,7:18);
+        P_k(19:30,19:30) = P(7:18,7:18);
+        
+        % cov of hip and knee is same as hip and ankle
+        P_k(7:18,1:6) = P(7:18,1:6);
+        P_k(1:6,7:18) = P(1:6,7:18);
+        P_k(7:12,7:12) = P(7:12,7:12);
+        P_k(13:18,13:18) = P(13:18,13:18);
+               
+        switch (hingejoint_constraint)
+            case 9
+                Kk = P_k*D_k'*(D_k*P_k*D_k')^(-1);
+            case 10
+                Kk = P_k*D_k'*(D_k*P_k*D_k')^(-1);
+                P_k = (I_N2-Kk*D_k)*P_k*(I_N2-Kk*D_k)';
+                P(1:18,1:18) = P_k([1:6, 19:30],[1:6, 19:30]);
+            otherwise
+                Kk = 0;
+        end        
+        
+        res = d_k-D_k*xtilde;
+        dx = Kk*(res);
+        xtilde = xtilde + dx;
+        xhat = xtilde([1:6, 19:30]);
+        
+        tmp_dat.cpkneeState(n,:) = xhat;
+        % tmp_dat.cpkneeStateRes(n,:) = res;
+        % tmp_dat.cpkneeStateKk(:,:,n) = Kk;
+    end
+    
+    if femurdist_constraint > 0
         diff_LH_LK = xhat(idx_pos_MP)+d_pelvis/2*PELV_CS(:,2)...
             -xhat(idx_pos_LA)-d_ltibia*LTIB_CS(:,3);
         diff_RH_RK = xhat(idx_pos_MP)-d_pelvis/2*PELV_CS(:,2)...
@@ -417,7 +560,18 @@ for n = 1:N_MP
         
         d_k = [d_lfemur; d_rfemur] - dist_est + D*xhat;
 
-        dx = P*D'*(D*P*D')^(-1)*(d_k-D*xhat);
+        switch (femurdist_constraint)
+            case 1
+                Kk = P*D'*(D*P*D')^(-1);
+            case 2
+                Kk = P*D'*(D*P*D')^(-1);
+                P = (I_N-Kk*D)*P*(I_N-Kk*D)';
+            otherwise
+                Kk = 0;
+        end
+        
+        dx = Kk*(d_k-D*xhat);
+        cP = cond(P);
         xhat = xhat + dx;
         
         tmp_dat.femdistState(n,:) = xhat;
