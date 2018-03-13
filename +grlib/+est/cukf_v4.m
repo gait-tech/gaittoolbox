@@ -1,5 +1,5 @@
 %cukf_v4 implemented knee pinjoint constraint on SR-UKF
-function [ x_rec, z_rec ] = cukf_v4(x,P,Q,R,N_MP,nMeas,acc,fs,...
+function [ x_rec, xa_rec, qFEM ] = cukf_v4(x,P,Q,R,N_MP,nMeas,acc,fs,...
     q_MP, q_LA, q_RA, d_pelvis, d_lfemur, d_rfemur,...
     d_ltibia, d_rtibia,isConstr)
 % Unscented Kalman filter for state estimation
@@ -36,7 +36,8 @@ S = chol(P)';
 %S = eye(L);
 %disp(size(S))
 x_rec = nan(L,N_MP);
-z_rec = nan(m,N_MP);
+xa_rec = nan(12,N_MP);
+qFEM = nan(8,N_MP);
 %vanderwerve 2001 paper wm, wc, and constant definitions
 
 for k=1:N_MP
@@ -64,13 +65,45 @@ for k=1:N_MP
         [x] = hingeJoint_constr(x,hjc,P,k,q_MP, q_LA, q_RA,...
             d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia);
     end
-    
     U = K*Sy';
     for i = 1:m
         S = cholupdate(S, U(:,i), '-');
     end
+    
+    idx_pos_MP = [1:3]';
+    idx_pos_LA = [10:12]';
+    idx_pos_RA = [19:21]';
+    
+    LTIB_CS = quat2rotm(q_LA(k,:));
+    RTIB_CS = quat2rotm(q_RA(k,:));
+    PELV_CS = quat2rotm(q_MP(k,:));
+    
+    LKNE = x(idx_pos_LA,1) + d_ltibia*LTIB_CS(:,3);
+    RKNE = x(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
+    LFEP = x(idx_pos_MP,1) + d_pelvis/2*PELV_CS(:,2);
+    RFEP = x(idx_pos_MP,1) - d_pelvis/2*PELV_CS(:,2);
+    
+    LFEM_z = x(idx_pos_MP,1)+d_pelvis/2*PELV_CS(:,2)-LKNE;
+    RFEM_z = x(idx_pos_MP,1)-d_pelvis/2*PELV_CS(:,2)-RKNE;
+    
+    LFEM_z = LFEM_z/norm(LFEM_z);
+    RFEM_z = RFEM_z/norm(RFEM_z);
+    
+    LFEM_y = LTIB_CS(:,2);
+    RFEM_y = RTIB_CS(:,2);
+    
+    LFEM_x = cross(LFEM_y,LFEM_z);
+    RFEM_x = cross(RFEM_y,RFEM_z);
+    
+    LFEM_CS = [LFEM_x, LFEM_y, LFEM_z];
+    RFEM_CS = [RFEM_x, RFEM_y, RFEM_z];
+    
+    qLFEM = rotm2quat(LFEM_CS)';
+    qRFEM = rotm2quat(RFEM_CS)';
+    
     x_rec(:,k) = x;
-    z_rec(:,k) = z;
+    xa_rec(:,k) = [LFEP; LKNE; RFEP; RKNE];
+    qFEM(:,k) = [qLFEM; qRFEM];
 end
 end
 
@@ -246,8 +279,42 @@ end
 
 dx = Kk*(res);
 x_constr = xhat + dx;
+end
 
-%          tmp_dat.cpkneeState(n,:) = xhat;
-%          tmp_dat.cpkneeStateRes(n,:) = res;
-%          tmp_dat.cpkneeStateKk(:,:,n) = Kk;
+function [xp] = f(x,fs)
+nDim = 3;
+nSense = 3;
+nStpSns = 9;
+nSt = length(x);
+xp = zeros(nSt,1);
+for i = 0:nStpSns:nSt-nDim
+    for j = 1:nSense
+        xp(i+j) = x(i+j)+(x(i+j+nDim)*1/fs)+(0.5*(1/fs)^2*x(i+j+2*nDim));...
+        xp(i+j+nDim) = x(i+j+nDim)+1/fs*x(i+j+2*nDim);...
+        xp(i+j+2*nDim) = x(i+j+2*nDim);
+%     disp('i = ')
+%     disp(i)
+%     disp('j = ')
+%     disp(j)
+    end
+end
+%add noise
+%xp = xp + diag(Q);
+end
+
+function [hp] = h(x,fs)
+nDim = 3;
+nSense = 3;
+nStpSns = 9;
+nSt = length(x);
+hp = zeros(nDim*nSense,1);
+k = 1;
+for i = 0:nStpSns:nSt-nDim
+    for j = 1:nSense
+        hp(k) = x(i+j+2*nDim);
+        k = k+1;
+    end
+end
+%add noise
+%hp = hp + diag(R);
 end
