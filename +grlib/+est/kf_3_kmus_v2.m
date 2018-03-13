@@ -76,6 +76,8 @@ function [ varargout ] = kf_3_kmus_v2(fs, ...
 %        8: least squares estimate + constrained projection
 %        9: maximum probability estimate w/out knee lock + no P update
 %        10: maximum probability estimate w/out knee lock
+%        11: maximum probability estimate w/out knee lock + SCKF
+%        (iterative)
 %   femurdist_constraint - turn on/off femur distance constraint
 %   kneeangle_constraint - turn on/off knee angle constraint
 
@@ -465,6 +467,17 @@ for n = 1:N_MP
             LKNE; zeros(3, 1); RKNE; zeros(3, 1); ...
             xhat(idx_pos_LA); xhat(idx_vel_LA); ...
             xhat(idx_pos_RA); xhat(idx_vel_RA)];
+        Ptilde = zeros(length(xtilde));
+        Ptilde(1:6,1:6) = P(1:6,1:6);
+        Ptilde(19:30,1:6) = P(7:18,1:6);
+        Ptilde(1:6,19:30) = P(1:6,7:18);
+        Ptilde(19:30,19:30) = P(7:18,7:18);
+        
+        % cov of hip and knee is same as hip and ankle
+        Ptilde(7:18,1:6) = P(7:18,1:6);
+        Ptilde(1:6,7:18) = P(1:6,7:18);
+        Ptilde(7:12,7:12) = P(7:12,7:12);
+        Ptilde(13:18,13:18) = P(13:18,13:18);
         
         % calculate the z axis of femur and tibia
         LFEM_z = xtilde(1:3,1)+d_pelvis/2*PELV_CS(:,2)-xtilde(7:9,1);
@@ -477,54 +490,137 @@ for n = 1:N_MP
         g_dltib = norm(LTIB_z, 2);
         g_drtib = norm(RTIB_z, 2);
         
-        D_k = zeros(6, length(xtilde));
-        D_k(1,1:3) = LFEM_z'/g_dlfem;
-        D_k(1,7:9) = -LFEM_z'/g_dlfem;
-        D_k(2,1:3) = RFEM_z'/g_drfem;
-        D_k(2,13:15) = -RFEM_z'/g_drfem;
-        D_k(3,7:9) = LTIB_z'/g_dltib;
-        D_k(3,19:21) = -LTIB_z'/g_dltib;
-        D_k(4,13:15) = RTIB_z'/g_drtib;
-        D_k(4,25:27) = -RTIB_z'/g_drtib;
-        D_k(5,1:3) = LTIB_CS(:,2)';
-        D_k(5,7:9) = -LTIB_CS(:,2)';
-        D_k(6,1:3) = RTIB_CS(:,2)';
-        D_k(6,13:15) = -RTIB_CS(:,2)';
+        Dtilde = zeros(6, length(xtilde));
+        Dtilde(1,1:3) = LFEM_z'/g_dlfem;
+        Dtilde(1,7:9) = -LFEM_z'/g_dlfem;
+        Dtilde(2,1:3) = RFEM_z'/g_drfem;
+        Dtilde(2,13:15) = -RFEM_z'/g_drfem;
+        Dtilde(3,7:9) = LTIB_z'/g_dltib;
+        Dtilde(3,19:21) = -LTIB_z'/g_dltib;
+        Dtilde(4,13:15) = RTIB_z'/g_drtib;
+        Dtilde(4,25:27) = -RTIB_z'/g_drtib;
+        Dtilde(5,1:3) = LTIB_CS(:,2)';
+        Dtilde(5,7:9) = -LTIB_CS(:,2)';
+        Dtilde(6,1:3) = RTIB_CS(:,2)';
+        Dtilde(6,13:15) = -RTIB_CS(:,2)';
         
-        d_k = [d_lfemur-g_dlfem+D_k(1,:)*xtilde;...
-               d_rfemur-g_drfem+D_k(2,:)*xtilde;...
-               d_ltibia-g_dltib+D_k(3,:)*xtilde;...
-               d_rtibia-g_drtib+D_k(4,:)*xtilde;...
+        d_k = [d_lfemur-g_dlfem+Dtilde(1,:)*xtilde;...
+               d_rfemur-g_drfem+Dtilde(2,:)*xtilde;...
+               d_ltibia-g_dltib+Dtilde(3,:)*xtilde;...
+               d_rtibia-g_drtib+Dtilde(4,:)*xtilde;...
                -d_pelvis/2*PELV_CS(:,2)'*LTIB_CS(:,2);...
                d_pelvis/2*PELV_CS(:,2)'*RTIB_CS(:,2) ];
-        
-        P_k = zeros(length(xtilde));
-        P_k(1:6,1:6) = P(1:6,1:6);
-        P_k(19:30,1:6) = P(7:18,1:6);
-        P_k(1:6,19:30) = P(1:6,7:18);
-        P_k(19:30,19:30) = P(7:18,7:18);
-        
-        % cov of hip and knee is same as hip and ankle
-        P_k(7:18,1:6) = P(7:18,1:6);
-        P_k(1:6,7:18) = P(1:6,7:18);
-        P_k(7:12,7:12) = P(7:12,7:12);
-        P_k(13:18,13:18) = P(13:18,13:18);
                
         switch (hingejoint_constraint)
             case 9
-                Kk = P_k*D_k'*(D_k*P_k*D_k')^(-1);
+                Kk = Ptilde*Dtilde'*(Dtilde*Ptilde*Dtilde')^(-1);
             case 10
-                Kk = P_k*D_k'*(D_k*P_k*D_k')^(-1);
-                P_k = (I_N2-Kk*D_k)*P_k*(I_N2-Kk*D_k)';
-                P(1:18,1:18) = P_k([1:6, 19:30],[1:6, 19:30]);
+                Kk = Ptilde*Dtilde'*(Dtilde*Ptilde*Dtilde')^(-1);
+                Ptilde = (I_N2-Kk*Dtilde)*Ptilde*(I_N2-Kk*Dtilde)';
+                P(1:18,1:18) = Ptilde([1:6, 19:30],[1:6, 19:30]);
             otherwise
                 Kk = 0;
         end        
         
-        res = d_k-D_k*xtilde;
+        res = d_k-Dtilde*xtilde;
         dx = Kk*(res);
         xtilde = xtilde + dx;
         xhat = xtilde([1:6, 19:30]);
+        
+        % debug the effect of linear approximation
+%         LFEM_z = xtilde(1:3,1)+d_pelvis/2*PELV_CS(:,2)-xtilde(7:9,1);
+%         RFEM_z = xtilde(1:3,1)-d_pelvis/2*PELV_CS(:,2)-xtilde(13:15,1);
+%         LTIB_z = xtilde(7:9,1)-xtilde(19:21,1);
+%         RTIB_z = xtilde(13:15,1)-xtilde(25:27,1);
+%         [d_k-D_k*xtilde; norm(LFEM_z)-d_lfemur; norm(RFEM_z)-d_rfemur;...
+%             norm(LTIB_z)-d_ltibia; norm(RTIB_z)-d_rtibia;
+%             dot(LFEM_z, LTIB_CS(:,2)); dot(RFEM_z, RTIB_CS(:,2))]
+        
+        tmp_dat.cpkneeState(n,:) = xhat;
+        tmp_dat.cpkneeStateRes(n,:) = res;
+        % tmp_dat.cpkneeStateKk(:,:,n) = Kk;
+    end
+
+    if hingejoint_constraint ==11
+        % calculate the location of the knee
+        LKNE = xhat(idx_pos_LA,1) + d_ltibia*LTIB_CS(:,3);
+        RKNE = xhat(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
+        
+        % technically I must solve for the velocity of the knee, but I
+        % don't need it anyway and it won't show up in xhat so I am
+        % ignoring it for now.
+        xtilde = [xhat(idx_pos_MP); xhat(idx_vel_MP); ...
+            LKNE; zeros(3, 1); RKNE; zeros(3, 1); ...
+            xhat(idx_pos_LA); xhat(idx_vel_LA); ...
+            xhat(idx_pos_RA); xhat(idx_vel_RA)];
+        Ptilde = zeros(length(xtilde));
+        Ptilde(1:6,1:6) = P(1:6,1:6);
+        Ptilde(19:30,1:6) = P(7:18,1:6);
+        Ptilde(1:6,19:30) = P(1:6,7:18);
+        Ptilde(19:30,19:30) = P(7:18,7:18);
+        Ptilde(7:18,1:6) = P(7:18,1:6);
+        Ptilde(1:6,7:18) = P(1:6,7:18);
+        Ptilde(7:12,7:12) = P(7:12,7:12);
+        Ptilde(13:18,13:18) = P(13:18,13:18);
+        
+        sckfAlpha = 0.1;
+        sckfThreshold = 100;
+        
+        for i=0:30
+            % calculate the z axis of femur and tibia
+            LFEM_z = xtilde(1:3,1)+d_pelvis/2*PELV_CS(:,2)-xtilde(7:9,1);
+            RFEM_z = xtilde(1:3,1)-d_pelvis/2*PELV_CS(:,2)-xtilde(13:15,1);
+            LTIB_z = xtilde(7:9,1)-xtilde(19:21,1);
+            RTIB_z = xtilde(13:15,1)-xtilde(25:27,1);
+
+            g_dlfem = norm(LFEM_z, 2);
+            g_drfem = norm(RFEM_z, 2);
+            g_dltib = norm(LTIB_z, 2);
+            g_drtib = norm(RTIB_z, 2);
+
+            Dtilde = zeros(6, length(xtilde));
+            Dtilde(1,1:3) = LFEM_z'/g_dlfem;
+            Dtilde(1,7:9) = -LFEM_z'/g_dlfem;
+            Dtilde(2,1:3) = RFEM_z'/g_drfem;
+            Dtilde(2,13:15) = -RFEM_z'/g_drfem;
+            Dtilde(3,7:9) = LTIB_z'/g_dltib;
+            Dtilde(3,19:21) = -LTIB_z'/g_dltib;
+            Dtilde(4,13:15) = RTIB_z'/g_drtib;
+            Dtilde(4,25:27) = -RTIB_z'/g_drtib;
+            Dtilde(5,1:3) = LTIB_CS(:,2)';
+            Dtilde(5,7:9) = -LTIB_CS(:,2)';
+            Dtilde(6,1:3) = RTIB_CS(:,2)';
+            Dtilde(6,13:15) = -RTIB_CS(:,2)';
+            
+            if i==0
+                R0 = sckfAlpha*Dtilde*Ptilde*Dtilde';
+            end
+            
+            Ri = R0*exp(-i);
+            Si = max(Dtilde.^2 .* diag(Ptilde)', [], 2) ./ diag(Dtilde * Ptilde* Dtilde');
+            Si(isnan(Si)) = sckfThreshold+1;
+            if sum(Si < sckfThreshold) == 0, break, end
+                       
+            Kk = Ptilde*Dtilde'*(Dtilde*Ptilde*Dtilde'+Ri)^(-1);
+            res = [d_lfemur-g_dlfem; d_rfemur-g_drfem;...
+                   d_ltibia-g_dltib; d_rtibia-g_drtib;...
+                   -d_pelvis/2*PELV_CS(:,2)'*LTIB_CS(:,2)-Dtilde(5,:)*xtilde;...
+                   d_pelvis/2*PELV_CS(:,2)'*RTIB_CS(:,2)-Dtilde(6,:)*xtilde];
+            dx = Kk*(res);
+            xtilde = xtilde + dx;
+            % Ptilde = (I_N2-Kk*Dtilde)*Ptilde*(I_N2-Kk*Dtilde)' + Kk*Ri*Kk';
+        end   
+        
+        xhat = xtilde([1:6, 19:30]);
+        
+        % debug the effect of linear approximation
+%         LFEM_z = xtilde(1:3,1)+d_pelvis/2*PELV_CS(:,2)-xtilde(7:9,1);
+%         RFEM_z = xtilde(1:3,1)-d_pelvis/2*PELV_CS(:,2)-xtilde(13:15,1);
+%         LTIB_z = xtilde(7:9,1)-xtilde(19:21,1);
+%         RTIB_z = xtilde(13:15,1)-xtilde(25:27,1);
+%         [d_k-D_k*xtilde; norm(LFEM_z)-d_lfemur; norm(RFEM_z)-d_rfemur;...
+%             norm(LTIB_z)-d_ltibia; norm(RTIB_z)-d_rtibia;
+%             dot(LFEM_z, LTIB_CS(:,2)); dot(RFEM_z, RTIB_CS(:,2))]
         
         tmp_dat.cpkneeState(n,:) = xhat;
         % tmp_dat.cpkneeStateRes(n,:) = res;

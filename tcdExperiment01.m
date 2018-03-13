@@ -216,10 +216,8 @@
         struct('accData', 'v', 'oriData', 'v', 'zupt', 1, 'hjc', 1, ...
                'accbias', 2, 'P', eye(27, 27)*100), ... 
         struct('accData', 'x', 'oriData', 'v', 'zupt', 1, 'hjc', 1, ...
-               'accbias', 2, 'P', eye(27, 27)*100), ...     
-        };
-    setups = { ... % base scenarios 
-        struct('accData', 'v', 'oriData', 'v', 'zupt', 1, 'hjc', 1), ...
+               'accbias', 2, 'P', eye(27, 27)*100), ...
+        ... % hjc v2 (no knee lock)
         struct('accData', 'x', 'oriData', 'x', 'zupt', 0, 'hjc', 9), ...
         struct('accData', 'v', 'oriData', 'v', 'zupt', 1, 'hjc', 9), ...
         struct('accData', 'v', 'oriData', 'x', 'zupt', 1, 'hjc', 9), ...
@@ -227,6 +225,11 @@
         struct('accData', 'x', 'oriData', 'x', 'zupt', 1, 'hjc', 9), ...
         struct('accData', 'xf', 'oriData', 'v', 'zupt', 1, 'hjc', 9), ...
         struct('accData', 'xf', 'oriData', 'x', 'zupt', 1, 'hjc', 9), ...
+        struct('accData', 'v', 'oriData', 'v', 'zupt', 1, 'hjc', 10), ...
+        struct('accData', 'x', 'oriData', 'v', 'zupt', 1, 'hjc', 10), ...
+        };
+    setups = { ... % base scenarios 
+        struct('accData', 'x', 'oriData', 'v', 'zupt', 1, 'hjc', 11), ...
         };
     
     resultsIdx = 1; clear results;
@@ -292,7 +295,8 @@
     end
     
     grlib.struct2csvstr(results, true)
-    
+    grlib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia)
+    grlib.viz.plotStateComparison(t_dat_v2, x_pos_v2, 1)    
 %     [ x_pri_v2, x_pos_v2, t_dat_v2 ] = kf_3_kmus_v2(fs, ...
 %         sigma_acc, sigma_acc, sigma_acc, P, ...
 %         x0_pos_MP, x0_vel_MP, gfr_acc_MP(2:end,:), bIsStatMP_act, qPelvisAct, ...
@@ -332,30 +336,30 @@
 % %     diff_gfr_acc_RA = gfr_acc_RA(1:end-1,:) - gfr_acc_RA_act;
 % %     grlib.viz.plotXYZ(diff_gfr_acc_MP, diff_gfr_acc_LA, diff_gfr_acc_RA);
 %     
-%     % Animation
-%     updateFigureContents('Animation');
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
-%     for i=idx
-%         clf; grid;
-%         xlim(estBodyLimits(1:2)); 
-%         ylim(estBodyLimits(3:4)); 
-%         zlim(estBodyLimits(5:6));  
-%         view(0, 180);
-%         grlib.viz.plotLowerBody(estBody, i);
-%         pause(1/1000);
-%     end
-% 
-%     updateFigureContents('Animation');
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
-%     for i=idx
-%         clf; grid; 
-%         xlim(actBodyLimits(1:2)); 
-%         ylim(actBodyLimits(3:4)); 
-%         zlim(actBodyLimits(5:6));  
-%         view(0, 180);
-%         grlib.viz.plotLowerBody(actBody, i);
-%         pause(1/1000);
-%     end
+    % Animation
+    updateFigureContents('Animation');
+    xlabel('x'); ylabel('y'); zlabel('z');
+    estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
+    for i=idx
+        clf; grid;
+        xlim(estBodyLimits(1:2)); 
+        ylim(estBodyLimits(3:4)); 
+        zlim(estBodyLimits(5:6));  
+        view(0, 180);
+        grlib.viz.plotLowerBody(estBody, i);
+        pause(1/1000);
+    end
+
+    updateFigureContents('Animation');
+    xlabel('x'); ylabel('y'); zlabel('z');
+    actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
+    for i=idx
+        clf; grid; 
+        xlim(actBodyLimits(1:2)); 
+        ylim(actBodyLimits(3:4)); 
+        zlim(actBodyLimits(5:6));  
+        view(0, 180);
+        grlib.viz.plotLowerBody(actBody, i);
+        pause(1/1000);
+    end
 % end
