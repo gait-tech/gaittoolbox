@@ -566,7 +566,7 @@ for n = 1:N_MP
         sckfAlpha = 0.1;
         sckfThreshold = 100;
         
-        for i=0:30
+        for i=0:50
             % calculate the z axis of femur and tibia
             LFEM_z = xtilde(1:3,1)+d_pelvis/2*PELV_CS(:,2)-xtilde(7:9,1);
             RFEM_z = xtilde(1:3,1)-d_pelvis/2*PELV_CS(:,2)-xtilde(13:15,1);
@@ -608,7 +608,7 @@ for n = 1:N_MP
                    d_pelvis/2*PELV_CS(:,2)'*RTIB_CS(:,2)-Dtilde(6,:)*xtilde];
             dx = Kk*(res);
             xtilde = xtilde + dx;
-            % Ptilde = (I_N2-Kk*Dtilde)*Ptilde*(I_N2-Kk*Dtilde)' + Kk*Ri*Kk';
+            Ptilde = (I_N2-Kk*Dtilde)*Ptilde*(I_N2-Kk*Dtilde)' + Kk*Ri*Kk';
         end   
         
         xhat = xtilde([1:6, 19:30]);
