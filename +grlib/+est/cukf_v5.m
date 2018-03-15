@@ -70,8 +70,10 @@ for k=1:N_MP
     x=x1+K*(z-z1);                              %measurement update
     if isConstr
         xhat = x;
-        options = optimoptions('fmincon','Algorithm','interior-point'); % run interior-point algorithm
-    x = fmincon(@(x) L2Dist(x,xhat),xhat,[],[],[],[],[],[],@(x) hingeJoint_constrNL(x,1,q_MP, q_LA, q_RA,...
+        options = optimoptions('fmincon','Algorithm','sqp','Display','off',...
+            'OptimalityTolerance', 1e-2, 'ConstraintTolerance', 1e-2,...
+            'MaxFunctionEvaluations',1500); % run interior-point algorithm
+    x = fmincon(@(x) L2Dist(x,xhat),xhat,[],[],[],[],[],[],@(x) hingeJoint_constrNL(x,1,q_MP(k,:), q_LA(k,:), q_RA(k,:),...
     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia),options);
 
 %         [x] = hingeJoint_constrNL(x,hjc,P,k,q_MP, q_LA, q_RA,...
@@ -336,7 +338,11 @@ function y = L2Dist(x,x0)
 %L2 norm involving sqrt is unnecessary, can use x^2 to find same
 %location of min cost in constrained region with less computational
 %cost.
-y = (x-x0)'*(x-x0);
+%using inverse of covariance rather than I will make state est over time
+%less smooth but more accurate over the average of the interval
+
+%y = (x-x0)'*(x-x0);
+y = ((x-x0)'*(x-x0))^4;
 end
 
 function [c, ceq] = nonlincon(x)
@@ -357,9 +363,9 @@ I_N = eye(length(xhat));
 D = [-eye(3,3) zeros(3,3) zeros(3,3) eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) zeros(3,3) zeros(3,3);
     -eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) zeros(3,3) zeros(3,3) eye(3,3) zeros(3,3) zeros(3,3)];
 
-LTIB_CS = quat2rotm(q_LA(n,:));
-RTIB_CS = quat2rotm(q_RA(n,:));
-PELV_CS = quat2rotm(q_MP(n,:));
+LTIB_CS = quat2rotm(q_LA);
+RTIB_CS = quat2rotm(q_RA);
+PELV_CS = quat2rotm(q_MP);
 
 LKNE = xhat(idx_pos_LA,1) + d_ltibia*LTIB_CS(:,3);
 RKNE = xhat(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
@@ -386,10 +392,15 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
     +d_rfemur*sin(alpha_rk)*RTIB_CS(:,1) ...
     -d_rtibia*RTIB_CS(:,3)) ];
 
+% res = d_k - D*xhat;
+% ceq = res'*res;
+
 ceq = d_k - D*xhat;
 
 c = [];
 %note: still want to use kalman gain to scale res or costfcn?
+%weight cost function by inverse covariance matrix
+%after 3q. 28 in somon 2010
 %dx = Kk*(res);
 
 end
