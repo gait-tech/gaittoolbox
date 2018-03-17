@@ -35,4 +35,5 @@ function out = togrBody(obj, idx, args)
               
     out.posUnit = obj.posUnit;
     out.nSamples = length(idx);
+    out.frame = obj.frame;
 end

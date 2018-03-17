@@ -17,7 +17,7 @@ function obj = loadBVHFile(fname, unit)
     [bvh_data, time] = tcdlib.BVHBody.loadbvh(fname);
     
     obj = tcdlib.BVHBody('srcFileName', fname, 'posUnit', unit, ...
-                         'frame', 'Vicon');
+                         'frame', 'vicon');
         
     n = max(size(bvh_data));
     

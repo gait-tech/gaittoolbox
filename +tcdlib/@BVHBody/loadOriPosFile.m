@@ -26,7 +26,7 @@ function obj = loadOriPosFile(fname_ori, fname_pos, unit)
     end
     
     obj = tcdlib.BVHBody('srcFileName', {fname_ori, fname_pos}, ...
-                         'posUnit', unit, 'frame', 'Vicon');
+                         'posUnit', unit, 'frame', 'vicon');
     
     %% Load orientation data
     fileID_ori = fopen(fname_ori, 'r');

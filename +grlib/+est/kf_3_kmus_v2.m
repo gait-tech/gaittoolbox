@@ -66,17 +66,17 @@ function [ varargout ] = kf_3_kmus_v2(fs, ...
 %   zerovel_update - turn on/off zero velocity update. boolean
 %   uwb_update - turn on/off uwb measurement update. boolean
 %   hingejoint_constraint - turn on/off knee coplanar constraint.
-%        1: maximum probability estimate + no P update
-%        2: least squares estimate + no P update
-%        3: maximum probability estimate + constrained projection + no P update
-%        4: least squares estimate + constrained projection + no P update
-%        5: maximum probability estimate
-%        6: least squares estimate
-%        7: maximum probability estimate + constrained projection
-%        8: least squares estimate + constrained projection
-%        9: maximum probability estimate w/out knee lock + no P update
-%        10: maximum probability estimate w/out knee lock
-%        11: maximum probability estimate w/out knee lock + SCKF
+%        001: maximum probability estimate + no P update
+%        002: least squares estimate + no P update
+%        003: maximum probability estimate + constrained projection + no P update
+%        004: least squares estimate + constrained projection + no P update
+%        005: maximum probability estimate
+%        006: least squares estimate
+%        007: maximum probability estimate + constrained projection
+%        008: least squares estimate + constrained projection
+%        101: maximum probability estimate w/out knee lock + no P update
+%        102: maximum probability estimate w/out knee lock
+%        121: maximum probability estimate w/out knee lock + SCKF
 %        (iterative)
 %   femurdist_constraint - turn on/off femur distance constraint
 %   kneeangle_constraint - turn on/off knee angle constraint
@@ -197,6 +197,9 @@ if islogical(P0) && ~P0
 else
     P = P0;
 end
+
+S_N = 1e-20*eye(D_N);
+S_N2 = 1e-20*eye(6);
 
 % check that all accelerometer measurements are equal dimensions
 [N_MP,~] = size(gfr_acc_MP);
@@ -389,7 +392,7 @@ for n = 1:N_MP
 %% -----------------------------------------------------------------------
 %  ---- Constraint update step using anthropometric measurement ----  
     
-    if hingejoint_constraint > 0 && hingejoint_constraint <= 8
+    if hingejoint_constraint > 0 && hingejoint_constraint <= 9
         % calculate the location of the knee
         LKNE = xhat(idx_pos_LA,1) + d_ltibia*LTIB_CS(:,3);
         RKNE = xhat(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
@@ -443,6 +446,9 @@ for n = 1:N_MP
                 Kk = D'*(D*D')^(-1);
                 A = (I_N-Kk*D)*A;
                 P = (I_N-Kk*D)*P;
+            case 9 % maximum probability estimate + P update w/ some noise
+                Kk = P*D'*(D*P*D' + S_N)^(-1);
+                P = (I_N-Kk*D)*P;
             otherwise
                 Kk = 0;
         end
@@ -455,7 +461,7 @@ for n = 1:N_MP
         tmp_dat.cpkneeStateKk(:,:,n) = Kk;
     end
     
-    if hingejoint_constraint >=9 && hingejoint_constraint <= 10
+    if hingejoint_constraint >=101 && hingejoint_constraint <= 103
         % calculate the location of the knee
         LKNE = xhat(idx_pos_LA,1) + d_ltibia*LTIB_CS(:,3);
         RKNE = xhat(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
@@ -512,10 +518,14 @@ for n = 1:N_MP
                d_pelvis/2*PELV_CS(:,2)'*RTIB_CS(:,2) ];
                
         switch (hingejoint_constraint)
-            case 9
+            case 101
                 Kk = Ptilde*Dtilde'*(Dtilde*Ptilde*Dtilde')^(-1);
-            case 10
+            case 102
                 Kk = Ptilde*Dtilde'*(Dtilde*Ptilde*Dtilde')^(-1);
+                Ptilde = (I_N2-Kk*Dtilde)*Ptilde*(I_N2-Kk*Dtilde)';
+                P(1:18,1:18) = Ptilde([1:6, 19:30],[1:6, 19:30]);
+            case 103
+                Kk = Ptilde*Dtilde'*(Dtilde*Ptilde*Dtilde'+S_N2)^(-1);
                 Ptilde = (I_N2-Kk*Dtilde)*Ptilde*(I_N2-Kk*Dtilde)';
                 P(1:18,1:18) = Ptilde([1:6, 19:30],[1:6, 19:30]);
             otherwise
@@ -541,7 +551,7 @@ for n = 1:N_MP
         % tmp_dat.cpkneeStateKk(:,:,n) = Kk;
     end
 
-    if hingejoint_constraint ==11
+    if hingejoint_constraint==121
         % calculate the location of the knee
         LKNE = xhat(idx_pos_LA,1) + d_ltibia*LTIB_CS(:,3);
         RKNE = xhat(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
