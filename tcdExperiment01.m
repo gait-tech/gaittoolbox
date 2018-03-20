@@ -230,8 +230,8 @@
         };
     setups = { ... % base scenarios 
         struct('accData', 'x', 'oriData', 'v', 'zupt', 1, 'hjc', 11), ...
+        struct('accData', 'x', 'oriData', 'x', 'zupt', 1, 'hjc', 11), ...
         };
-    
     resultsIdx = 1; clear results;
     for sI=1:length(setups)
         cs = struct(setupDefault);
@@ -336,30 +336,30 @@
 % %     diff_gfr_acc_RA = gfr_acc_RA(1:end-1,:) - gfr_acc_RA_act;
 % %     grlib.viz.plotXYZ(diff_gfr_acc_MP, diff_gfr_acc_LA, diff_gfr_acc_RA);
 %     
-    % Animation
-    updateFigureContents('Animation');
-    xlabel('x'); ylabel('y'); zlabel('z');
-    estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
-    for i=idx
-        clf; grid;
-        xlim(estBodyLimits(1:2)); 
-        ylim(estBodyLimits(3:4)); 
-        zlim(estBodyLimits(5:6));  
-        view(0, 180);
-        grlib.viz.plotLowerBody(estBody, i);
-        pause(1/1000);
-    end
-
-    updateFigureContents('Animation');
-    xlabel('x'); ylabel('y'); zlabel('z');
-    actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
-    for i=idx
-        clf; grid; 
-        xlim(actBodyLimits(1:2)); 
-        ylim(actBodyLimits(3:4)); 
-        zlim(actBodyLimits(5:6));  
-        view(0, 180);
-        grlib.viz.plotLowerBody(actBody, i);
-        pause(1/1000);
-    end
+%     % Animation
+%     updateFigureContents('Animation');
+%     xlabel('x'); ylabel('y'); zlabel('z');
+%     estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
+%     for i=idx
+%         clf; grid;
+%         xlim(estBodyLimits(1:2)); 
+%         ylim(estBodyLimits(3:4)); 
+%         zlim(estBodyLimits(5:6));  
+%         view(0, 180);
+%         grlib.viz.plotLowerBody(estBody, i);
+%         pause(1/1000);
+%     end
+% 
+%     updateFigureContents('Animation');
+%     xlabel('x'); ylabel('y'); zlabel('z');
+%     actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
+%     for i=idx
+%         clf; grid; 
+%         xlim(actBodyLimits(1:2)); 
+%         ylim(actBodyLimits(3:4)); 
+%         zlim(actBodyLimits(5:6));  
+%         view(0, 180);
+%         grlib.viz.plotLowerBody(actBody, i);
+%         pause(1/1000);
+%     end
 % end
