@@ -3,11 +3,12 @@
 %> @brief Body class used to animate body and obtain gait parameters
 % ======================================================================
 
-classdef grBody < handle
+classdef grBody < matlab.mixin.Copyable
     properties
         %> name of body
         name
         nSamples
+        frame
         
         % Plot specifications
         posUnit = 'mm';

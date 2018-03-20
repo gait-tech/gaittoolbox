@@ -3,14 +3,12 @@
 %>
 %> @param obj1 grBody 1 (self)
 %> @param obj1 grBody 2 (other)
-%> @param ref reference. default: MIDPEL
-%> @param seq orientation sequence. default: YXZ
+%> @param seq orientation sequence
 %>
 %> @retval out struct with the difference of pos and ori parameters
 % ======================================================================
-function out = diffRelRMSE(obj1, obj2, ref, seq)
+function out = diffRMSE(obj1, obj2, seq)
     if nargin <= 2
-        ref = 'MIDPEL';
         seq = 'YXZ';
     end
     
