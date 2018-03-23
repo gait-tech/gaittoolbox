@@ -207,10 +207,12 @@ function [ xhat_pri, xhat_pos, tmp_dat ] = kf_3_kmus_v2(fs, ...
     % initialise covariance in the state estimate
     if islogical(P0) && ~P0
         P = Q;
+    elseif isscalar(P0)
+        P = P0*I_N;
     else
         P = P0;
     end
-
+    
     options = optimoptions('fmincon',...
         'Algorithm', 'sqp', 'Display', 'off',...
         'OptimalityTolerance', 1e-2, ...

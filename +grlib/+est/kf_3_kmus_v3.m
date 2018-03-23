@@ -53,8 +53,9 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 
     fOpt = struct('fs', 60, 'applyZupt', false, 'applyUwb', false, ...
         'applyAccBias', false, 'applyConst', 0, ...
-        'sigmaAccMP', 0.5, 'sigmaAccLA', 0.5, 'sigmaAccRA', 0.5, ...
-        'sigmaOriMP', 1e-2, 'sigmaOriLA', 1e-2, 'sigmaOriRA', 1e-2, ...
+        'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
+        'sigmaQOriMP', 1e5, 'sigmaQOriLA', 1e5, 'sigmaQOriRA', 1e5, ...
+        'sigmaROriMP', 1e-1, 'sigmaROriLA', 1e-1, 'sigmaROriRA', 1e-1, ...
         'sigmaUwbMPLA', 0.2, 'sigmaUwbMPRA', 0.2, 'sigmaUwbLARA', 0.1, ...
         'sigmaZuptMP', 0.5, 'sigmaZuptLA', 0.5, 'sigmaZuptRA', 0.5, ...
         'optimOptimalityTolerance', 1e-2, ...
@@ -71,7 +72,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     
     idxPosMP = 1:3; % column idx corresponding to the mid-pelvis position
     idxVelMP = 4:6; % column idx corresponding to the mid-pelvis velocity
-	idxOriMP = 7:10 % column idx corresponding to the mid-pelvis orientation
+	idxOriMP = 7:10; % column idx corresponding to the mid-pelvis orientation
     idxPosLA = 11:13; % column idx corresponding to the left ankle position
     idxVelLA = 14:16; % column idx corresponding to the left ankle velocity
     idxOriLA = 17:20; % column idx corresponding to the left ankle orientation
@@ -109,7 +110,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     F(idxPosLA,idxVelLA) = dt.*eye(3); % left ankle
     F(idxPosRA,idxVelRA) = dt.*eye(3); % right ankle
 
-    if applyAccBias
+    if fOpt.applyAccBias
         F(idxPosMP, idxAccBiasMP) = -dt2.*eye(3);
         F(idxPosLA, idxAccBiasLA) = -dt2.*eye(3);
         F(idxPosRA, idxAccBiasRA) = -dt2.*eye(3);
@@ -127,14 +128,18 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     G(idxVelRA, 7:9) = dt .*eye(3);
 
     % Initialise process noise covariance
-    Q = diag(repelem([(fOpt.sigmaAccMP)^2 (fOpt.sigmaAccLA)^2 (fOpt.sigmaAccRA)^2], 3));
-    Q = G * Q * G';
-
+    Q = diag(repelem([(fOpt.sigmaQAccMP)^2 (fOpt.sigmaQAccLA)^2 (fOpt.sigmaQAccRA)^2], 3));
+    Qori = diag([zeros(1,6) repelem((fOpt.sigmaQOriMP)^2, 1, 4) ...
+                 zeros(1,6) repelem((fOpt.sigmaQOriLA)^2, 1, 4) ...
+                 zeros(1,6) repelem((fOpt.sigmaQOriRA)^2, 1, 4)]);
+    Q = G * Q * G' + Qori;
     % initialise covariance in the state estimate
     if islogical(P0) && ~P0
-        P_plus = Q;
+        P_tilde = Q;
+    elseif isscalar(P0)
+        P_tilde = P0*I_N;
     else
-        P_plus = P0;
+        P_tilde = P0;
     end
     
     nMeasure = 12;
@@ -143,7 +148,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     H(idxMOriLA, idxOriLA) = eye(4, 4);
     H(idxMOriRA, idxOriRA) = eye(4, 4);
 
-    Rdiag = repelem([(fOpt.sigmaOriMP)^2 (fOpt.sigmaOriLA)^2 (fOpt.sigmaOriRA)^2], 4);
+    Rdiag = repelem([(fOpt.sigmaROriMP)^2 (fOpt.sigmaROriLA)^2 (fOpt.sigmaROriRA)^2], 4);
     R = diag(Rdiag);
     
     % check that all accelerometer measurements are equal dimensions
@@ -184,7 +189,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         idxMVelRA = nMeasure+7:nMeasure+9;
         nMeasure = nMeasure+9;
         
-        H(end+1:end+9, nStates) = zeros(9, nStates);
+        H(end+1:end+9, :) = zeros(9, nStates);
         H(idxMVelMP, idxVelMP) = eye(3);
         H(idxMVelLA, idxVelLA) = eye(3);
         H(idxMVelRA, idxVelRA) = eye(3);
@@ -194,7 +199,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             (fOpt.sigmaZuptLA)^2 (fOpt.sigmaZuptRA)^2], 3);
         R = diag(Rdiag);
         
-        y_k(end+1:end+9, 1:nStates) = zeros(9, nSamples);
+        y_k(end+1:end+9, :) = zeros(9, nSamples);
     end
     
     if fOpt.applyUwb
@@ -220,8 +225,11 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     end
     
     if fOpt.applyConst
-        D = [-eye(3,3) zeros(3,3) eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3);
-             -eye(3,3) zeros(3,3) zeros(3,3) zeros(3,3) eye(3,3) zeros(3,3)];
+        D = zeros(6, nStates);
+        D(1:3,idxPosMP) = -eye(3, 3);
+        D(1:3,idxPosLA) = eye(3, 3);
+        D(4:6,idxPosMP) = -eye(3, 3);
+        D(4:6,idxPosRA) = eye(3, 3);
      
         optimOpt = optimoptions('fmincon', 'Algorithm', 'sqp', ...
             'Display', 'off', ...
@@ -231,7 +239,6 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     end
 
     for n = 1:nSamples
-
     %% -----------------------------------------------------------------------
     % Prediction Step using accelerometer measurements ----    
 %         if fOpt.applyAccBias
@@ -244,7 +251,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %         end
         
         xhat = F * xhat + G * u_k(:,n) ;
-        P_min= F * P_plus * F' + Q;
+        P_min = F * P_tilde * F' + Q;
         xhat_pri(n,:) = xhat;
         P_pri(:,:,n)  = P_min;
         
@@ -271,12 +278,13 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 idx(end+1:end+3) = idxMVelRA;
             end
         end
+        
         res = y_k(idx, n) - H(idx, :) * xhat;
-        K = P_min * H(idx, :)' /(H(idx, :) * P_min * H(idx,:)' + R(idx, idx))
+        K = P_min * H(idx, :)' /(H(idx, :) * P_min * H(idx,:)' + R(idx, idx));
 
-        xhat = xhat + K * y_k(idx, n);
+        xhat = xhat + K * res;
         P_min1 = (I_N - K * H(idx, :)) * P_min;
-
+        
         if fOpt.applyZupt
             if bIsStatLA(n)
                 debug_dat.zuptStateL(n,:) = xhat;
@@ -337,14 +345,16 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         else
             P_plus = P_min1;
         end
-
     %% -----------------------------------------------------------------------
     % Constraint update step ---- 
-        LTIB_CS = quat2rotm(xhat(idxOriLA,1));
-        RTIB_CS = quat2rotm(xhat(idxOriRA,1));
-        PELV_CS = quat2rotm(xhat(idxOriMP,1));
+        LTIB_CS = quat2rotm(xhat(idxOriLA,1)');
+        RTIB_CS = quat2rotm(xhat(idxOriRA,1)');
+        PELV_CS = quat2rotm(xhat(idxOriMP,1)');
         % Test frankenstein constraint
-        if fOpt.applyConst == 1
+        
+        if fOpt.applyConst == 0
+            P_tilde = P_plus;
+        elseif fOpt.applyConst == 1
             % calculate the location of the knee
             LKNE = xhat(idxPosLA,1) + dLTibia*LTIB_CS(:,3);
             RKNE = xhat(idxPosRA,1) + dRTibia*RTIB_CS(:,3);
@@ -379,6 +389,8 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             debug_dat.cstrStateRes(n,:) = res;
             debug_dat.cstrState(n,:) = xhat;
             debug_dat.cstrStateKk(:,:,n) = Kk;
+            
+            P_tilde = P_plus;
         end
 
         debug_dat.LFEO(n, :) = xhat(idxPosLA) + dLTibia * LTIB_CS(:, 3);
