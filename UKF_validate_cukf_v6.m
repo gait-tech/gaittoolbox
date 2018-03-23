@@ -7,7 +7,7 @@ clc;
 dataSim = 1;
 dataTCD = 2;
 
-data = dataTCD;
+data = dataSim;
 
 if data == dataSim
     load('cukf_v6_testfile_50F0706.mat')
@@ -115,7 +115,22 @@ grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA')
 %gelib.viz.plotPositionDiff(estBody, actBody, cell{'MIDPEL'; 'LTIO'; 'RTIO'})
 elseif data == dataTCD
     load('cukf_v6_testfile_txpexp01.mat')
-        %% UKF Setup 
+%         %% Swap y and z coordinates of pos data for TCD 
+%         %swap y and z col of gfr pos. data of tcd dataset
+%         swapyzM = [1 0 0; 0 0 1; 0 1 0];
+%         %swp mid pelvis coordinates
+%         actBody.MIDPEL = swapyzM*actBody.MIDPEL'
+%         actBody.MIDPEL = actBody.MIDPEL';
+%         %swap left tibia coordinates
+%         actBody.LTIO = swapyzM*actBody.LTIO'
+%         actBody.LTIO = actBody.LTIO';
+%         %swap right tibia coordinates
+%         actBody.RTIO = swapyzM*actBody.RTIO'
+%         actBody.RTIO = actBody.RTIO';
+%        
+%         
+    %% UKF Setup 
+        
     nSense = 3;
     nStates=13*nSense;      %number of states per sensor = 9: xyz pos, vel, acc
     nMeas = 7*nSense; % xyz acc_mp
@@ -124,11 +139,11 @@ elseif data == dataTCD
     r=0.8;    %std of measurement noise
     Q=q^2*eye(nStates); % covariance of process
     R=r^2*eye(nMeas);        % covariance of measurement
-    sIdx = 1;
+    sIdx0 = 1;
     
-    x0 = [actBody.MIDPEL(1,:)'; gfr_vel_MP_act(1,:)'; gfr_acc_MP_filt(1,:)'; qPelvisAct(1,:)';...
-        actBody.LTIO(1,:)'; gfr_vel_LA_act(1,:)'; gfr_acc_LA_filt(1,:)'; qLankleAct(1,:)';...
-        actBody.RTIO(1,:)'; gfr_vel_RA_act(1,:)'; gfr_acc_RA_filt(1,:)'; qRankleAct(1,:)'];
+    x0 = [actBody.MIDPEL(sIdx0,:)'; gfr_vel_MP_act(sIdx0,:)'; gfr_acc_MP_filt(sIdx0,:)'; qPelvisAct(sIdx0,:)';...
+        actBody.LTIO(sIdx0,:)'; gfr_vel_LA_act(sIdx0,:)'; gfr_acc_LA_filt(sIdx0,:)'; qLankleAct(sIdx0,:)';...
+        actBody.RTIO(sIdx0,:)'; gfr_vel_RA_act(sIdx0,:)'; gfr_acc_RA_filt(sIdx0,:)'; qRankleAct(sIdx0,:)'];
     
     P = eye(length(x0));                         % initial state covraiance
     [N_MP,~] = size(gfr_acc_MP);              % total dynamic steps
@@ -136,10 +151,11 @@ elseif data == dataTCD
     isConstr = true;
     
     tStart = tic;
-    %N_MP = 50; %number rof timesteps to test on KF
+    N_MP = 1000; %number rof timesteps to test on KF
     %TODO: return removed estimated values of knee and femur pos/or
-    [x_rec, xa_rec, qFEM] = grlib.est.cukf_v6(x0,P,Q,R,N_MP,nMeas,gfr_acc,fs, qPelvisEst,...
-        qLankleEst, qRankleEst, d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia,...
+    trng = sIdx0:sIdx0+N_MP;
+    [x_rec, xa_rec, qFEM] = grlib.est.cukf_v6(x0,P,Q,R,N_MP,nMeas,gfr_acc(trng,:),fs, qPelvisEst(trng,:),...
+        qLankleEst(trng,:), qRankleEst(trng,:), d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia,...
         isConstr);
     
     runTime = toc(tStart)
