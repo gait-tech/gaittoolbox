@@ -14,7 +14,7 @@ function out = struct2csvstr(s, showcolname)
     
     n = size(data.Variables); n = n(1);
     for i=1:n
-        outBuf{outIdx} = strjoin(string(data{i,:}), ',');
+        outBuf{outIdx} = strjoin(fillmissing(string(data{i,:}), 'constant', "nan"), ',');
         outIdx = outIdx + 1;
     end
     
