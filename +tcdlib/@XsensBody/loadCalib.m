@@ -13,7 +13,7 @@ function obj = loadCalib(fname)
 
     %% Variable initialization
     obj = tcdlib.XsensBody('srcFileName', fname, 'nSamples', 1, ...
-                           'frame', 'Calib');
+                           'frame', 'calib');
     
     %% Load calibration data
     fileID = fopen(fname, 'r');

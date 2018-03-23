@@ -19,11 +19,11 @@ function plotStateComparison(estStateData, actStateData, stateIdx)
 %         t = [1:3:n 2:3:n 3:3:n];
 %         y = [estStateData.predState(:,i); ...
 %              estStateData.zuptState(:,i); ...
-%              estStateData.cpkneeState(:,i)];
+%              estStateData..constrainedState(:,i)];
         scatter(1:3:n, estStateData.predState(:,i), '.r');
         scatter(2:3:n, estStateData.zuptStateL(:,i), '<g');
         scatter(2:3:n, estStateData.zuptStateR(:,i), '>g');
-        scatter(3:3:n, estStateData.cpkneeState(:,i), '.b');
+        scatter(3:3:n, estStateData.cstrState(:,i), '.b');
         
         actStateData2 = repelem(actStateData(:,i), 3);
         scatter(1:n, actStateData2, '.k');

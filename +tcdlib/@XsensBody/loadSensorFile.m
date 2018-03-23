@@ -7,6 +7,10 @@
 %> 
 %> Each field has a table with dimensions N x 13. The column of each row 
 %> are quaternions[4], accelerometer [3], gyroscope [3], magnetometer [3]
+%> 
+%> For the TCD dataset, the accelerometer, gyroscope, magnetometer are in 
+%> the sensor frame. quaternions tell the orientation relationship between 
+%> sensor and world frame.
 %>
 %> @param fname .sensors filename
 %>
@@ -24,7 +28,7 @@ function obj = loadSensorFile(fname)
     end
     
     obj = tcdlib.XsensBody('srcFileName', fname, 'nSamples', nFrames, ...
-                           'frame', 'world');
+                           'frame', 'sensor');
                            
     field = {};
     fscanf(fileID, "%d", 1);
