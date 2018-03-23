@@ -1,33 +1,42 @@
 %cukf_v6 (included quaternions in state, first using last timestep as 
-%prediction for next, v7 will change this implmentation and remove accel 
-%from state ve) still constaints implemented knee pinjoint constraint
+%prediction for next) still constaints implemented "pos level" knee pinjoint constraint
 %on SR-UKF with nonlin projection of estimated x onto constrained space
+%psecial note for v6: x containts [pos, vel, accel, quat]' of each sensor
+%resulting in a state vec of 39 elements (3 sensors, 13 states per sensor)
+%order of sensors in state is MP, LA, RA
 function [ x_rec, xa_rec, qFEM ] = cukf_v6(x,P,Q,R,N_MP,nMeas,acc,fs,...
     q_MP, q_LA, q_RA, d_pelvis, d_lfemur, d_rfemur,...
     d_ltibia, d_rtibia,isConstr)
-% Unscented Kalman filter for state estimation
-% UKF   Unscented Kalman Filter for nonlinear dynamic systems
-% [x, P] = ukf(f,x,P,h,z,Q,R) returns state estimate, x and state covariance, P
-% for nonlinear dynamic system (for simplicity, noises are assumed as additive):
+% Unscented Kalman filter for state estimation of human lower limbs (a
+% nonlinear dynamical system)
+% [x_rec, xa_rec, qFEM] = ukf(x,P,Q,R,N_MP,nMeas,acc,fs,...
+%    q_MP, q_LA, q_RA, d_pelvis, d_lfemur, d_rfemur,...
+%   d_ltibia, d_rtibia,isConstr) assumes additive noise
 %           x_k+1 = f(x_k) + w_k
 %           z_k   = h(x_k) + v_k
 % where w ~ N(0,Q) meaning w is gaussian noise with covariance Q
 %       v ~ N(0,R) meaning v is gaussian noise with covariance R
-% Inputs:   f: function handle for f(x)
-%           x: "a priori" state estimate
+% Inputs:   x: state at time K
 %           P: "a priori" estimated state covariance
-%           h: fanction handle for h(x)
-%           z: current measurement
-%           Q: process noise covariance
-%           R: measurement noise covariance
-% Output:   x: "a posteriori" state estimate
-%           P: "a posteriori" state covariance
+%           Q: initial estimated process noise covariance
+%           R: initial estimated measurement noise covariance           z: current measurement
+%           N_MP: number of timesteps to step forward using filter
+%           nMeas: number of dimensions in measurment vec (mes. space)
+%           acc: acceleration measuremnt matrix
+%           fs: sampleing rate from sensors (1/fs = tiemstep length)
+%           q__:q_MP,q_LA,q_RA quaternions of midpel, left ankle, right
+%               ankle in gfr
+%           d__:d_rtib, d_lfib, d_Lfem, d_rfem, d_pel is length of interest
+%           (principle axis) in each segment
+% Output:   x_rec: "a posteriori" state estimate
+%           xa_rec: "a posteriori" augmented state components
+%           qFEM: quaternion representing orientation of femur in gfr
 
 L = length(x);                                 %numer of states
 m = nMeas;
 alpha = 1e-4;     %should be small (0<alpha<1)                            %default, tunable
 ki = 0;            %start with 0 change if needed                           %default, tunable
-beta = 2;     % assuming gaussian prior                                %default, tunable
+beta = 2;     % assuming gaussian then use 2                                %default, tunable
 %hjc = 3;%3 or 4 - see hingeJoint_cosntr func. for details
 lambda = alpha^2*(L+ki)-L;                    %constant
 c = L+lambda;                                 %constant
@@ -39,13 +48,13 @@ S = chol(P)';
 %S = eye(L);
 %disp(size(S))
 x_rec = nan(L,N_MP);
-xa_rec = nan(12,N_MP); % 12 = femur proximal and distal points, both legs
+xa_rec = nan(12,N_MP); % 12 = femur proximal and distal points, both legs(2x2x3)
 qFEM = nan(8,N_MP); %8 = 4 per quaterinoin and 2 legs
 %vanderwerve 2001 paper wm, wc, and constant definitions
 
 for k=1:N_MP
-    disp('k')
-    disp(k)
+%     disp('k')
+%     disp(k)
     z = [acc(k,1:3)'; q_MP(k,:)'; acc(k,4:6)'; q_LA(k,:)'; acc(k,7:9)'; q_RA(k,:)'];
     %could constrain raw measurements here
     
@@ -64,7 +73,7 @@ for k=1:N_MP
     P = Px-K*Pxz';
 if isConstr
         xhat = x1;
-        options = optimoptions('fmincon','Algorithm','interior-point','Display','off',...
+        options = optimoptions('fmincon','Algorithm','sqp','Display','off',...
             'OptimalityTolerance', 1e-4, 'ConstraintTolerance', 1e-4,...
             'MaxFunctionEvaluations',15000); % run interior-point algorithm
     x1 = fmincon(@(x1) L2Dist(x1,xhat,S),xhat,[],[],[],[],[],[],@(x1) hingeJoint_constrNL_q(x1,...
@@ -72,17 +81,17 @@ if isConstr
 end
     x=x1+K*(z-z1);                              %measurement update
     
-%     if isConstr
-%         xhat = x;
-%         options = optimoptions('fmincon','Algorithm','sqp','Display','off',...
-%             'OptimalityTolerance', 1e-4, 'ConstraintTolerance', 1e-4,...
-%             'MaxFunctionEvaluations',15000); % run interior-point algorithm
-%     x = fmincon(@(x) L2Dist(x,xhat),xhat,[],[],[],[],[],[],@(x) hingeJoint_constrNL_q(x,...
-%     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia),options);
+    if isConstr
+        xhat = x;
+        options = optimoptions('fmincon','Algorithm','sqp','Display','off',...
+            'OptimalityTolerance', 1e-4, 'ConstraintTolerance', 1e-4,...
+            'MaxFunctionEvaluations',15000); % run interior-point algorithm
+    x = fmincon(@(x) L2Dist(x,xhat,S),xhat,[],[],[],[],[],[],@(x) hingeJoint_constrNL_q(x,...
+    d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia),options);
 
 %         [x] = hingeJoint_constrNL(x,hjc,P,k,q_MP, q_LA, q_RA,...
 %             d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia);
-%     end
+    end
     U = K*Sy';
     for i = 1:m
         S = cholupdate(S, U(:,i), '-');
@@ -210,7 +219,7 @@ function y = L2Dist(x,x0,S)
 
 %y = (x-x0)'*(x-x0);
 % add index specifying pos. of mp la and ra rather than including q
-qW = norm(x0); %weighting for q deviation to account for diffin units between pos and q.
+qW = 1;%norm(x0); %weighting for q deviation to account for diffin units between pos and q.
 %need to adapt x to rel pos of LA and RA to prevent large data recording
 %problems
 %posIdx = [];
@@ -218,9 +227,9 @@ res = (x-x0);
 qIdx = [10:13 23:26 36:39]';
 res(qIdx) = qW*res(qIdx);
 res = S\res; %add res*inv(S) to scale cost by certainty
-n = 1000; %have also tried 2,4,6,8,14,100,1000 around >= 14 greatly increases speed of finding solution, not much difference etween 100 and 1000
+n = 10; %have also tried 2,4,6,8,14,100,1000 around >= 14 greatly increases speed of finding solution, not much difference etween 100 and 1000
 y = (res'*res)^n;
-
+%y = sum(res.^n);
 end
 
 function [c, ceq] = hingeJoint_constrNL_q(xhat,...
