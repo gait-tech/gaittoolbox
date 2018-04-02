@@ -1,4 +1,6 @@
 %% Run experiment to all TCD data
+% To display the mean of results per label
+% varfun(@nanmean, results, 'InputVariables', @isnumeric, 'GroupingVariables', 'label')
 
 dataList = { ...
     struct('subj', 's1', 'act', 'Acting1'), ...
@@ -49,6 +51,7 @@ dataList = { ...
     struct('subj', 's5', 'act', 'walking2'), ...
 };
 dir = 'totalcapture';
+expDir = "./experiments";
 
 % setups = { ... % base scenarios 
 %     struct('accData', 'v', 'oriData', 'v'), ...
@@ -198,7 +201,7 @@ setups = {
            'accData', 'x', 'oriData', 'v', 'zuptData', 'x', ...
            'zupt', 1, 'cstr', 105), ...
 };
-
+           
 dataN = length(dataList);
 dataInstances = {};
 results = table();
@@ -219,7 +222,7 @@ for i = 1:dataN
     
     display(sprintf("Data %3d/%3d: %s", i, dataN, tmp.name));
     r = tcdExperiment01(tmp.dataV, tmp.dataS, tmp.calibIB, tmp.calibIR, ...
-                        tmp.name, setups);
+                        tmp.name, setups, expDir);
     results = [results; struct2table(r)];
 %     dataInstances{i} = tmp;
 end

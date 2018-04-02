@@ -10,7 +10,8 @@
 % animateTrialSample05(dataV, dataS, 60);
 % animateTrialSample05('Data/s1/acting1_BlenderZXY_YmZ.bvh', 'Data/s1/Acting1_Xsens_AuxFields.sensors', 60);
 
-function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, name, setups)
+function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
+                                   name, setups, savedir)
     %% Inputs and Input Check
 %     fnameV = 'totalcapture/vicon/s1/acting1_BlenderZXY_YmZ.bvh';
 %     fnameS = 'totalcapture/gyroMag/s1/Acting1_Xsens_AuxFields.sensors';
@@ -21,6 +22,9 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, name, set
     validateattributes(fnameS, {'char', 'tcdlib.XsensBody'}, {});
     validateattributes(fnameCIB, {'char', 'tcdlib.XsensBody'}, {});
     validateattributes(fnameCIR, {'char', 'tcdlib.XsensBody'}, {});
+    if nargin <= 6
+        savedir = ''
+    end
     
     %% Initialization
     % Initialize variables and libraries
@@ -245,7 +249,7 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, name, set
             cs_bIsStatRA = bIsStatRA_act(sIdx:end,:);
         end
         
-%         try
+        try
             if cs.est == 'ekfv2'
                 [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v2(fs, ...
                     cs.Qacc, cs.Qacc, cs.Qacc, cs.P, ...
@@ -306,14 +310,17 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, name, set
                    'qRSK', x_pos_v2(idx0, 27:30));
             end
                 
+            if ~strcmp(savedir, '')
+                save(sprintf("%s/%s-%s.mat", savedir, name, cs.label), ...
+                     'estBody', 'actBody')
+            end
             estBodyRel = estBody.changeRefFrame('MIDPEL');
     %         results(resultsIdx) = estBody.diffRMSE(actBody);
-    %         resultsIdx = resultsIdx + 1;
             results0 = estBodyRel.diffRelRMSE(actBodyRel);
-%         catch
-%             results0 = estBody.diffRelRMSE(nan);
-%         end
-%         
+        catch
+            results0 = estBody.diffRelRMSE(nan);
+        end
+        
         results0.name = name;
         results0.label = cs.label;
         results0.runtime = cputime-t0;
@@ -322,8 +329,8 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, name, set
         resultsIdx = resultsIdx + 1;
     end
     
-%     grlib.struct2csvstr(results, true)
 %     grlib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia)
+%     struct2table(results)
 %     grlib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'})
 %     
 %     [ x_pri_v2, x_pos_v2, t_dat_v2 ] = kf_3_kmus_v2(fs, ...
