@@ -6,10 +6,14 @@
 %> 
 %> @param body Body instance to be plotted
 %> @param t time point to be plotted
-%>
+%> @param showGround show ground
 %> @retval p plot object
 % ======================================================================
-function p = plotLowerBody(body, t)    
+function p = plotLowerBody(body, t, showGround)    
+    if nargin <= 2
+        showGround = false;
+    end
+    
     pelvL = line([body.LFEP(t,1) body.MIDPEL(t,1) body.RFEP(t,1)], ...
                  [body.LFEP(t,2) body.MIDPEL(t,2) body.RFEP(t,2)], ...
                  [body.LFEP(t,3) body.MIDPEL(t,3) body.RFEP(t,3)], ...
@@ -35,4 +39,8 @@ function p = plotLowerBody(body, t)
                  [body.RFEO(t,3) body.RTIO(t,3)],...
                  'Color', char(body.xyzColor(1)), 'LineWidth', 2);
     rtibL.Marker = body.ptSymbol;
+    if showGround
+        [ptsX, ptsY, ptsZ] = body.groundCoordinates();
+        patch(ptsX, ptsY, ptsZ, 'k', 'FaceAlpha', .5, 'LineStyle', ':')
+    end
 end
