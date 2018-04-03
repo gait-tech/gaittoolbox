@@ -1,7 +1,7 @@
-function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
-    gfr_acc_MP, bIsStatMP, q_MP, ...
-    gfr_acc_LA, bIsStatLA, q_LA, ...
-    gfr_acc_RA, bIsStatRA, q_RA, ...
+function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
+    gfrAccMP, bIsStatMP, qMP, ...
+    gfrAccLA, bIsStatLA, qLA, ...
+    gfrAccRA, bIsStatRA, qRA, ...
     dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, uwb_mea, options)
 % KF_3_KMUS Kalman Filter for performing sensor fusion on the trajectory of
 % three KMUs presumably worn on the body in the following configuration: mid
@@ -23,9 +23,9 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %               in the accelerometer measurements when subjected to a known
 %               acceleration
 %   x0        - the initial state in the GFR
-%   gfr_acc_MP - the acceleration of the mid-pelvis in the GFR
-%   gfr_acc_LA - the acceleration of the left ankle in the GFR
-%   gfr_acc_RA - the acceleration of the right ankle in the GFR
+%   gfrAccMP - the acceleration of the mid-pelvis in the GFR
+%   gfrAccLA - the acceleration of the left ankle in the GFR
+%   gfrAccRA - the acceleration of the right ankle in the GFR
 %   bIsStatMP  - a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_MP(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
@@ -35,9 +35,9 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %   bIsStatRA  - a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_RA(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-%   q_MP       - mid  pelvis orientation in the GFR (quaternion)
-%   q_LA       - left  ankle orientation in the GFR (quaternion)
-%   q_RA       - right ankle orientation in the GFR (quaternion)
+%   qMP       - mid  pelvis orientation in the GFR (quaternion)
+%   qLA       - left  ankle orientation in the GFR (quaternion)
+%   qRA       - right ankle orientation in the GFR (quaternion)
 %   dPelvis   - pelvis width
 %   dRFemur   - right femur length
 %   dLFemur   - left femur length
@@ -49,7 +49,8 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %       applyUwb - turn on/off uwb measurement update. boolean
 %       applyAccBias - turn on/off acc bias in the model. boolean
 %       applyConst - turn on/off constraints.
-%   
+%           001: projection (W=I) assuming perfect orientation
+%           101: fmincon
 
     fOpt = struct('fs', 60, 'applyZupt', false, 'applyUwb', false, ...
         'applyAccBias', false, 'applyConst', 0, ...
@@ -60,7 +61,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         'sigmaZuptMP', 0.5, 'sigmaZuptLA', 0.5, 'sigmaZuptRA', 0.5, ...
         'optimOptimalityTolerance', 1e-2, ...
         'optimConstraintTolerance', 1e-2, ...
-        'optimMaxFunctionEvaluations', 1500);
+        'optimMaxFunctionEvaluations', 1500, 'optimUseParallel', false);
     
     optionFieldNames = fieldnames(options);
     for i=1:length(optionFieldNames)
@@ -95,7 +96,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     % initialise state vector (must be column)
     validateattributes(x0, {'numeric'}, ...
                        {'2d', 'ncols', 1, 'nrows', nStates});
-    xhat = x0;
+    x_tilde = x0;
 
     dt = 1/(fOpt.fs);       % assume constant sampling interval
     dt2 = 0.5*dt*dt;        % local variable for readability
@@ -152,17 +153,17 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     R = diag(Rdiag);
     
     % check that all accelerometer measurements are equal dimensions
-    [nSamples, ~] = size(gfr_acc_MP);
-    validateattributes(gfr_acc_MP, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 3});
-    validateattributes(gfr_acc_LA, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 3});
-    validateattributes(gfr_acc_RA, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 3});
-    validateattributes(q_MP, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 4});
-    validateattributes(q_LA, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 4});
-    validateattributes(q_RA, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 4});
+    [nSamples, ~] = size(gfrAccMP);
+    validateattributes(gfrAccMP, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 3});
+    validateattributes(gfrAccLA, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 3});
+    validateattributes(gfrAccRA, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 3});
+    validateattributes(qMP, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 4});
+    validateattributes(qLA, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 4});
+    validateattributes(qRA, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 4});
     
     % local variable assignment for readability
-    u_k = [gfr_acc_MP, gfr_acc_LA, gfr_acc_RA]';
-    y_k = [q_MP, q_LA, q_RA]';
+    u_k = [gfrAccMP, gfrAccLA, gfrAccRA]';
+    y_k = [qMP, qLA, qRA]';
     
     % allocate memory to store apriori and aposteriori state estimates, xhat,
     % and error covariances in the state estimate, P_pri, P_pos
@@ -171,6 +172,9 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 
     xhat_pos = nan(nSamples, nStates);
     P_pos    = nan(nStates, nStates, nSamples);
+    
+    xhat_con = nan(nSamples, nStates);
+    P_con    = nan(nStates, nStates, nSamples);
 
     debug_dat = struct;
     debug_dat.LFEO = nan(nSamples, 3); debug_dat.RFEO = nan(nSamples, 3);
@@ -224,18 +228,19 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         R_uwb(3,3) = (fOpt.sigmaUwbLARA)^2;
     end
     
-    if fOpt.applyConst
+    if fOpt.applyConst == 1
         D = zeros(6, nStates);
         D(1:3,idxPosMP) = -eye(3, 3);
         D(1:3,idxPosLA) = eye(3, 3);
         D(4:6,idxPosMP) = -eye(3, 3);
         D(4:6,idxPosRA) = eye(3, 3);
-     
+    elseif fOpt.applyConst >= 101 && fOpt.applyConst <= 106
         optimOpt = optimoptions('fmincon', 'Algorithm', 'sqp', ...
             'Display', 'off', ...
             'OptimalityTolerance', fOpt.optimOptimalityTolerance, ...
             'ConstraintTolerance', fOpt.optimConstraintTolerance, ...
-            'MaxFunctionEvaluations', fOpt.optimMaxFunctionEvaluations);
+            'MaxFunctionEvaluations', fOpt.optimMaxFunctionEvaluations, ...
+            'UseParallel', fOpt.optimUseParallel);
     end
 
     for n = 1:nSamples
@@ -250,12 +255,12 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %             F(idxVelRA,idxAccBiasRA) = -dt.*RTIB_CS;
 %         end
         
-        xhat = F * xhat + G * u_k(:,n) ;
+        x_min = F * x_tilde + G * u_k(:,n) ;
         P_min = F * P_tilde * F' + Q;
-        xhat_pri(n,:) = xhat;
+        xhat_pri(n,:) = x_min;
         P_pri(:,:,n)  = P_min;
         
-        debug_dat.predState(n,:) = xhat;
+        debug_dat.predState(n,:) = x_min;
 
     %% ------------------------------------------------------------------------
     % Measurement update step
@@ -279,27 +284,27 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             end
         end
         
-        res = y_k(idx, n) - H(idx, :) * xhat;
+        res = y_k(idx, n) - H(idx, :) * x_min;
         K = P_min * H(idx, :)' /(H(idx, :) * P_min * H(idx,:)' + R(idx, idx));
 
-        xhat = xhat + K * res;
+        x_min1 = x_min + K * res;
         P_min1 = (I_N - K * H(idx, :)) * P_min;
         
         if fOpt.applyZupt
             if bIsStatLA(n)
-                debug_dat.zuptStateL(n,:) = xhat;
+                debug_dat.zuptStateL(n,:) = x_min1;
             end
             if bIsStatRA(n)
-                debug_dat.zuptStateR(n,:) = xhat;
+                debug_dat.zuptStateR(n,:) = x_min1;
             end
         end
         
     %% ---- Kalman Filter Update Step using UWB measurements ---- 
     % this correction step should be done last
         if fOpt.applyUwb
-            diff_MP_LA = xhat(idxPosMP)' - xhat(idxPosLA)';
-            diff_MP_RA = xhat(idxPosMP)' - xhat(idxPosRA)';
-            diff_LA_RA = xhat(idxPosLA)' - xhat(idxPosRA)';
+            diff_MP_LA = x_min1(idxPosMP)' - x_min1(idxPosLA)';
+            diff_MP_RA = x_min1(idxPosMP)' - x_min1(idxPosRA)';
+            diff_LA_RA = x_min1(idxPosLA)' - x_min1(idxPosRA)';
             % the observation model
             h_uwb_est = [vecnormalize( diff_MP_LA );
                          vecnormalize( diff_MP_RA );
@@ -337,31 +342,37 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             % Calculate the kalman gain
             K    = P_min1 * H_uwb' * S^(-1);
             % Update state estimate
-            xhat = xhat + K * y_innovation;
+            x_plus = x_min1 + K * y_innovation;
             % Update Covariance in the state estimate
             P_plus    = (I_N - K * H) * P_min1;
 
-            debug_dat.uwbuptState(n,:) = xhat;
+            debug_dat.uwbuptState(n,:) = x_plus;
         else
+            x_plus = x_min1;
             P_plus = P_min1;
         end
+        
+        xhat_pos(n, :) = x_plus;
+        P_pos(:, :, n)  = P_plus;
+        
     %% -----------------------------------------------------------------------
     % Constraint update step ---- 
-        LTIB_CS = quat2rotm(xhat(idxOriLA,1)');
-        RTIB_CS = quat2rotm(xhat(idxOriRA,1)');
-        PELV_CS = quat2rotm(xhat(idxOriMP,1)');
+        LTIB_CS = quat2rotm(x_plus(idxOriLA,1)');
+        RTIB_CS = quat2rotm(x_plus(idxOriRA,1)');
+        PELV_CS = quat2rotm(x_plus(idxOriMP,1)');
         % Test frankenstein constraint
         
         if fOpt.applyConst == 0
+            x_tilde = x_plus;
             P_tilde = P_plus;
-        elseif fOpt.applyConst == 1
+        elseif fOpt.applyConst == 1 % projection (W=I) assuming perfect orientation
             % calculate the location of the knee
-            LKNE = xhat(idxPosLA,1) + dLTibia*LTIB_CS(:,3);
-            RKNE = xhat(idxPosRA,1) + dRTibia*RTIB_CS(:,3);
+            LKNE = x_plus(idxPosLA,1) + dLTibia*LTIB_CS(:,3);
+            RKNE = x_plus(idxPosRA,1) + dRTibia*RTIB_CS(:,3);
 
             % calculate the z axis of the femur
-            LFEM_z = xhat(idxPosMP,1)+dPelvis/2*PELV_CS(:,2)-LKNE;
-            RFEM_z = xhat(idxPosMP,1)-dPelvis/2*PELV_CS(:,2)-RKNE;
+            LFEM_z = x_plus(idxPosMP,1)+dPelvis/2*PELV_CS(:,2)-LKNE;
+            RFEM_z = x_plus(idxPosMP,1)-dPelvis/2*PELV_CS(:,2)-RKNE;
 
             % calculate the z axis of the tibia
             LTIB_z = LTIB_CS(:,3);
@@ -382,21 +393,56 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                      -dRTibia*RTIB_CS(:,3)) ];
             
             Kk = D'*(D*D')^(-1);
-            res = d_k - D * xhat;
+            res = d_k - D * x_plus;
             dx = Kk*(res);
-            xhat = xhat + dx;
+            x_tilde = x_plus + dx;
             
             debug_dat.cstrStateRes(n,:) = res;
-            debug_dat.cstrState(n,:) = xhat;
+            debug_dat.cstrState(n,:) = x_tilde;
             debug_dat.cstrStateKk(:,:,n) = Kk;
             
             P_tilde = P_plus;
+        elseif fOpt.applyConst >= 101 && fOpt.applyConst <= 106 % fmincon
+            switch (fOpt.applyConst)
+                case 101
+                    optimOpt.Algorithm = 'interior-point';
+                    W = P_plus;
+                case 102
+                    optimOpt.Algorithm = 'sqp';
+                    W = P_plus;
+                case 103
+                    optimOpt.Algorithm = 'active-set';
+                    W = P_plus;
+                case 104
+                    optimOpt.Algorithm = 'interior-point';
+                    W = I_N;
+                case 105
+                    optimOpt.Algorithm = 'sqp';
+                    W = I_N;
+                case 106
+                    optimOpt.Algorithm = 'active-set';
+                    W = I_N;
+            end
+            
+            x_tilde = fmincon(@(x_tilde) L2Dist(x_tilde, x_plus, W), ...
+                x_plus, [], [], [], [], [], [], ...
+                @(x_tilde) hjc_nonlcon(x_tilde, dPelvis, ...
+                dLFemur, dRFemur, dLTibia, dRTibia), optimOpt);
+            
+            % normalize the quaternions
+            x_tilde(idxOriMP) = quatnormalize(x_tilde(idxOriMP, 1)');
+            x_tilde(idxOriLA) = quatnormalize(x_tilde(idxOriLA, 1)');
+            x_tilde(idxOriRA) = quatnormalize(x_tilde(idxOriRA, 1)');
+            P_tilde = P_plus;
         end
 
-        debug_dat.LFEO(n, :) = xhat(idxPosLA) + dLTibia * LTIB_CS(:, 3);
-        debug_dat.RFEO(n, :) = xhat(idxPosRA) + dRTibia * RTIB_CS(:, 3);
-        debug_dat.LFEP(n, :) = xhat(idxPosMP) + dPelvis/2 * PELV_CS(:, 2);
-        debug_dat.RFEP(n, :) = xhat(idxPosMP) - dPelvis/2 * PELV_CS(:, 2);
+        xhat_con(n, :) = x_tilde;
+        P_con(:, :, n)  = P_tilde;
+        
+        debug_dat.LFEO(n, :) = x_tilde(idxPosLA) + dLTibia * LTIB_CS(:, 3);
+        debug_dat.RFEO(n, :) = x_tilde(idxPosRA) + dRTibia * RTIB_CS(:, 3);
+        debug_dat.LFEP(n, :) = x_tilde(idxPosMP) + dPelvis/2 * PELV_CS(:, 2);
+        debug_dat.RFEP(n, :) = x_tilde(idxPosMP) - dPelvis/2 * PELV_CS(:, 2);
         LFEM_z = (debug_dat.LFEP(n,:)-debug_dat.LFEO(n,:))';
         LFEM_y = LTIB_CS(:,2);
         LFEM_x = cross(LFEM_y, LFEM_z);
@@ -406,8 +452,6 @@ function [ xhat_pri, xhat_pos, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         debug_dat.qLTH(n, :) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
         debug_dat.qRTH(n, :) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
 
-        xhat_pos(n, :) = xhat;
-        P_pos(:, :, n)  = P_plus;
     end
 end
 
@@ -418,23 +462,52 @@ function y = L2Dist(x, x0, S)
 %cost.
 %using inverse of covariance rather than I will make state est over time
 %less smooth but more accurate over the average of the interval
-
+    qW = norm(x0); %weighting for q deviation to account for diffin units between pos and q.
     res = (x-x0);
+    qIdx = [7:10 17:20 27:30]';
+    res(qIdx) = qW*res(qIdx);
     res = S\res; %add res*inv(S) to scale cost by certainty
     n = 1000; %have also tried 2,4,6,8,14,100,1000 around >= 14 greatly increases speed of finding solution, not much difference etween 100 and 1000
     y = (res'*res)^n;
 end
 
-function [c, ceq] = hjc_kneeaug_nonlcon(x, Rpelv2, dPelvis, ...
-    dLFemur, dRFemur, dLTibia, dRTibia)
-    LFEM_z = x(1:3,1)+dPelvis/2*Rpelv2-x(7:9,1);
-    RFEM_z = x(1:3,1)-dPelvis/2*Rpelv2-x(13:15,1);
-    LTIB_z = x(7:9,1)-x(19:21,1);
-    RTIB_z = x(13:15,1)-x(25:27,1);
+function [c, ceq] = hjc_nonlcon(x, dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
+    idxPosMP = 1:3; % column idx corresponding to the mid-pelvis position
+    % idxVelMP = 4:6; % column idx corresponding to the mid-pelvis velocity
+	idxOriMP = 7:10; % column idx corresponding to the mid-pelvis orientation
+    idxPosLA = 11:13; % column idx corresponding to the left ankle position
+    % idxVelLA = 14:16; % column idx corresponding to the left ankle velocity
+    idxOriLA = 17:20; % column idx corresponding to the left ankle orientation
+    idxPosRA = 21:23; % column idx corresponding to the right ankle position
+    % idxVelRA = 24:26; % column idx corresponding to the right ankle velocity
+    idxOriRA = 27:30; % column idx corresponding to the right ankle orientation
 
-    ceq = [LFEM_z'*LFEM_z - dLFemur^2;
-           RFEM_z'*RFEM_z - dRFemur^2;
-           LTIB_z'*LTIB_z - dLTibia^2;
-           RTIB_z'*RTIB_z - dRTibia^2];
+    LTIB_CS = quat2rotm(x(idxOriLA,1)');
+    RTIB_CS = quat2rotm(x(idxOriRA,1)');
+    PELV_CS = quat2rotm(x(idxOriMP,1)');
+
+    LKNE = x(idxPosLA,1) + dLTibia*LTIB_CS(:,3);
+    RKNE = x(idxPosRA,1) + dRTibia*RTIB_CS(:,3);
+    % calculate the z axis of the femur
+    LFEM_z = x(idxPosMP,1)+dPelvis/2*PELV_CS(:,2)-LKNE;
+    RFEM_z = x(idxPosMP,1)-dPelvis/2*PELV_CS(:,2)-RKNE;
+    % calculate the z axis of the tibia
+    LTIB_z = LTIB_CS(:,3);
+    RTIB_z = RTIB_CS(:,3);
+
+    % calculate alpha_lk and alpha_rk
+    alpha_lk = acos(dot(LFEM_z, LTIB_z)/(norm(LFEM_z)*norm(LTIB_z)));
+    alpha_rk = acos(dot(RFEM_z, RTIB_z)/(norm(RFEM_z)*norm(RTIB_z)));
+
+    % setup the constraint equations
+    ceq = [x(idxPosLA) - x(idxPosMP) - (dPelvis/2*PELV_CS(:,2) ...
+        -dLFemur*cos(alpha_lk)*LTIB_CS(:,3) ...
+        +dLFemur*sin(alpha_lk)*LTIB_CS(:,1) ...
+        -dLTibia*LTIB_CS(:,3)) ; ...
+        x(idxPosRA) - x(idxPosMP) - (-dPelvis/2*PELV_CS(:,2)+ ...
+        -dRFemur*cos(alpha_rk)*RTIB_CS(:,3) ...
+        +dRFemur*sin(alpha_rk)*RTIB_CS(:,1) ...
+        -dRTibia*RTIB_CS(:,3)) ];
+
     c = [];
 end

@@ -92,6 +92,24 @@ classdef grBody < matlab.mixin.Copyable
         function out = zlim(obj)
             out = lim(obj, 3);
         end
+        
+        function [ptsX, ptsY, ptsZ] = groundCoordinates(obj)
+%             xVector = obj.RTIO(1,:) - obj.LTIO(1,:);
+%             xVector = xVector / norm(xVector);
+            gndOrigin = (obj.LTIO(1,:)+obj.RTIO(1,:))/2;
+%             zVector = obj.MIDPEL(1,:) - gndOrigin;
+%             yVector = cross(zVector, xVector);
+            CS = quat2rotm(obj.qRPV(1,:));
+            xVector = CS(:,1)';
+            yVector = CS(:,2)';
+            pts = [ gndOrigin + xVector + yVector;
+                    gndOrigin - xVector + yVector;
+                    gndOrigin - xVector - yVector;
+                    gndOrigin + xVector - yVector];
+            
+            ptsX = pts(:,1); ptsY = pts(:,2); ptsZ = pts(:,3);
+        end
+        
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);
     end
