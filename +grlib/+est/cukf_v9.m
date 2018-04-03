@@ -58,8 +58,8 @@ qFEM = nan(8,N_MP); %8 = 4 per quaterinoin and 2 legs
 %vanderwerve 2001 paper wm, wc, and constant definitions
 
 for k=1:N_MP
-%     disp('k')
-%     disp(k)
+        disp('k')
+        disp(k)
     z = [acc(k,1:3)'; q_MP(k,:)'; w_MP_gfr__s(k,:)'; acc(k,4:6)'; q_LA(k,:)'; w_LA_gfr__s(k,:)'; acc(k,7:9)'; q_RA(k,:)'; w_RA_gfr__s(k,:)'];
     %could constrain raw measurements here
     
@@ -73,29 +73,29 @@ for k=1:N_MP
     
     K=(Pxz/Sy)/Sy';
     %K=Pxz/(Pz);
-%     disp('dim K')
-%     disp(size(K));
+    %     disp('dim K')
+    %     disp(size(K));
     P = Px-K*Pxz';
-% if isConstr
-%         xhat = x1;
-%         options = optimoptions('fmincon','Algorithm','sqp','Display','off',...
-%             'OptimalityTolerance', 1e-4, 'ConstraintTolerance', 1e-4,...
-%             'MaxFunctionEvaluations',15000); % run interior-point algorithm
-%     x1 = fmincon(@(x1) L2Dist(x1,xhat,S),xhat,[],[],[],[],[],[],@(x1) hingeJoint_constrNL_q(x1,...
-%     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia),options);
-% end
+    % if isConstr
+    %         xhat = x1;
+    %         options = optimoptions('fmincon','Algorithm','sqp','Display','off',...
+    %             'OptimalityTolerance', 1e-4, 'ConstraintTolerance', 1e-4,...
+    %             'MaxFunctionEvaluations',15000); % run interior-point algorithm
+    %     x1 = fmincon(@(x1) L2Dist(x1,xhat,S),xhat,[],[],[],[],[],[],@(x1) hingeJoint_constrNL_q(x1,...
+    %     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia),options);
+    % end
     x=x1+K*(z-z1);                              %measurement update
     
     if isConstr
         xhat = x;
         options = optimoptions('fmincon','Algorithm','sqp','Display','off',...
-            'OptimalityTolerance', 1e-4, 'ConstraintTolerance', 1e-4,...
+            'OptimalityTolerance', 1e-3, 'ConstraintTolerance', 1e-3,...
             'MaxFunctionEvaluations',15000); % run interior-point algorithm
-    x = fmincon(@(x) L2Dist(x,xhat,S),xhat,[],[],[],[],[],[],@(x) hingeJoint_constrNL_q(x,...
-    d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia),options);
-
-%         [x] = hingeJoint_constrNL(x,hjc,P,k,q_MP, q_LA, q_RA,...
-%             d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia);
+        x = fmincon(@(x) L2Dist(x,xhat,S),xhat,[],[],[],[],[],[],@(x) hingeJoint_constrNL_q(x,...
+            d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia),options);
+        
+        %         [x] = hingeJoint_constrNL(x,hjc,P,k,q_MP, q_LA, q_RA,...
+        %             d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia);
     end
     U = K*Sy';
     for i = 1:m
@@ -229,29 +229,12 @@ epm = [-e1 -e2 -e3;...
 xp(42:45) = xp(42:45) + 0.5*epm*xp(46:48)*dt;
 end
 
-function [xp] = f_waaq(x,fs)
-dt = 1/fs;
-dt2 = 1/2*(1/fs)^2;
-As(1:3,:) = [eye(3,3) dt*eye(3,3) dt2*eye(3,3) zeros(3,4)];
-As(4:6,:) = [zeros(3,3) eye(3,3) dt*eye(3,3) zeros(3,4)];
-As(7:13,:) = [zeros(7,6) eye(7,7)];
-Af = [As zeros(13,26); zeros(13,13) As zeros(13,13); zeros(13,26) As];
-xp = Af*x;
-end
-
 %for state vec with pos vel accel, quat, ang.vel
 function [hp] = h_pvaqw(x,fs)
 Hs(1:3,:) = [zeros(3,6) eye(3,3) zeros(3,7)];
 Hs(4:7,:) = [zeros(4,9) eye(4,4) zeros(4,3)];
 Hs(8:10,:) = [zeros(3,13) eye(3,3)];
 Hf = [Hs zeros(10,32); zeros(10,16) Hs zeros(10,16); zeros(10,32) Hs];
-hp = Hf*x;
-end
-
-function [hp] = h_waaq(x,fs)
-Hs(1:3,:) = [zeros(3,6) eye(3,3) zeros(3,4)];
-Hs(4:7,:) = [zeros(4,9) eye(4,4)];
-Hf = [Hs zeros(7,26); zeros(7,13) Hs zeros(7,13); zeros(7,26) Hs];
 hp = Hf*x;
 end
 
@@ -274,22 +257,23 @@ qIdx = [10:13 26:29 42:45]';
 res(qIdx) = qW*res(qIdx);
 res = S\res; %add res*inv(S) to scale cost by certainty
 n = 10; %have also tried 2,4,6,8,14,100,1000 around >= 14 greatly increases speed of finding solution, not much difference etween 100 and 1000
-y = (res'*res)^n;
-%y = sum(res.^n);
+%y = (res'*res)^n;
+y = sum(res.^n);
 end
 
 function [c, ceq] = hingeJoint_constrNL_q(xhat,...
     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia)
-%   if hingejoint_constraint > 0 && hingejoint_constraint <= 8
-% calculate the location of the knee
-   
-%% Pos-level knee joint constraint 
-    idx_pos_MP = [1:3]';
-    idx_pos_LA = [17:19]';
-    idx_pos_RA = [33:35]';
-    idx_q_MP = [10:13]';
-    idx_q_LA = [26:29]';
-    idx_q_RA = [42:45]';
+%% Pos-level knee joint constraint
+idx_pos_MP = [1:3]';
+idx_pos_LA = [17:19]';
+idx_pos_RA = [33:35]';
+
+idx_vel_LA = [20:22]';
+idx_vel_RA = [36:38]';
+
+idx_q_MP = [10:13]';
+idx_q_LA = [26:29]';
+idx_q_RA = [42:45]';
 
 I_N = eye(length(xhat));
 %       pos     vel         accel       quat    ang.vel      pos     vel         accel       quat    ang.vel        pos     vel         accel       quat    ang.vel
@@ -309,13 +293,29 @@ RKNE = xhat(idx_pos_RA,1) + d_rtibia*RTIB_CS(:,3);
 LFEM_z = xhat(idx_pos_MP,1)+d_pelvis/2*PELV_CS(:,2)-LKNE;
 RFEM_z = xhat(idx_pos_MP,1)-d_pelvis/2*PELV_CS(:,2)-RKNE;
 
+% normalize z-axis of femur
+LFEM_z = LFEM_z/norm(LFEM_z);
+RFEM_z = RFEM_z/norm(RFEM_z);
+
 % calculate the z axis of the tibia
 LTIB_z = LTIB_CS(:,3);
 RTIB_z = RTIB_CS(:,3);
 
 % calculate alpha_lk and alpha_rk
-alpha_lk = acos(dot(LFEM_z, LTIB_z)/(norm(LFEM_z)*norm(LTIB_z)));
-alpha_rk = acos(dot(RFEM_z, RTIB_z)/(norm(RFEM_z)*norm(RTIB_z)));
+%alpha_lk = acos(dot(LFEM_z, LTIB_z)/(norm(LFEM_z)*norm(LTIB_z)));
+%alpha_rk = acos(dot(RFEM_z, RTIB_z)/(norm(RFEM_z)*norm(RTIB_z)));
+
+%calculate alpha_lk and alpha_rk using atan2
+LFEM_z__N = LFEM_z;
+RFEM_z__N = RFEM_z;
+
+% _TIB_CS is _TIB_CS described in wrod frame, or rotm from tib2world frame
+% therefore, inverse is from wrold to tib frame
+LFEM_z__TIB = LTIB_CS\LFEM_z__N;
+RFEM_z__TIB = RTIB_CS\RFEM_z__N;
+
+alpha_lk = atan2(-LFEM_z__TIB(1),LFEM_z__TIB(3));
+alpha_rk = atan2(-RFEM_z__TIB(1),RFEM_z__TIB(3));
 
 % setup the constraint equations
 d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
@@ -329,26 +329,27 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
 
 %% Vel-Level Knee-Joint Constraint
 for i = 1:2
-    %% Variable assignment based on knee cosntructing constraints for (left
-    %or right knee)
+    %% Variable assignment based on knee cosntructing constraints
+    %(left or right knee)
     
     l_pel = d_pelvis;
     
-        wxPEL = xhat(14);
-        wyPEL = xhat(15);
-        wzPEL = xhat(16);
-        
-        q1PEL = xhat(10);
-        q2PEL = xhat(11);
-        q3PEL = xhat(12);
-        q4PEL = xhat(13);
-        
-        dxv = [xhat(20) - xhat(4); %left ankle_pel rel vel in Nx
-            xhat(21) - xhat(5); % || in Ny
-            xhat(22) - xhat(6);%  || in Nz
-            xhat(36) - xhat(4);% right ankle _pel rel vel in Nx
-            xhat(37) - xhat(5);%    || Ny
-            xhat(38) - xhat(6)];%   || Nz
+    wxPEL = xhat(14);
+    wyPEL = xhat(15);
+    wzPEL = xhat(16);
+    
+    q1PEL = xhat(10);
+    q2PEL = xhat(11);
+    q3PEL = xhat(12);
+    q4PEL = xhat(13);
+    
+    dxv = [xhat(20) - xhat(4); %left ankle_pel rel vel in Nx
+        xhat(21) - xhat(5); % || in Ny
+        xhat(22) - xhat(6);%  || in Nz
+        xhat(36) - xhat(4);% right ankle _pel rel vel in Nx
+        xhat(37) - xhat(5);%    || Ny
+        xhat(38) - xhat(6)];%   || Nz
+    
     if i == 1 %left knee
         
         l_tib = d_ltibia;
@@ -384,47 +385,67 @@ for i = 1:2
     end
     
     %% constraint calc
+    %qKN = -qKN;
     %w_KN_scl is a scalar value of the knee joint angular velocity
     w_KN_scl = wyTIB + 2*(q1TIB*q4TIB-q2TIB*q3TIB)*(wxTIB*cos(qKN)+...
-    wzTIB*sin(qKN))/(2*sin(qKN)*(q1TIB*q3TIB+q2TIB*q4TIB)+...
-    cos(qKN)*(-1+2*q1TIB^2+2*q2TIB^2));
+        wzTIB*sin(qKN))/(2*sin(qKN)*(q1TIB*q3TIB+q2TIB*q4TIB)+...
+        cos(qKN)*(-1+2*q1TIB^2+2*q2TIB^2));
+    %w_KN_scl = -w_KN_scl;
+    %relVel_ANK_PELo_N is the relative velocities of the ankle from the pelvis,
+    %described in frame N (eqivalent to gfr)
+    relVel_ANK_PELo_N = [(l_pel*wxPEL*(q1PEL*q3PEL+q2PEL*q4PEL)-...
+        l_tib*wyTIB*(-1+2*q1TIB^2+2*q2TIB^2)-0.5*l_pel*wzPEL*(-1+2*q1PEL^2+2*q2PEL^2)...
+        -2*(q1TIB*q4TIB-q2TIB*q3TIB)*(l_tib*wxTIB+l_fem*(wxTIB*cos(qKN)+wzTIB*sin(qKN)))...
+        -l_fem*(2*sin(qKN)*(q1TIB*q3TIB+q2TIB*q4TIB)+cos(qKN)*(-1+2*q1TIB^2+...
+        2*q2TIB^2))*(wyTIB-w_KN_scl));...
+        ((-1+2*q1TIB^2+2*q3TIB^2)*(l_tib*wxTIB+l_fem*(wxTIB*cos(qKN)+wzTIB*sin(qKN)))...
+        -2*l_tib*wyTIB*(q1TIB*q4TIB+q2TIB*q3TIB)-l_pel*wzPEL*(q1PEL*q4PEL+q2PEL*q3PEL)...
+        -l_pel*wxPEL*(q1PEL*q2PEL-q3PEL*q4PEL)-2*l_fem*(cos(qKN)*(q1TIB*q4TIB+q2TIB*q3TIB)...
+        -sin(qKN)*(q1TIB*q2TIB-q3TIB*q4TIB))*(wyTIB-w_KN_scl));...
+        (l_pel*wzPEL*(q1PEL*q3PEL-q2PEL*q4PEL)+2*l_tib*wyTIB*(q1TIB*q3TIB-q2TIB*q4TIB)...
+        +0.5*l_pel*wxPEL*(-1+2*q1PEL^2+2*q4PEL^2)+2*(q1TIB*q2TIB+...
+        q3TIB*q4TIB)*(l_tib*wxTIB+l_fem*(wxTIB*cos(qKN)+wzTIB*sin(qKN)))+...
+        l_fem*(2*cos(qKN)*(q1TIB*q3TIB-q2TIB*q4TIB)-sin(qKN)*(-1+2*q1TIB^2 ...
+        +2*q4TIB^2))*(wyTIB-w_KN_scl))];
     
-%relVel_ANK_PELo_N is the relative velocities of the ankle from the pelvis,
-%described in frame N (eqivalent to gfr)
-relVel_ANK_PELo_N = [(l_pel*wxPEL*(q1PEL*q3PEL+q2PEL*q4PEL)-...
-    l_tib*wyTIB*(-1+2*q1TIB^2+2*q2TIB^2)-0.5*l_pel*wzPEL*(-1+2*q1PEL^2+2*q2PEL^2)...
-    -2*(q1TIB*q4TIB-q2TIB*q3TIB)*(l_tib*wxTIB+l_fem*(wxTIB*cos(qKN)+wzTIB*sin(qKN)))...
-    -l_fem*(2*sin(qKN)*(q1TIB*q3TIB+q2TIB*q4TIB)+cos(qKN)*(-1+2*q1TIB^2+...
-2*q2TIB^2))*(wyTIB-w_KN_scl));...
-((-1+2*q1TIB^2+2*q3TIB^2)*(l_tib*wxTIB+l_fem*(wxTIB*cos(qKN)+wzTIB*sin(qKN)))...
--2*l_tib*wyTIB*(q1TIB*q4TIB+q2TIB*q3TIB)-l_pel*wzPEL*(q1PEL*q4PEL+q2PEL*q3PEL)...
--l_pel*wxPEL*(q1PEL*q2PEL-q3PEL*q4PEL)-2*l_fem*(cos(qKN)*(q1TIB*q4TIB+q2TIB*q3TIB)...
--sin(qKN)*(q1TIB*q2TIB-q3TIB*q4TIB))*(wyTIB-w_KN_scl));...
- (l_pel*wzPEL*(q1PEL*q3PEL-q2PEL*q4PEL)+2*l_tib*wyTIB*(q1TIB*q3TIB-q2TIB*q4TIB)...
- +0.5*l_pel*wxPEL*(-1+2*q1PEL^2+2*q4PEL^2)+2*(q1TIB*q2TIB+...
- q3TIB*q4TIB)*(l_tib*wxTIB+l_fem*(wxTIB*cos(qKN)+wzTIB*sin(qKN)))+...
- l_fem*(2*cos(qKN)*(q1TIB*q3TIB-q2TIB*q4TIB)-sin(qKN)*(-1+2*q1TIB^2 ...
-+2*q4TIB^2))*(wyTIB-w_KN_scl))];
-
-%left, then right knee constrained
-if i == 1
-    d_k_v(1:3,1) = relVel_ANK_PELo_N;
-elseif i == 2
-    d_k_v(4:6,1) = relVel_ANK_PELo_N;
-end
+    %left, then right knee constrained
+    if i == 1
+        d_k_v(1:3,1) = relVel_ANK_PELo_N;
+    elseif i == 2
+        d_k_v(4:6,1) = relVel_ANK_PELo_N;
+    end
 end
 %% construct constraint for fmincon format
 % res = d_k - D*xhat;
 % ceq = res'*res;
-kp = 1;
+kv = 0.1;
+pRes = (d_k - D*xhat);
+vRes = (d_k_v - dxv);
+kq = 100;
+qMPRes = (xhat(idx_q_MP)'*xhat(idx_q_MP))-1;
+qLARes = (xhat(idx_q_LA)'*xhat(idx_q_LA))-1;
+qRARes = (xhat(idx_q_RA)'*xhat(idx_q_RA))-1;
 
-ceq = [(d_k - D*xhat);
-    kp*(d_k_v - dxv)];
+ceq = [ pRes + kv*vRes;
+        kq*qMPRes;
+        kq*qLARes;
+        kq*qRARes];
+    
 
-c = [];
-%note: still want to use kalman gain to scale res or costfcn?
-%weight cost function by inverse covariance matrix
-%after 3q. 28 in simon 2010
-%dx = Kk*(res);
+maxFootVel = 12.5; %m/s
 
+% c = [norm(xhat(idx_vel_LA))-maxFootVel;
+%     norm(xhat(idx_vel_RA))-maxFootVel];
+qSafetyFactor = deg2rad(3);
+c = [-alpha_lk;
+    (alpha_lk+qSafetyFactor) - 0.5*pi;
+    -alpha_rk;
+    (alpha_rk+qSafetyFactor) - 0.5*pi];
+%TODO (or at least consider):
+% add quaternion constraints (motion, vel. accel) as in 331 text
+% add accel-level knee-joint constraint
+% Tune weighting on pos-vel knee constraints (kd)
+% add additional physiological params (ang vel, etc.)
+% Add ZVUPT
+% Add trailing accel rec, to limit jerk profile->smooth/limit accel
 end
