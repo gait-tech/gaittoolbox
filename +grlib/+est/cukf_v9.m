@@ -58,8 +58,10 @@ qFEM = nan(8,N_MP); %8 = 4 per quaterinoin and 2 legs
 %vanderwerve 2001 paper wm, wc, and constant definitions
 
 for k=1:N_MP
+    if mod(k,50) == 0
         disp('k')
         disp(k)
+    end
     z = [acc(k,1:3)'; q_MP(k,:)'; w_MP_gfr__s(k,:)'; acc(k,4:6)'; q_LA(k,:)'; w_LA_gfr__s(k,:)'; acc(k,7:9)'; q_RA(k,:)'; w_RA_gfr__s(k,:)'];
     %could constrain raw measurements here
     
@@ -75,7 +77,7 @@ for k=1:N_MP
     %K=Pxz/(Pz);
     %     disp('dim K')
     %     disp(size(K));
-    P = Px-K*Pxz';
+    %P = Px-K*Pxz';
     % if isConstr
     %         xhat = x1;
     %         options = optimoptions('fmincon','Algorithm','sqp','Display','off',...
@@ -90,7 +92,7 @@ for k=1:N_MP
         xhat = x;
         options = optimoptions('fmincon','Algorithm','sqp','Display','off',...
             'OptimalityTolerance', 1e-3, 'ConstraintTolerance', 1e-3,...
-            'MaxFunctionEvaluations',15000); % run interior-point algorithm
+            'MaxFunctionEvaluations',5000); % run interior-point algorithm
         x = fmincon(@(x) L2Dist(x,xhat,S),xhat,[],[],[],[],[],[],@(x) hingeJoint_constrNL_q(x,...
             d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia),options);
         
@@ -249,14 +251,17 @@ function y = L2Dist(x,x0,S)
 %y = (x-x0)'*(x-x0);
 % add index specifying pos. of mp la and ra rather than including q
 qW = 1;%norm(x0); %weighting for q deviation to account for diffin units between pos and q.
+posW = 10;
 %need to adapt x to rel pos of LA and RA to prevent large data recording
 %problems
 %posIdx = [];
 res = (x-x0);
 qIdx = [10:13 26:29 42:45]';
+posIdx = [1:3 17:19 33:35]';
 res(qIdx) = qW*res(qIdx);
-res = S\res; %add res*inv(S) to scale cost by certainty
-n = 10; %have also tried 2,4,6,8,14,100,1000 around >= 14 greatly increases speed of finding solution, not much difference etween 100 and 1000
+res(posIdx) = posW*res(posIdx);
+%res = S\res; %add res*inv(S) to scale cost by certainty
+n = 16; %have also tried 2,4,6,8,14,16,100,1000 around >= 14 greatly increases speed of finding solution, not much difference etween 100 and 1000
 %y = (res'*res)^n;
 y = sum(res.^n);
 end
@@ -274,6 +279,10 @@ idx_vel_RA = [36:38]';
 idx_q_MP = [10:13]';
 idx_q_LA = [26:29]';
 idx_q_RA = [42:45]';
+
+idx_w_MP = [14:16]';
+idx_w_LA = [30:32]';
+idx_w_RA = [46:48]';
 
 I_N = eye(length(xhat));
 %       pos     vel         accel       quat    ang.vel      pos     vel         accel       quat    ang.vel        pos     vel         accel       quat    ang.vel
@@ -438,31 +447,60 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
 kv = 0.1;
 pRes = (d_k - D*xhat);
 vRes = (d_k_v - dxv);
+
 kq = 100;
 qMPRes = (xhat(idx_q_MP)'*xhat(idx_q_MP))-1;
 qLARes = (xhat(idx_q_LA)'*xhat(idx_q_LA))-1;
 qRARes = (xhat(idx_q_RA)'*xhat(idx_q_RA))-1;
 
+qDotMP = calcqdot(xhat(idx_q_MP),xhat(idx_w_MP));
+qDotMPRes = xhat(idx_q_MP)'*qDotMP;
+qDotLA = calcqdot(xhat(idx_q_LA),xhat(idx_w_LA));
+qDotLARes = xhat(idx_q_LA)'*qDotLA;
+qDotRA = calcqdot(xhat(idx_q_RA),xhat(idx_w_RA));
+qDotRARes = xhat(idx_q_RA)'*qDotRA;
+%TODO add qdot constr.
+
 ceq = [ pRes + kv*vRes;
         kq*qMPRes;
         kq*qLARes;
-        kq*qRARes];
+        kq*qRARes;
+        kq*qDotMPRes;
+        kq*qDotLARes;
+        kq*qDotRARes];
     
 
-maxFootVel = 12.5; %m/s
-
+maxFootVel = 12; %m/s
+maxKNAngVel = 12; %rad/s
 % c = [norm(xhat(idx_vel_LA))-maxFootVel;
 %     norm(xhat(idx_vel_RA))-maxFootVel];
 qSafetyFactor = deg2rad(3);
-c = [-alpha_lk;
+ c = [-alpha_lk;
     (alpha_lk+qSafetyFactor) - 0.5*pi;
     -alpha_rk;
-    (alpha_rk+qSafetyFactor) - 0.5*pi];
+    (alpha_rk+qSafetyFactor) - 0.5*pi;
+    abs(w_LKN_scl) - maxKNAngVel;
+    abs(w_RKN_scl) - maxKNAngVel;
+    norm(relVel_LANK_PELo_N) - maxFootVel;
+    norm(relVel_RANK_PELo_N) - maxFootVel];
+%knee joint angular velocity cap from :
+%Effects of power training on muscle structure and neuromuscular performance
+%March 2005Scandinavian Journal of Medicine and Science in Sports 15(1):58-64
+
 %TODO (or at least consider):
-% add quaternion constraints (motion, vel. accel) as in 331 text
+% add quaternion constraints (accel) as in 331 text
 % add accel-level knee-joint constraint
-% Tune weighting on pos-vel knee constraints (kd)
+% Tune weighting on pos-vel knee constraints (kv)
 % add additional physiological params (ang vel, etc.)
 % Add ZVUPT
 % Add trailing accel rec, to limit jerk profile->smooth/limit accel
+end
+
+function qdot = calcqdot(q,w)
+    e0 = q(1); e1 = q(2); e2 = q(3); e3 = q(4);
+epm = [-e1 -e2 -e3;...
+    e0 -e3 e2;...
+    e3 e0 -e1;...
+    -e2 e1 e0];
+qdot = 0.5*epm*w;
 end
