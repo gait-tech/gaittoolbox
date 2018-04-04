@@ -58,7 +58,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         'sigmaQOriMP', 1e5, 'sigmaQOriLA', 1e5, 'sigmaQOriRA', 1e5, ...
         'sigmaROriMP', 1e-1, 'sigmaROriLA', 1e-1, 'sigmaROriRA', 1e-1, ...
         'sigmaUwbMPLA', 0.2, 'sigmaUwbMPRA', 0.2, 'sigmaUwbLARA', 0.1, ...
-        'sigmaZuptMP', 0.5, 'sigmaZuptLA', 0.5, 'sigmaZuptRA', 0.5, ...
+        'sigmaZuptMP', 1e-4, 'sigmaZuptLA', 1e-4, 'sigmaZuptRA', 1e-4, ...
         'optimOptimalityTolerance', 1e-2, ...
         'optimConstraintTolerance', 1e-2, ...
         'optimMaxFunctionEvaluations', 1500, 'optimUseParallel', false);
@@ -182,10 +182,18 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     debug_dat.qLFemur = nan(nSamples, 4); debug_dat.qRFemur = nan(nSamples, 4);
     
     debug_dat.predState = nan(nSamples, nStates);
-    debug_dat.zuptStateL = nan(nSamples, nStates);
-    debug_dat.zuptStateR = nan(nSamples, nStates);
+    debug_dat.predP = nan(nStates, nStates, nSamples);
+%     debug_dat.zuptStateL = false(nSamples, 1);
+%     debug_dat.zuptStateR = false(nSamples, 1);
+    debug_dat.zuptState = nan(nSamples, nStates);
+    debug_dat.zuptP = nan(nStates, nStates, nSamples);
     debug_dat.uwbuptState = nan(nSamples, nStates);
+    debug_dat.uwbuptP = nan(nStates, nStates, nSamples);
     debug_dat.cstrState = nan(nSamples, nStates);
+    debug_dat.cstrP = nan(nStates, nStates, nSamples);
+    
+    debug_dat.zuptStateL = bIsStatLA;
+    debug_dat.zuptStateR = bIsStatRA;
     
     if fOpt.applyZupt
         idxMVelMP = nMeasure+1:nMeasure+3;
@@ -228,7 +236,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         R_uwb(3,3) = (fOpt.sigmaUwbLARA)^2;
     end
     
-    if fOpt.applyConst == 1
+    if fOpt.applyConst >= 1 && fOpt.applyConst <= 2
         D = zeros(6, nStates);
         D(1:3,idxPosMP) = -eye(3, 3);
         D(1:3,idxPosLA) = eye(3, 3);
@@ -261,7 +269,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         P_pri(:,:,n)  = P_min;
         
         debug_dat.predState(n,:) = x_min;
-
+        debug_dat.predP(:,:,n) = P_min;
+        
     %% ------------------------------------------------------------------------
     % Measurement update step
     % matrices beginnning with 'H_' are the 'observation matrices' that map
@@ -291,12 +300,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         P_min1 = (I_N - K * H(idx, :)) * P_min;
         
         if fOpt.applyZupt
-            if bIsStatLA(n)
-                debug_dat.zuptStateL(n,:) = x_min1;
-            end
-            if bIsStatRA(n)
-                debug_dat.zuptStateR(n,:) = x_min1;
-            end
+            debug_dat.zuptState(n,:) = x_min1;
+            debug_dat.zuptP(:,:,n) = P_min1;
         end
         
     %% ---- Kalman Filter Update Step using UWB measurements ---- 
@@ -347,6 +352,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             P_plus    = (I_N - K * H) * P_min1;
 
             debug_dat.uwbuptState(n,:) = x_plus;
+            debug_dat.uwbuptP(:,:,n) = P_plus;
         else
             x_plus = x_min1;
             P_plus = P_min1;
@@ -365,7 +371,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         if fOpt.applyConst == 0
             x_tilde = x_plus;
             P_tilde = P_plus;
-        elseif fOpt.applyConst == 1 % projection (W=I) assuming perfect orientation
+        elseif fOpt.applyConst >= 1 && fOpt.applyConst <= 2 % projection (W=I) assuming perfect orientation
             % calculate the location of the knee
             LKNE = x_plus(idxPosLA,1) + dLTibia*LTIB_CS(:,3);
             RKNE = x_plus(idxPosRA,1) + dRTibia*RTIB_CS(:,3);
@@ -392,13 +398,18 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                      +dRFemur*sin(alpha_rk)*RTIB_CS(:,1) ...
                      -dRTibia*RTIB_CS(:,3)) ];
             
-            Kk = D'*(D*D')^(-1);
+            switch (fOpt.applyConst)
+                case 1 % least squares estimate + no P update
+                    Kk = D'*(D*D')^(-1);
+                case 2 % maximum probability estimate + no P update
+                    Kk = P_plus*D'*(D*P_plus*D')^(-1);
+            end
+            
             res = d_k - D * x_plus;
             dx = Kk*(res);
             x_tilde = x_plus + dx;
             
             debug_dat.cstrStateRes(n,:) = res;
-            debug_dat.cstrState(n,:) = x_tilde;
             debug_dat.cstrStateKk(:,:,n) = Kk;
             
             P_tilde = P_plus;
@@ -438,6 +449,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 
         xhat_con(n, :) = x_tilde;
         P_con(:, :, n)  = P_tilde;
+        debug_dat.cstrState(n,:) = x_tilde;
+        debug_dat.cstrP(:,:,n) = P_tilde;
         
         debug_dat.LFEO(n, :) = x_tilde(idxPosLA) + dLTibia * LTIB_CS(:, 3);
         debug_dat.RFEO(n, :) = x_tilde(idxPosRA) + dRTibia * RTIB_CS(:, 3);

@@ -20,7 +20,8 @@ function plotPosition(bodys, parts)
         for j=1:length(bodys)
             data = bodys{j}.(parts{i});
             t = (1:length(data(:,1)))';
-
+            t = t / bodys{j}.fs;
+            
             subplot(n,1,plotIndex); hold on;
             plot(t, data(:,1), ...
                  strcat(bodys{j}.xyzColor{1}, bodys{j}.lnSymbol));
