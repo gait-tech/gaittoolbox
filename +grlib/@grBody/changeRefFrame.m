@@ -9,7 +9,7 @@
 % ======================================================================
 function out = changeRefFrame(obj, ref)
     if nargin <= 1
-        ref = 'MIDPEL0';
+        ref = 'MIDPEL';
     end
     
     refMap = containers.Map({'MIDPEL'}, ...

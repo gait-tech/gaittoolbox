@@ -7,7 +7,11 @@ classdef grBody < matlab.mixin.Copyable
     properties
         %> name of body
         name
+        %> number of samples
         nSamples
+        %> sampling frequency
+        fs = 60
+        %> frame: vicon / world / MIDPEL
         frame
         
         % Plot specifications

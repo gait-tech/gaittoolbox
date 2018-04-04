@@ -162,10 +162,12 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
     gfr_acc_MP = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_MP);
     gfr_acc_LA = quatrotate(quatconj(dataS.L_LowLeg.ori), ...
                             dataS.L_LowLeg.acc) - [0 0 9.81];
-    gfr_acc_LA = quatrotate(quatconj(calibIR.L_LowLeg.ori), gfr_acc_LA);
+%     gfr_acc_LA = quatrotate(quatconj(calibIR.L_LowLeg.ori), gfr_acc_LA);
+    gfr_acc_LA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_LA);
     gfr_acc_RA = quatrotate(quatconj(dataS.R_LowLeg.ori), ...
                             dataS.R_LowLeg.acc) - [0 0 9.81];
-    gfr_acc_RA = quatrotate(quatconj(calibIR.R_LowLeg.ori), gfr_acc_RA);
+%     gfr_acc_RA = quatrotate(quatconj(calibIR.R_LowLeg.ori), gfr_acc_RA);
+    gfr_acc_RA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_RA);
     
     fc = 10;
     [lpf_b, lpf_a] = butter(6, fc/(fs/2));
@@ -216,40 +218,40 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
         end
         
         if cs.accData == 'x'
-            cs_gfr_acc_MP = gfr_acc_MP(sIdx:end-1,:);
-            cs_gfr_acc_LA = gfr_acc_LA(sIdx:end-1,:);
-            cs_gfr_acc_RA = gfr_acc_RA(sIdx:end-1,:);
+            cs_gfr_acc_MP = gfr_acc_MP(sIdx:eIdx,:);
+            cs_gfr_acc_LA = gfr_acc_LA(sIdx:eIdx,:);
+            cs_gfr_acc_RA = gfr_acc_RA(sIdx:eIdx,:);
         elseif cs.accData == 'xf'
-            cs_gfr_acc_MP = gfr_acc_MP_filt(sIdx:end-1,:);
-            cs_gfr_acc_LA = gfr_acc_LA_filt(sIdx:end-1,:);
-            cs_gfr_acc_RA = gfr_acc_RA_filt(sIdx:end-1,:);
+            cs_gfr_acc_MP = gfr_acc_MP_filt(sIdx:eIdx,:);
+            cs_gfr_acc_LA = gfr_acc_LA_filt(sIdx:eIdx,:);
+            cs_gfr_acc_RA = gfr_acc_RA_filt(sIdx:eIdx,:);
         else
-            cs_gfr_acc_MP = gfr_acc_MP_act(sIdx:end,:);
-            cs_gfr_acc_LA = gfr_acc_LA_act(sIdx:end,:);
-            cs_gfr_acc_RA = gfr_acc_RA_act(sIdx:end,:);
+            cs_gfr_acc_MP = gfr_acc_MP_act(sIdx:eIdx,:);
+            cs_gfr_acc_LA = gfr_acc_LA_act(sIdx:eIdx,:);
+            cs_gfr_acc_RA = gfr_acc_RA_act(sIdx:eIdx,:);
         end
         
         if cs.oriData == 'x'
-            cs_qPelvis = qPelvisEst(sIdx:end-1,:);
-            cs_qLankle = qLankleEst(sIdx:end-1,:);
-            cs_qRankle = qRankleEst(sIdx:end-1,:);
+            cs_qPelvis = qPelvisEst(sIdx:eIdx,:);
+            cs_qLankle = qLankleEst(sIdx:eIdx,:);
+            cs_qRankle = qRankleEst(sIdx:eIdx,:);
         else
-            cs_qPelvis = qPelvisAct(sIdx+1:end,:);
-            cs_qLankle = qLankleAct(sIdx+1:end,:);
-            cs_qRankle = qRankleAct(sIdx+1:end,:);
+            cs_qPelvis = qPelvisAct(sIdx+1:eIdx+1,:);
+            cs_qLankle = qLankleAct(sIdx+1:eIdx+1,:);
+            cs_qRankle = qRankleAct(sIdx+1:eIdx+1,:);
         end
         
         if cs.zuptData == 'x'
-            cs_bIsStatMP = bIsStatMP(sIdx:end-1,:);
-            cs_bIsStatLA = bIsStatLA(sIdx:end-1,:);
-            cs_bIsStatRA = bIsStatRA(sIdx:end-1,:);
+            cs_bIsStatMP = bIsStatMP(sIdx:eIdx,:);
+            cs_bIsStatLA = bIsStatLA(sIdx:eIdx,:);
+            cs_bIsStatRA = bIsStatRA(sIdx:eIdx,:);
         else
-            cs_bIsStatMP = bIsStatMP_act(sIdx:end,:);
-            cs_bIsStatLA = bIsStatLA_act(sIdx:end,:);
-            cs_bIsStatRA = bIsStatRA_act(sIdx:end,:);
+            cs_bIsStatMP = bIsStatMP_act(sIdx:eIdx,:);
+            cs_bIsStatLA = bIsStatLA_act(sIdx:eIdx,:);
+            cs_bIsStatRA = bIsStatRA_act(sIdx:eIdx,:);
         end
         
-        try
+%         try
             if cs.est == 'ekfv2'
                 [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v2(fs, ...
                     cs.Qacc, cs.Qacc, cs.Qacc, cs.P, ...
@@ -277,6 +279,18 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
                    'qLTH', t_dat_v2.qLTH(idx0,:), ...
                    'qRSK', cs_qRankle(idx0,:), ...
                    'qLSK', cs_qLankle(idx0,:));
+                
+                estState = x_pos_v2;
+                estState2 = t_dat_v2;
+                actState = [MIDPEL_act(sIdx:eIdx,:) gfr_vel_MP_act(sIdx:eIdx,:) ...
+                            dataV.LeftFoot(sIdx:eIdx,:) gfr_vel_LA_act(sIdx:eIdx,:) ...
+                            dataV.RightFoot(sIdx:eIdx,:) gfr_vel_RA_act(sIdx:eIdx,:)];
+                estAcc = [gfr_acc_MP(sIdx:eIdx,:) ...
+                          gfr_acc_LA(sIdx:eIdx,:) ...
+                          gfr_acc_RA(sIdx:eIdx,:)];
+                actAcc = [gfr_acc_MP_act(sIdx:eIdx,:) ...
+                          gfr_acc_LA_act(sIdx:eIdx,:) ...
+                          gfr_acc_RA_act(sIdx:eIdx,:)];
             elseif cs.est == 'ekfv3'
                 x0 = [x0_pos_MP x0_vel_MP zeros(1,4) ...
                       x0_pos_LA x0_vel_LA zeros(1,4) ...
@@ -308,18 +322,34 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
                    'qRTH', t_dat_v2.qRTH(idx0, :), ...
                    'qLSK', x_pos_v2(idx0, 17:20), ...
                    'qRSK', x_pos_v2(idx0, 27:30));
+               
+                estState = x_pos_v2;
+                estState2 = t_dat_v2;
+                actState = [MIDPEL_act(sIdx:eIdx,:) ...
+                   gfr_vel_MP_act(sIdx:eIdx,:) qPelvisAct(sIdx+1:eIdx+1,:)...
+                   dataV.LeftFoot(sIdx:eIdx,:) ...
+                   gfr_vel_LA_act(sIdx:eIdx,:) qLankleAct(sIdx+1:eIdx+1,:)...
+                   dataV.RightFoot(sIdx:eIdx,:) ...
+                   gfr_vel_RA_act(sIdx:eIdx,:) qRankleAct(sIdx+1:eIdx+1,:)];
+                estAcc = [gfr_acc_MP(sIdx:eIdx,:) ...
+                          gfr_acc_LA(sIdx:eIdx,:) ...
+                          gfr_acc_RA(sIdx:eIdx,:)];
+                actAcc = [gfr_acc_MP_act(sIdx:eIdx,:) ...
+                          gfr_acc_LA_act(sIdx:eIdx,:) ...
+                          gfr_acc_RA_act(sIdx:eIdx,:)];
             end
-                
+            
+            estBodyRel = estBody.changeRefFrame('MIDPEL');
             if ~strcmp(savedir, '')
                 save(sprintf("%s/%s-%s.mat", savedir, name, cs.label), ...
-                     'estBody', 'actBody')
+                     'estBody', 'actBody', 'estState', 'actState', ...
+                     'estState2', 'estAcc', 'actAcc')
             end
-            estBodyRel = estBody.changeRefFrame('MIDPEL');
     %         results(resultsIdx) = estBody.diffRMSE(actBody);
             results0 = estBodyRel.diffRelRMSE(actBodyRel);
-        catch
-            results0 = estBody.diffRelRMSE(nan);
-        end
+%         catch
+%             results0 = estBody.diffRelRMSE(nan);
+%         end
         
         results0.name = name;
         results0.label = cs.label;
@@ -356,72 +386,4 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
 % 
 %     %% --------------------------------------------------------------------
 %     %  Further Validation
-    % Static Plots
-%     updateFigureContents('Position');
-%     grlib.viz.plotPosition({estBody, actBody}, {'MIDPEL', 'LTIO', 'RTIO'});
-%     
-%     updateFigureContents('Animation Freeze');
-%     grid; view(0, 90); hold on;
-%     for i=idx0(1):30:idx0(end)
-%         grlib.viz.plotLowerBody(estBody, i);
-%         grlib.viz.plotLowerBody(actBody, i);
-%     end
-% %     
-% %     updateFigureContents('GFR Acc Diff');
-% %     diff_gfr_acc_MP = gfr_acc_MP(1:end-1,:) - gfr_acc_MP_act;
-% %     diff_gfr_acc_LA = gfr_acc_LA(1:end-1,:) - gfr_acc_LA_act;
-% %     diff_gfr_acc_RA = gfr_acc_RA(1:end-1,:) - gfr_acc_RA_act;
-% %     grlib.viz.plotXYZ(diff_gfr_acc_MP, diff_gfr_acc_LA, diff_gfr_acc_RA);
-%     
-%     % Animation
-%     updateFigureContents('Animation');
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
-%     for i=idx
-%         clf; grid;
-%         xlim(estBodyLimits(1:2)); 
-%         ylim(estBodyLimits(3:4)); 
-%         zlim(estBodyLimits(5:6));  
-%         view(0, 180);
-%         grlib.viz.plotLowerBody(estBody, i);
-%         pause(1/1000);
-%     end
-%     
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     estBodyLimitsRel = [estBodyRel.xlim() estBodyRel.ylim() estBodyRel.zlim()];
-%     for i=idx
-%         clf; grid;
-%         xlim(estBodyLimitsRel(1:2)); 
-%         ylim(estBodyLimitsRel(3:4)); 
-%         zlim(estBodyLimitsRel(5:6));  
-%         view(20, 30);
-%         grlib.viz.plotLowerBody(estBodyRel, i, true);
-%         pause(1/1000);
-%     end
-%     
-%         
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     actBodyLimitsRel = [actBodyRel.xlim() actBodyRel.ylim() actBodyRel.zlim()];
-%     for i=idx
-%         clf; grid;
-%         xlim(actBodyLimitsRel(1:2)); 
-%         ylim(actBodyLimitsRel(3:4)); 
-%         zlim(actBodyLimitsRel(5:6));  
-%         view(40, 30);
-%         grlib.viz.plotLowerBody(actBodyRel, i);
-%         pause(1/1000);
-%     end
-% 
-%     updateFigureContents('Animation');
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
-%     for i=idx
-%         clf; grid; 
-%         xlim(actBodyLimits(1:2)); 
-%         ylim(actBodyLimits(3:4)); 
-%         zlim(actBodyLimits(5:6));  
-%         view(0, 180);
-%         grlib.viz.plotLowerBody(actBody, i);
-%         pause(1/1000);
-%     end
 end

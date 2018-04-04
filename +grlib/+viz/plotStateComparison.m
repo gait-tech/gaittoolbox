@@ -8,11 +8,12 @@
 %> @param stateIdx compare state number stateIdx: stateIdx+2
 % ======================================================================
 
-function plotStateComparison(estStateData, actStateData, stateIdx)
+function plotStateComparison(estStateData, actStateData, stateIdx, fs)
     plotIndex = 1;
     target = stateIdx:stateIdx+2;
     sp = [];
     n = length(estStateData.predState(:,1))*3;
+    fsAdj = fs*3;
     
     for i=target
         sp(plotIndex) = subplot(length(target), 1, plotIndex); hold on;
@@ -20,15 +21,21 @@ function plotStateComparison(estStateData, actStateData, stateIdx)
 %         y = [estStateData.predState(:,i); ...
 %              estStateData.zuptState(:,i); ...
 %              estStateData..constrainedState(:,i)];
-        scatter(1:3:n, estStateData.predState(:,i), '.r');
-        scatter(2:3:n, estStateData.zuptStateL(:,i), '<g');
-        scatter(2:3:n, estStateData.zuptStateR(:,i), '>g');
-        scatter(3:3:n, estStateData.cstrState(:,i), '.b');
+        scatter((1:3:n)/fsAdj, estStateData.predState(:,i), '.r');
+        zuptState = estStateData.zuptState(:,i);
+        zuptStateL = zuptState;
+        zuptStateL(~estStateData.zuptStateL(:,1)) = nan;
+        zuptStateR = zuptState;
+        zuptStateR(~estStateData.zuptStateR(:,1)) = nan;
+        scatter((2:3:n)/fsAdj, zuptState(:,1), '.g');
+        scatter((2:3:n)/fsAdj, zuptStateL(:,1), '<g');
+        scatter((2:3:n)/fsAdj, zuptStateR(:,1), '>g');
+        scatter((3:3:n)/fsAdj, estStateData.cstrState(:,i), '.b');
         
         actStateData2 = repelem(actStateData(:,i), 3);
-        scatter(1:n, actStateData2, '.k');
+        scatter((1:n)/fsAdj, actStateData2, '.k');
         
-        legend('pred', 'zuptL', 'zuptR', 'cpknee', 'actual');
+        legend('pred', 'zupt', 'zuptL', 'zuptR', 'cstr', 'actual');
         plotIndex = plotIndex + 1;
     end
     linkaxes(sp, 'x');
