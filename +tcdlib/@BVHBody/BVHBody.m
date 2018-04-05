@@ -91,4 +91,8 @@ classdef BVHBody < handle
         obj = loadBVHFile(fname, unit)
         obj = loadOriPosFile(fname_ori, fname_pos, unit)
     end
+    
+    methods
+        obj = toWorldFrame(obj, qR)
+    end
 end

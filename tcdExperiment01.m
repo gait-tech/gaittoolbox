@@ -56,6 +56,9 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
         dataS = fnameS;
     end
     
+    qV2W = rotm2quat([1 0 0; 0 0 -1; 0 1 0]);
+    dataV = dataV.toWorldFrame(qV2W);
+    
     nSamples = min(dataV.nSamples, dataS.nSamples);
     key = {'Pelvis', 'L_UpLeg', 'R_UpLeg',...
         'L_LowLeg', 'R_LowLeg', 'L_Foot', 'R_Foot'};
@@ -139,12 +142,9 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
     qRankleEst0 = quatmultiply((calibIR.R_LowLeg.ori), ...
         quatmultiply(dataS.R_LowLeg.ori, quatconj(calibIB.R_LowLeg.ori)));
     % orientation of body in World frame
-%     qPelvisEst = quatmultiply(dataS.Pelvis.ori, ...
-%                               quatconj(calibIB.Pelvis.ori));
-%     qLankleEst = quatmultiply(dataS.L_LowLeg.ori, ...
-%                               quatconj(calibIB.L_LowLeg.ori));
-%     qRankleEst = quatmultiply(dataS.R_LowLeg.ori, ...
-%                               quatconj(calibIB.R_LowLeg.ori));
+    qPelvisEst0 = quatmultiply(qV2W, qPelvisEst0);
+    qLankleEst0 = quatmultiply(qV2W, qLankleEst0);
+    qRankleEst0 = quatmultiply(qV2W, qRankleEst0);
 
     % Align body frame convention to biomechanics convention
     % FROM: x - right, y - back, z - down
@@ -159,15 +159,15 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
     
     gfr_acc_MP = quatrotate(quatconj(dataS.Pelvis.ori), ...
                             dataS.Pelvis.acc) - [0 0 9.81];
-    gfr_acc_MP = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_MP);
+%     gfr_acc_MP = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_MP);
     gfr_acc_LA = quatrotate(quatconj(dataS.L_LowLeg.ori), ...
                             dataS.L_LowLeg.acc) - [0 0 9.81];
 %     gfr_acc_LA = quatrotate(quatconj(calibIR.L_LowLeg.ori), gfr_acc_LA);
-    gfr_acc_LA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_LA);
+%     gfr_acc_LA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_LA);
     gfr_acc_RA = quatrotate(quatconj(dataS.R_LowLeg.ori), ...
                             dataS.R_LowLeg.acc) - [0 0 9.81];
 %     gfr_acc_RA = quatrotate(quatconj(calibIR.R_LowLeg.ori), gfr_acc_RA);
-    gfr_acc_RA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_RA);
+%     gfr_acc_RA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_RA);
     
     fc = 10;
     [lpf_b, lpf_a] = butter(6, fc/(fs/2));

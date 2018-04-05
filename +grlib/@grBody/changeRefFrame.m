@@ -18,6 +18,11 @@ function out = changeRefFrame(obj, ref)
     if strcmp(obj.frame, 'vicon') && isKey(refMap, ref)
         refPos = ref;
         refOri = refMap(ref);
+    elseif strcmp(obj.frame, 'world') && isKey(refMap, ref)
+        refPos = ref;
+        refOri = refMap(ref);
+    else
+        error('The source frame or destination frame is not supported');
     end
     
     out = copy(obj);
