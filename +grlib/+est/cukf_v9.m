@@ -8,7 +8,7 @@
 % z now containts [accel, quat, ang. vel]' x3 in order MP, LA, RA
 % therefore, z has length = 3x10 = 30
 
-function [ x_rec, xa_rec, qFEM ] = cukf_v9(x,P,Q,R,N_MP,nMeas,acc,fs,...
+function [ x_rec, xa_rec, qFEM, qlkVec, qrkVec ] = cukf_v9(x,P,Q,R,N_MP,nMeas,acc,fs,...
     q_MP, q_LA, q_RA, w_MP_gfr__s, w_LA_gfr__s, w_RA_gfr__s, d_pelvis, d_lfemur, d_rfemur,...
     d_ltibia, d_rtibia,isConstr)
 %% Unscented Kalman filter for state estimation of human lower limbs (a
@@ -36,6 +36,8 @@ function [ x_rec, xa_rec, qFEM ] = cukf_v9(x,P,Q,R,N_MP,nMeas,acc,fs,...
 % Output:   x_rec: "a posteriori" state estimate
 %           xa_rec: "a posteriori" augmented state components
 %           qFEM: quaternion representing orientation of femur in gfr
+qlkVec = [];
+qrkVec = [];
 
 L = length(x);                                 %numer of states
 m = nMeas;
@@ -126,6 +128,19 @@ for k=1:N_MP
     LFEM_z = LFEM_z/norm(LFEM_z);
     RFEM_z = RFEM_z/norm(RFEM_z);
     
+    LFEM_z__N = LFEM_z;
+RFEM_z__N = RFEM_z;
+
+% _TIB_CS is _TIB_CS described in wrod frame, or rotm from tib2world frame
+% therefore, inverse is from wrold to tib frame
+LFEM_z__TIB = LTIB_CS\LFEM_z__N;
+RFEM_z__TIB = RTIB_CS\RFEM_z__N;
+
+%global qklVec arkVec 
+alpha_lk = atan2(-LFEM_z__TIB(1),LFEM_z__TIB(3));
+alpha_rk = atan2(-RFEM_z__TIB(1),RFEM_z__TIB(3));
+qlkVec(k) = alpha_lk;
+qrkVec(k) = alpha_rk;
     LFEM_y = LTIB_CS(:,2);
     RFEM_y = RTIB_CS(:,2);
     
@@ -251,7 +266,7 @@ function y = L2Dist(x,x0,S)
 %y = (x-x0)'*(x-x0);
 % add index specifying pos. of mp la and ra rather than including q
 qW = 1;%norm(x0); %weighting for q deviation to account for diffin units between pos and q.
-posW = 10;
+posW = 1;
 %need to adapt x to rel pos of LA and RA to prevent large data recording
 %problems
 %posIdx = [];
@@ -323,6 +338,7 @@ RFEM_z__N = RFEM_z;
 LFEM_z__TIB = LTIB_CS\LFEM_z__N;
 RFEM_z__TIB = RTIB_CS\RFEM_z__N;
 
+%global alpha_lk alpha_rk 
 alpha_lk = atan2(-LFEM_z__TIB(1),LFEM_z__TIB(3));
 alpha_rk = atan2(-RFEM_z__TIB(1),RFEM_z__TIB(3));
 
@@ -336,7 +352,41 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
     +d_rfemur*sin(alpha_rk)*RTIB_CS(:,1) ...
     -d_rtibia*RTIB_CS(:,3)) ];
 
-%% Vel-Level Knee-Joint Constraint
+%% MG-generated Pos constraint
+%     q1PEL = xhat(10);
+%     q2PEL = xhat(11);
+%     q3PEL = xhat(12);
+%     q4PEL = xhat(13);
+%     
+%     q1LTIB = xhat(26);
+%     q2LTIB = xhat(27);
+%     q3LTIB = xhat(28);
+%     q4LTIB = xhat(29);
+% 
+%     q1RTIB = xhat(42);
+%     q2RTIB = xhat(43);
+%     q3RTIB = xhat(44);
+%     q4RTIB = xhat(45);
+% 
+%     qLKN = alpha_lk;
+%     qRKN = alpha_rk;
+%     
+%  p_LTIBo_PELo =[(-2*d_ltibia*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)-d_pelvis*(q1PEL*q4PEL-q2PEL*q3PEL)...
+% -d_lfemur*(2*cos(qLKN)*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)-sin(qLKN)*(-1+2*q1LTIB^2+2*q2LTIB^2)));...
+%  + (2*d_ltibia*(q1LTIB*q2LTIB-q3LTIB*q4LTIB)+0.5*d_pelvis*(-1+2*q1PEL^2+2*q3PEL^2)...
+%  +2*d_lfemur*(sin(qLKN)*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)+cos(qLKN)*(q1LTIB*q2LTIB-q3LTIB*q4LTIB)));...
+%  + (d_pelvis*(q1PEL*q2PEL+q3PEL*q4PEL)-d_ltibia*(-1+2*q1LTIB^2+2*q4LTIB^2)...
+%  -d_lfemur*(2*sin(qLKN)*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)+cos(qLKN)*(-1+2*q1LTIB^2+2*q4LTIB^2)))];
+% %  
+%   p_RTIBo_PELo = [(d_pelvis*(q1PEL*q4PEL-q2PEL*q3PEL)-2*d_rtibia*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)...
+%       -d_rfemur*(2*cos(qRKN)*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)-sin(qRKN)*(-1+2*q1RTIB^2+2*q2RTIB^2)));...
+%       + (2*d_rtibia*(q1RTIB*q2RTIB-q3RTIB*q4RTIB)+2*d_rfemur*(sin(qRKN)*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)...
+%       +cos(qRKN)*(q1RTIB*q2RTIB-q3RTIB*q4RTIB))-0.5*d_pelvis*(-1+2*q1PEL^2+2*q3PEL^2));...
+%       + (-d_pelvis*(q1PEL*q2PEL+q3PEL*q4PEL)-d_rtibia*(-1+2*q1RTIB^2+2*q4RTIB^2)...
+%       -d_rfemur*(2*sin(qRKN)*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)+cos(qRKN)*(-1+2*q1RTIB^2+2*q4RTIB^2)))];
+%  d_k = [p_LTIBo_PELo;
+%         p_RTIBo_PELo];
+ %% Vel-Level Knee-Joint Constraint
 
     %% Variable assignment based on knee cosntructing constraints
     %(left or right knee)
@@ -352,6 +402,7 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
     q3PEL = xhat(12);
     q4PEL = xhat(13);
     
+    
     dxv = [xhat(20) - xhat(4); %left ankle_pel rel vel in Nx
         xhat(21) - xhat(5); % || in Ny
         xhat(22) - xhat(6);%  || in Nz
@@ -361,8 +412,8 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
     
     %% left knee
         
-        l_tib = d_ltibia;
-        l_fem = d_lfemur;
+%         l_tib = d_ltibia;
+%         l_fem = d_lfemur;
         
         qLKN = alpha_lk;
         
@@ -381,26 +432,15 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
     %w_KN_scl = -w_KN_scl;
     %relVel_ANK_PELo_N is the relative velocities of the ankle from the pelvis,
     %described in frame N (eqivalent to gfr)
-    relVel_LANK_PELo_N = [(l_pel*wxPEL*(q1PEL*q3PEL+q2PEL*q4PEL)-...
-        l_tib*wyLTIB*(-1+2*q1LTIB^2+2*q2LTIB^2)-0.5*l_pel*wzPEL*(-1+2*q1PEL^2+2*q2PEL^2)...
-        -2*(q1LTIB*q4LTIB-q2LTIB*q3LTIB)*(l_tib*wxLTIB+l_fem*(wxLTIB*cos(qLKN)+wzLTIB*sin(qLKN)))...
-        -l_fem*(2*sin(qLKN)*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)+cos(qLKN)*(-1+2*q1LTIB^2+...
-        2*q2LTIB^2))*(wyLTIB-w_LKN_scl));...
-        ((-1+2*q1LTIB^2+2*q3LTIB^2)*(l_tib*wxLTIB+l_fem*(wxLTIB*cos(qLKN)+wzLTIB*sin(qLKN)))...
-        -2*l_tib*wyLTIB*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)-l_pel*wzPEL*(q1PEL*q4PEL+q2PEL*q3PEL)...
-        -l_pel*wxPEL*(q1PEL*q2PEL-q3PEL*q4PEL)-2*l_fem*(cos(qLKN)*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)...
-        -sin(qLKN)*(q1LTIB*q2LTIB-q3LTIB*q4LTIB))*(wyLTIB-w_LKN_scl));...
-        (l_pel*wzPEL*(q1PEL*q3PEL-q2PEL*q4PEL)+2*l_tib*wyLTIB*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)...
-        +0.5*l_pel*wxPEL*(-1+2*q1PEL^2+2*q4PEL^2)+2*(q1LTIB*q2LTIB+...
-        q3LTIB*q4LTIB)*(l_tib*wxLTIB+l_fem*(wxLTIB*cos(qLKN)+wzLTIB*sin(qLKN)))+...
-        l_fem*(2*cos(qLKN)*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)-sin(qLKN)*(-1+2*q1LTIB^2 ...
-        +2*q4LTIB^2))*(wyLTIB-w_LKN_scl))];
-       
+    
+    %gen manual velocity eq
+    grlib.est.genLAMPRelVel
+    
         d_k_v(1:3,1) = relVel_LANK_PELo_N;
 
      %% right knee
-        l_tib = d_rtibia;
-        l_fem = d_rfemur;
+%         l_tib = d_rtibia;
+%         l_fem = d_rfemur;
         
         qRKN = alpha_rk;
         
@@ -423,21 +463,9 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
     %w_RKN_scl = -w_RKN_scl;
     %relVel_ANK_PELo_N is the relative velocities of the ankle from the pelvis,
     %described in frame N (eqivalent to gfr)
-    relVel_RANK_PELo_N = [(l_pel*wxPEL*(q1PEL*q3PEL+q2PEL*q4PEL)-...
-        l_tib*wyRTIB*(-1+2*q1RTIB^2+2*q2RTIB^2)-0.5*l_pel*wzPEL*(-1+2*q1PEL^2+2*q2PEL^2)...
-        -2*(q1RTIB*q4RTIB-q2RTIB*q3RTIB)*(l_tib*wxRTIB+l_fem*(wxRTIB*cos(qRKN)+wzRTIB*sin(qRKN)))...
-        -l_fem*(2*sin(qRKN)*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)+cos(qRKN)*(-1+2*q1RTIB^2+...
-        2*q2RTIB^2))*(wyRTIB-w_RKN_scl));...
-        ((-1+2*q1RTIB^2+2*q3RTIB^2)*(l_tib*wxRTIB+l_fem*(wxRTIB*cos(qRKN)+wzRTIB*sin(qRKN)))...
-        -2*l_tib*wyRTIB*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)-l_pel*wzPEL*(q1PEL*q4PEL+q2PEL*q3PEL)...
-        -l_pel*wxPEL*(q1PEL*q2PEL-q3PEL*q4PEL)-2*l_fem*(cos(qRKN)*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)...
-        -sin(qRKN)*(q1RTIB*q2RTIB-q3RTIB*q4RTIB))*(wyRTIB-w_RKN_scl));...
-        (l_pel*wzPEL*(q1PEL*q3PEL-q2PEL*q4PEL)+2*l_tib*wyRTIB*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)...
-        +0.5*l_pel*wxPEL*(-1+2*q1PEL^2+2*q4PEL^2)+2*(q1RTIB*q2RTIB+...
-        q3RTIB*q4RTIB)*(l_tib*wxRTIB+l_fem*(wxRTIB*cos(qRKN)+wzRTIB*sin(qRKN)))+...
-        l_fem*(2*cos(qRKN)*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)-sin(qRKN)*(-1+2*q1RTIB^2 ...
-        +2*q4RTIB^2))*(wyRTIB-w_RKN_scl))];
-
+    
+    %gen right ankle rel vel from MP
+    grlib.est.genRAMPRelVel
         d_k_v(4:6,1) = relVel_RANK_PELo_N;
     
 
@@ -461,13 +489,14 @@ qDotRA = calcqdot(xhat(idx_q_RA),xhat(idx_w_RA));
 qDotRARes = xhat(idx_q_RA)'*qDotRA;
 %TODO add qdot constr.
 
-ceq = [ pRes + kv*vRes;
-        kq*qMPRes;
-        kq*qLARes;
-        kq*qRARes;
-        kq*qDotMPRes;
-        kq*qDotLARes;
-        kq*qDotRARes];
+ceq = [ pRes;
+     kv*vRes];
+%         kq*qMPRes;
+%         kq*qLARes;
+%         kq*qRARes;
+%         kq*qDotMPRes;
+%         kq*qDotLARes;
+%         kq*qDotRARes];
     
 
 maxFootVel = 12; %m/s
@@ -475,14 +504,14 @@ maxKNAngVel = 12; %rad/s
 % c = [norm(xhat(idx_vel_LA))-maxFootVel;
 %     norm(xhat(idx_vel_RA))-maxFootVel];
 qSafetyFactor = deg2rad(3);
- c = [-alpha_lk;
-    (alpha_lk+qSafetyFactor) - 0.5*pi;
-    -alpha_rk;
-    (alpha_rk+qSafetyFactor) - 0.5*pi;
-    abs(w_LKN_scl) - maxKNAngVel;
-    abs(w_RKN_scl) - maxKNAngVel;
-    norm(relVel_LANK_PELo_N) - maxFootVel;
-    norm(relVel_RANK_PELo_N) - maxFootVel];
+  c = [];%-alpha_lk;
+%     (alpha_lk+qSafetyFactor) - 0.5*pi;
+%     -alpha_rk;
+%     (alpha_rk+qSafetyFactor) - 0.5*pi;
+%     abs(w_LKN_scl) - maxKNAngVel;
+%     abs(w_RKN_scl) - maxKNAngVel;
+%     norm(relVel_LANK_PELo_N) - maxFootVel;
+%     norm(relVel_RANK_PELo_N) - maxFootVel];
 %knee joint angular velocity cap from :
 %Effects of power training on muscle structure and neuromuscular performance
 %March 2005Scandinavian Journal of Medicine and Science in Sports 15(1):58-64
