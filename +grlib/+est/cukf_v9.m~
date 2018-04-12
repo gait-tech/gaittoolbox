@@ -339,8 +339,8 @@ LFEM_z__TIB = LTIB_CS\LFEM_z__N;
 RFEM_z__TIB = RTIB_CS\RFEM_z__N;
 
 %global alpha_lk alpha_rk 
-alpha_lk = atan2(-LFEM_z__TIB(3),-LFEM_z__TIB(1)) + 0.5*pi;
-alpha_rk = atan2(-RFEM_z__TIB(3),-RFEM_z__TIB(1)) + 0.5*pi;
+alpha_lk = atan2(LFEM_z__TIB(1),-LFEM_z__TIB(3));
+alpha_rk = atan2(RFEM_z__TIB(1),-RFEM_z__TIB(3));
 
 % setup the constraint equations
 d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
@@ -501,7 +501,8 @@ qDotRA = calcqdot(xhat(idx_q_RA),xhat(idx_w_RA));
 qDotRARes = xhat(idx_q_RA)'*qDotRA;
 %TODO add qdot constr.
 
-ceq = [ pRes];% + kv*vRes];
+ceq = [ pRes;
+     kv*vRes];
 %         kq*qMPRes;
 %         kq*qLARes;
 %         kq*qRARes;
@@ -515,9 +516,9 @@ maxKNAngVel = 12; %rad/s
 % c = [norm(xhat(idx_vel_LA))-maxFootVel;
 %     norm(xhat(idx_vel_RA))-maxFootVel];
 qSafetyFactor = deg2rad(3);
-  c = [-(alpha_lk+qSafetyFactor);
+  c = [-alpha_lk;
     (alpha_lk+qSafetyFactor) - pi;
-    -(alpha_rk+qSafetyFactor);
+    -alpha_rk;
     (alpha_rk+qSafetyFactor) - pi];
 %     abs(w_LKN_scl) - maxKNAngVel;
 %     abs(w_RKN_scl) - maxKNAngVel;
