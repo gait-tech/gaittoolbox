@@ -47,7 +47,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %   options   - struct containing the ff. settings:
 %       applyZupt - turn on/off zero velocity update. boolean
 %           001: standard zupt
-%           002: zupt + floor assumption
+%           002: standard zupt + floor assumption
+%           003: standard zupt + floor assumption + reset at both foot
 %       applyUwb - turn on/off uwb measurement update. boolean
 %       applyAccBias - turn on/off acc bias in the model. boolean
 %       applyConst - turn on/off constraints.
@@ -81,7 +82,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
         'sigmaQOriMP', 1e5, 'sigmaQOriLA', 1e5, 'sigmaQOriRA', 1e5, ...
         'sigmaROriMP', 1e-1, 'sigmaROriLA', 1e-1, 'sigmaROriRA', 1e-1, ...
-        'sigmaRPosZLA', 1e-4, 'sigmaRPosZRA', 1e-4, ...
+        'sigmaRPosLA', 1e-4, 'sigmaRPosRA', 1e-4, ...
         'sigmaUwbMPLA', 0.2, 'sigmaUwbMPRA', 0.2, 'sigmaUwbLARA', 0.1, ...
         'sigmaZuptMP', 1e-4, 'sigmaZuptLA', 1e-4, 'sigmaZuptRA', 1e-4, ...
         'optimOptimalityTolerance', 1e-2, ...
@@ -220,7 +221,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     debug_dat.zuptStateL = bIsStatLA;
     debug_dat.zuptStateR = bIsStatRA;
     
-    if fOpt.applyZupt >= 1 && fOpt.applyZupt <= 2
+    if fOpt.applyZupt
         idxMVelMP = nMeasure+1:nMeasure+3;
         idxMVelLA = nMeasure+4:nMeasure+6;
         idxMVelRA = nMeasure+7:nMeasure+9;
@@ -238,21 +239,35 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         
         y_k(end+1:end+9, :) = zeros(9, nSamples);
     end
-    if fOpt.applyZupt == 2
-        idxMPosZLA = nMeasure+1;
-        idxMPosZRA = nMeasure+2;
-        nMeasure = nMeasure+2;
-        
-        H(end+1:end+2, :) = zeros(2, nStates);
-        H(idxMPosZLA, idxPosLA(3)) = 1;
-        H(idxMPosZRA, idxPosRA(3)) = 1;
-        
-        Rdiag = diag(R);
-        Rdiag(end+1:end+2) = [fOpt.sigmaRPosZLA fOpt.sigmaRPosZRA];
-        R = diag(Rdiag);
-        
+    
+    if fOpt.applyZupt >= 2 % add more zupt features
         floorZ = mean([x0(idxPosLA(3)), x0(idxPosRA(3))]);
-        y_k(end+1:end+2, :) = floorZ*ones(2, nSamples);        
+        
+        switch (fOpt.applyZupt)
+            case 2
+                targetL = idxPosLA(3);
+                targetR = idxPosRA(3);
+            case 3
+                targetL = idxPosLA;
+                targetR = idxPosRA;
+        end
+
+        targetLN = length(targetL); targetRN = length(targetR);
+        targetN = targetLN + targetRN;
+        idxMPosLA = nMeasure+1:nMeasure+targetLN;
+        idxMPosRA = idxMPosLA(end)+1:idxMPosLA(end)+targetRN;
+        nMeasure = nMeasure + targetN;
+
+        H(end+1:end+targetN, :) = zeros(targetN, nStates);
+        H(idxMPosLA, targetL) = eye(targetLN);
+        H(idxMPosRA, targetR) = eye(targetRN);
+
+        Rdiag = diag(R);
+        Rdiag(end+1:end+targetLN) = repelem([fOpt.sigmaRPosLA], targetLN);
+        Rdiag(end+targetLN+1:end+targetN) = repelem([fOpt.sigmaRPosRA], targetRN);
+        R = diag(Rdiag);
+
+        y_k(end+1:end+targetN, :) = floorZ*ones(targetN, nSamples);  
     end
     
     if fOpt.applyUwb
@@ -353,7 +368,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     % the variables in the state estimate vector, xhat, to the measurement
     % domain. In this case we are using
         idx = [idxMOriMP idxMOriLA idxMOriRA];
-        if fOpt.applyZupt >= 1 && fOpt.applyZupt <= 2
+        if fOpt.applyZupt >= 1
             if bIsStatMP(n)
                 idx(end+1:end+3) = idxMVelMP;
             end
@@ -364,12 +379,12 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 idx(end+1:end+3) = idxMVelRA;
             end
         end
-        if fOpt.applyZupt == 2
+        if fOpt.applyZupt >= 2 && fOpt.applyZupt <= 3
             if bIsStatLA(n)
-                idx(end+1) = idxMPosZLA;
+                idx(end+1:end+length(idxMPosLA)) = idxMPosLA;
             end
             if bIsStatRA(n)
-                idx(end+1) = idxMPosZRA;
+                idx(end+1:end+length(idxMPosRA)) = idxMPosRA;
             end
         end
         
