@@ -255,7 +255,7 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
             cs_bIsStatRA = bIsStatRA_act(sIdx:eIdx,:);
         end
         
-%         try
+        try
             if cs.est == 'ekfv2'
                 [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v2(fs, ...
                     cs.Qacc, cs.Qacc, cs.Qacc, cs.P, ...
@@ -351,9 +351,9 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
             end
     %         results(resultsIdx) = estBody.diffRMSE(actBody);
             results0 = estBodyRel.diffRelRMSE(actBodyRel);
-%         catch
-%             results0 = actBody.diffRelRMSE(nan);
-%         end
+        catch
+            results0 = actBody.diffRelRMSE(nan);
+        end
         
         results0.name = name;
         results0.label = cs.label;

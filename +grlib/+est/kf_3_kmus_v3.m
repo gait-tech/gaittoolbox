@@ -49,6 +49,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %           001: standard zupt
 %           002: standard zupt + floor assumption
 %           003: standard zupt + floor assumption + reset at both foot
+%           004: standard zupt + floor assumption + series reset at both foot
 %       applyUwb - turn on/off uwb measurement update. boolean
 %       applyAccBias - turn on/off acc bias in the model. boolean
 %       applyConst - turn on/off constraints.
@@ -56,6 +57,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %           002: estimate projection (W=I) assuming perfect orientation
 %           003: least squares estimate w/ full confidence on pelvis (P=0 at pelvis) + no P update
 %           004: maximum probability estimate w/ force equal foot covariance + no P update
+%           005: maximum probability estimate if P is well conditioned + P update
 %           011: fmincon (interior point) linear hjc in world frame, W = P^-1
 %           012: fmincon (sqp) linear hjc in world frame, W = P^-1
 %           013: fmincon (active set) linear hjc in world frame, W = P^-1
@@ -82,7 +84,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
         'sigmaQOriMP', 1e5, 'sigmaQOriLA', 1e5, 'sigmaQOriRA', 1e5, ...
         'sigmaROriMP', 1e-1, 'sigmaROriLA', 1e-1, 'sigmaROriRA', 1e-1, ...
-        'sigmaRPosLA', 1e-4, 'sigmaRPosRA', 1e-4, ...
+        'sigmaRPosLA', 1e-2, 'sigmaRPosRA', 1e-2, ...
+        'sigmaCPos', 1e-2, ...
         'sigmaUwbMPLA', 0.2, 'sigmaUwbMPRA', 0.2, 'sigmaUwbLARA', 0.1, ...
         'sigmaZuptMP', 1e-4, 'sigmaZuptLA', 1e-4, 'sigmaZuptRA', 1e-4, ...
         'optimOptimalityTolerance', 1e-2, ...
@@ -250,6 +253,9 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             case 3
                 targetL = idxPosLA;
                 targetR = idxPosRA;
+            case 4
+                targetL = idxPosLA;
+                targetR = idxPosRA;
         end
 
         targetLN = length(targetL); targetRN = length(targetR);
@@ -263,8 +269,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         H(idxMPosRA, targetR) = eye(targetRN);
 
         Rdiag = diag(R);
-        Rdiag(end+1:end+targetLN) = repelem([fOpt.sigmaRPosLA], targetLN);
-        Rdiag(end+targetLN+1:end+targetN) = repelem([fOpt.sigmaRPosRA], targetRN);
+        Rdiag(end+1:end+targetLN) = repelem([fOpt.sigmaRPosLA^2], targetLN);
+        Rdiag(end+1:end+targetRN) = repelem([fOpt.sigmaRPosRA^2], targetRN);
         R = diag(Rdiag);
 
         y_k(end+1:end+targetN, :) = floorZ*ones(targetN, nSamples);  
@@ -292,15 +298,18 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         R_uwb(3,3) = (fOpt.sigmaUwbLARA)^2;
     end
     
-    if fOpt.applyConst >= 1 && fOpt.applyConst <= 5
+    if fOpt.applyConst >= 1 && fOpt.applyConst <= 7
         D = zeros(6, nStates);
         D(1:3,idxPosMP) = -eye(3, 3);
         D(1:3,idxPosLA) = eye(3, 3);
         D(4:6,idxPosMP) = -eye(3, 3);
         D(4:6,idxPosRA) = eye(3, 3);
         
+        I_CN = eye(6, 6);
         P_custom = eye(nStates);
         P_custom(idxPosMP,idxPosMP) = 0;
+        
+        debug_dat.cstrStateU = true(nSamples, 6);
     elseif fOpt.applyConst >= 11 && fOpt.applyConst <= 16
         x2cxIdx = [idxPosMP, idxVelMP, idxPosLA, idxVelLA, idxPosRA, idxVelRA];
         nCStates = 18;
@@ -316,7 +325,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             'ConstraintTolerance', fOpt.optimConstraintTolerance, ...
             'MaxFunctionEvaluations', fOpt.optimMaxFunctionEvaluations, ...
             'UseParallel', fOpt.optimUseParallel);
-    elseif fOpt.applyConst >= 21 && fOpt.applyConst <= 22
+    elseif fOpt.applyConst >= 21 && fOpt.applyConst <= 23
         D = zeros(6, nStates);
         D(1:3,idxPosLA) = eye(3, 3);
         D(4:6,idxPosRA) = eye(3, 3);
@@ -369,23 +378,25 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     % domain. In this case we are using
         idx = [idxMOriMP idxMOriLA idxMOriRA];
         if fOpt.applyZupt >= 1
-            if bIsStatMP(n)
-                idx(end+1:end+3) = idxMVelMP;
-            end
-            if bIsStatLA(n)
-                idx(end+1:end+3) = idxMVelLA;
-            end
-            if bIsStatRA(n)
-                idx(end+1:end+3) = idxMVelRA;
-            end
+            if bIsStatMP(n) idx(end+1:end+3) = idxMVelMP; end
+            if bIsStatLA(n) idx(end+1:end+3) = idxMVelLA; end
+            if bIsStatRA(n) idx(end+1:end+3) = idxMVelRA; end
         end
-        if fOpt.applyZupt >= 2 && fOpt.applyZupt <= 3
-            if bIsStatLA(n)
+        if fOpt.applyZupt == 2
+            if bIsStatLA(n) idx(end+1:end+length(idxMPosLA)) = idxMPosLA; end
+            if bIsStatRA(n) idx(end+1:end+length(idxMPosRA)) = idxMPosRA; end
+        elseif fOpt.applyZupt == 3
+            if bIsStatLA(n) 
                 idx(end+1:end+length(idxMPosLA)) = idxMPosLA;
+                y_k(idxMPosLA(1:2), n) = x_min(idxPosLA(1:2));
             end
             if bIsStatRA(n)
                 idx(end+1:end+length(idxMPosRA)) = idxMPosRA;
+                y_k(idxMPosRA(1:2), n) = x_min(idxPosRA(1:2));
             end
+        elseif fOpt.applyZupt == 4
+            if bIsStatLA(n) idx(end+1:end+1) = idxMPosLA(3); end
+            if bIsStatRA(n) idx(end+1:end+1) = idxMPosRA(3); end
         end
         
         res = y_k(idx, n) - H(idx, :) * x_min;
@@ -393,6 +404,14 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 
         x_min1 = x_min + K * res;
         P_min1 = (I_N - K * H(idx, :)) * P_min;
+        
+        if fOpt.applyZupt == 4
+            idx = [idxMPosLA(1:2) idxMPosRA(1:2)];
+            y_k(idx) = [x_min(idxPosLA(1:2)) x_min(idxPosRA(1:2))];
+            K = P_min * H(idx, :)' /(H(idx, :) * P_min * H(idx,:)' + R(idx, idx));
+
+            P_min1 = (I_N - K * H(idx, :)) * P_min1;
+        end
         
         if fOpt.applyZupt
             debug_dat.zuptState(n,:) = x_min1;
@@ -466,7 +485,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         if fOpt.applyConst == 0
             x_tilde = x_plus;
             P_tilde = P_plus;
-        elseif fOpt.applyConst >= 1 && fOpt.applyConst <= 5 % projection (W=I) assuming perfect orientation
+        elseif fOpt.applyConst >= 1 && fOpt.applyConst <= 7 % projection (W=I) assuming perfect orientation
             % calculate the location of the knee
             
             d_k = solve_linhjc_d(x_plus(idxPosMP,1), x_plus(idxPosLA,1), ...
@@ -476,35 +495,52 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             switch (fOpt.applyConst)
                 case 1 % maximum probability estimate + no P update
                     Kk = P_plus*D'*(D*P_plus*D')^(-1);
+                    x_tilde = x_plus + Kk*(d_k - D * x_plus);
                     P_tilde = P_plus;
                 case 2 % least squares estimate + no P update
                     Kk = D'*(D*D')^(-1);
+                    x_tilde = x_plus + Kk*(d_k - D * x_plus);
                     P_tilde = P_plus;
                 case 3 % least squares estimate w/ full confidence on pelvis (P=0 at pelvis) + no P update
                     Kk = P_custom*D'*(D*P_custom*D')^(-1);
+                    x_tilde = x_plus + Kk*(d_k - D * x_plus);
                     P_tilde = P_plus;
                 case 4 % maximum probability estimate w/ force equal foot covariance + no P update
                     Winv = P_plus;
                     Winv(idxPosLA, idxPosLA) = Winv(idxPosRA, idxPosRA);
                     Winv(idxVelLA, idxVelLA) = Winv(idxVelRA, idxVelRA);
                     Kk = Winv*D'*(D*Winv*D')^(-1);
+                    x_tilde = x_plus + Kk*(d_k - D * x_plus);
                     P_tilde = P_plus;
-                case 5 % selected maximum probability estimate + P update
+                case 5 % maximum probability estimate if P is well conditioned + P update
                     if cond(P_plus) < 1e5
                         Kk = P_plus*D'*(D*P_plus*D')^(-1);
-                        P_tilde = (I_N-Kk*D)*P_plus;
+                        x_tilde = x_plus + Kk*(d_k - D * x_plus);
+                        P_tilde = (I_N-Kk*D)*P_plus*(I_N-Kk*D)';
                     else
-                        Kk = zeros(30, 6);
+                        x_tilde = x_plus;
+                        P_tilde = P_plus;
+                        debug_dat.cstrStateU(n, 1) = false;
+                    end
+                case 6 % soft maximum probability estimate + P update
+                    Kk = P_plus * D' * (D * P_plus * D' + fOpt.sigmaCPos*I_CN)^(-1);
+                    x_tilde = x_plus + Kk*(d_k - D * x_plus);
+                    P_tilde = (I_N-Kk*D)*P_plus*(I_N-Kk*D)' + Kk*fOpt.sigmaCPos*I_CN*Kk';
+                case 7 % maximum probability estimate of constraint subset + P update
+                    P_cstr = D*P_plus*D';
+                    idx = diag(P_cstr) > 1e-5;
+                    
+                    if sum(idx) > 0
+                        D2 = D(idx, :);
+                        Kk = P_plus*D2'*(P_cstr(idx, idx))^(-1);
+                        x_tilde = x_plus + Kk*(d_k(idx,:) - D2 * x_plus);
+                        P_tilde = (I_N-Kk*D2)*P_plus*(I_N-Kk*D2)';
+                    else
+                        x_tilde = x_plus;
                         P_tilde = P_plus;
                     end
+                    debug_dat.cstrStateU(n, :) = idx;
             end
-            
-            res = d_k - D * x_plus;
-            dx = Kk*(res);
-            x_tilde = x_plus + dx;
-            
-            debug_dat.cstrStateRes(n,:) = res;
-            debug_dat.cstrStateKk(:,:,n) = Kk;
         elseif fOpt.applyConst >= 11 && fOpt.applyConst <= 16 % fmincon linear const
             % calculate the location of the knee
             
@@ -541,7 +577,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             x_tilde = x_plus;
             x_tilde(x2cxIdx, 1) = x_hat;            
             P_tilde = P_plus;
-        elseif fOpt.applyConst >= 21 && fOpt.applyConst <= 22
+        elseif fOpt.applyConst >= 21 && fOpt.applyConst <= 23
             x_plus2 = grlib.est.changeStateRefFrame(x_plus', 'MIDPEL', ...
                             'kf_3_kmus_v3')';
             
@@ -556,16 +592,27 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             switch (fOpt.applyConst)
                 case 21 % maximum probability estimate + no P update
                     Kk = P_plus*D'*(D*P_plus*D')^(-1);
+                    x_tilde2 = x_plus2 + Kk*(d_k - D * x_plus2);
+                    P_tilde = P_plus;
                 case 22 % least squares estimate + no P update
                     Kk = D'*(D*D')^(-1);
+                    x_tilde2 = x_plus2 + Kk*(d_k - D * x_plus2);
+                    P_tilde = P_plus;
+                case 23 % maximum probability estimate of constraint subset + P update
+                    P_cstr = D*P_plus*D';
+                    idx = diag(P_cstr) > 1e-5;
+                    
+                    if sum(idx) > 0
+                        D2 = D(idx, :);
+                        Kk = P_plus*D2'*(P_cstr(idx, idx))^(-1);
+                        x_tilde2 = x_plus2 + Kk*(d_k(idx,:) - D2 * x_plus2);
+                        P_tilde = (I_N-Kk*D2)*P_plus*(I_N-Kk*D2)';
+                    else
+                        x_tilde2 = x_plus2;
+                        P_tilde = P_plus;
+                    end
+                    debug_dat.cstrStateU(n, :) = idx;
             end
-            
-            res = d_k - D * x_plus2;
-            dx = Kk*(res);
-            x_tilde2 = x_plus2 + dx;
-            
-            debug_dat.cstrStateRes(n,:) = res;
-            debug_dat.cstrStateKk(:,:,n) = Kk;
             
             x_tilde = x_plus;
             x_tilde(idxPosLA,1) = x_plus(idxPosMP,1) + ...
@@ -576,7 +623,6 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 quatrotate(quatconj(x_plus(idxOriMP,1)'), x_tilde2(idxPosRA,1)')';
             x_tilde(idxVelRA,1) = x_plus(idxVelMP,1) + ...
                 quatrotate(quatconj(x_plus(idxOriMP,1)'), x_tilde2(idxVelRA,1)')';
-            P_tilde = P_plus;
         elseif fOpt.applyConst >= 31 && fOpt.applyConst <= 36 % fmincon linear const
             % calculate the location of the knee
             
