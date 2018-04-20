@@ -63,6 +63,8 @@ for i=1:nSamples
 end
 
 % Static Plots
+grlib.viz.plotPosition({actBody}, {'LTIO', 'RTIO'});
+
 updateFigureContents('Position1');
 actBodyRel = actBody.changeRefFrame('MIDPEL');
 estBodyRel = estBody.changeRefFrame('MIDPEL');
@@ -84,6 +86,23 @@ while i <= actBody.nSamples
     xlabel('x'); ylabel('y'); zlabel('z');
     view(20, 30);
     grlib.viz.plotLowerBody(actBody, i);
+    i = i+1;
+    pause(1/1000);
+end
+
+% Animation
+updateFigureContents('Animation');
+xlabel('x'); ylabel('y'); zlabel('z');
+estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
+i = 1; az = 0; el = 180;
+while i <= estBody.nSamples
+    [az, el] = view;
+    clf; grid;
+    xlim(estBodyLimits(1:2)); 
+    ylim(estBodyLimits(3:4)); 
+    zlim(estBodyLimits(5:6));  
+    view(az, el);
+    grlib.viz.plotLowerBody(estBody, i);
     i = i+1;
     pause(1/1000);
 end
@@ -116,44 +135,32 @@ end
 % %     diff_gfr_acc_RA = gfr_acc_RA(1:end-1,:) - gfr_acc_RA_act;
 % %     grlib.viz.plotXYZ(diff_gfr_acc_MP, diff_gfr_acc_LA, diff_gfr_acc_RA);
 %     
-%     % Animation
-%     updateFigureContents('Animation');
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
-%     for i=idx
-%         clf; grid;
-%         xlim(estBodyLimits(1:2)); 
-%         ylim(estBodyLimits(3:4)); 
-%         zlim(estBodyLimits(5:6));  
-%         view(0, 180);
-%         grlib.viz.plotLowerBody(estBody, i);
-%         pause(1/1000);
-%     end
 %     
 
 %     
 %         
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     actBodyLimitsRel = [actBodyRel.xlim() actBodyRel.ylim() actBodyRel.zlim()];
-%     for i=idx
-%         clf; grid;
-%         xlim(actBodyLimitsRel(1:2)); 
-%         ylim(actBodyLimitsRel(3:4)); 
-%         zlim(actBodyLimitsRel(5:6));  
-%         view(40, 30);
-%         grlib.viz.plotLowerBody(actBodyRel, i);
-%         pause(1/1000);
-%     end
-% 
-%     updateFigureContents('Animation');
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
-%     for i=idx
-%         clf; grid; 
-%         xlim(actBodyLimits(1:2)); 
-%         ylim(actBodyLimits(3:4)); 
-%         zlim(actBodyLimits(5:6));  
-%         view(0, 180);
-%         grlib.viz.plotLowerBody(actBody, i);
-%         pause(1/1000);
-%     end
+updateFigureContents('Animation');
+xlabel('x'); ylabel('y'); zlabel('z');
+actBodyLimitsRel = [actBodyRel.xlim() actBodyRel.ylim() actBodyRel.zlim()];
+for i=1:actBodyRel.nSamples
+    clf; grid;
+    xlim(actBodyLimitsRel(1:2)); 
+    ylim(actBodyLimitsRel(3:4)); 
+    zlim(actBodyLimitsRel(5:6));  
+    view(40, 30);
+    grlib.viz.plotLowerBody(actBodyRel, i);
+    pause(1/1000);
+end
+
+updateFigureContents('Animation');
+xlabel('x'); ylabel('y'); zlabel('z');
+estBodyLimitsRel = [estBodyRel.xlim() estBodyRel.ylim() estBodyRel.zlim()];
+for i=1:estBodyRel.nSamples
+    clf; grid;
+    xlim(estBodyLimitsRel(1:2)); 
+    ylim(estBodyLimitsRel(3:4)); 
+    zlim(estBodyLimitsRel(5:6));  
+    view(40, 30);
+    grlib.viz.plotLowerBody(estBodyRel, i);
+    pause(1/1000);
+end

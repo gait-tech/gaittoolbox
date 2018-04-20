@@ -179,9 +179,13 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
     %  Simulate uwb measurement by generating pairwise combinations, using the
     %  origin of each bone segment as the root point
     uwb_mea = struct;
-    uwb_mea.left_tibia_mid_pelvis = vecnorm((MIDPEL_act-dataV.LeftFoot), 2, 2);
-    uwb_mea.mid_pelvis_right_tibia = vecnorm((MIDPEL_act-dataV.RightFoot), 2, 2);
-    uwb_mea.left_tibia_right_tibia = vecnorm((dataV.RightFoot-dataV.LeftFoot), 2, 2);
+    
+    uwb_mea.left_tibia_mid_pelvis = vecnorm((MIDPEL_act-dataV.LeftFoot), 2, 2) ...
+        + normrnd(0, 0.02, [nSamples, 1]);
+    uwb_mea.mid_pelvis_right_tibia = vecnorm((MIDPEL_act-dataV.RightFoot), 2, 2) ...
+        + normrnd(0, 0.02, [nSamples, 1]);
+    uwb_mea.left_tibia_right_tibia = vecnorm((dataV.RightFoot-dataV.LeftFoot), 2, 2) ...
+        + normrnd(0, 0.02, [nSamples, 1]);
 
     d_pelvis = norm(dataV.RightUpLeg(sIdx,:) - dataV.LeftUpLeg(sIdx,:));
     d_rfemur = norm(dataV.RightUpLeg(sIdx,:) - dataV.RightLeg(sIdx,:));
@@ -251,7 +255,7 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
             cs_bIsStatRA = bIsStatRA_act(sIdx:eIdx,:);
         end
         
-%         try
+        try
             if cs.est == 'ekfv2'
                 [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v2(fs, ...
                     cs.Qacc, cs.Qacc, cs.Qacc, cs.P, ...
@@ -347,9 +351,9 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
             end
     %         results(resultsIdx) = estBody.diffRMSE(actBody);
             results0 = estBodyRel.diffRelRMSE(actBodyRel);
-%         catch
-%             results0 = estBody.diffRelRMSE(nan);
-%         end
+        catch
+            results0 = actBody.diffRelRMSE(nan);
+        end
         
         results0.name = name;
         results0.label = cs.label;

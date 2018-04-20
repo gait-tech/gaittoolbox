@@ -42,7 +42,7 @@ function out = changeStateRefFrame(state, ref, format)
 
             for i=1:4:length(oriList)
                 target = oriList(i:i+3);
-                out.(sName)(:,target) = quatmultiply(state.(sName)(:,refOri), ...
+                out.(sName)(:,target) = quatmultiply(quatconj(state.(sName)(:,refOri)), ...
                     state.(sName)(:,target));
             end
         end
@@ -62,7 +62,7 @@ function out = changeStateRefFrame(state, ref, format)
 
         for i=1:4:length(oriList)
             target = oriList(i:i+3);
-            out(:,target) = quatmultiply(state(:,refOri), ...
+            out(:,target) = quatmultiply(quatconj(state(:,refOri)), ...
                 state(:,target));
         end
     end

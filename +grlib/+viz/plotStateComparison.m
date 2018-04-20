@@ -30,7 +30,10 @@ function plotStateComparison(estStateData, actStateData, stateIdx, fs)
         scatter((2:3:n)/fsAdj, zuptState(:,1), '.g');
         scatter((2:3:n)/fsAdj, zuptStateL(:,1), '<g');
         scatter((2:3:n)/fsAdj, zuptStateR(:,1), '>g');
-        scatter((3:3:n)/fsAdj, estStateData.cstrState(:,i), '.b');
+        cstrState = estStateData.cstrState(:,i);
+        cstrStateU = sum(estStateData.cstrStateU, 2) > 0;
+        cstrState(~cstrStateU) = nan;
+        scatter((3:3:n)/fsAdj, cstrState, '.b');
         
         actStateData2 = repelem(actStateData(:,i), 3);
         scatter((1:n)/fsAdj, actStateData2, '.k');
