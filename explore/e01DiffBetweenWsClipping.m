@@ -1,5 +1,4 @@
 % Show the absolute and relative position
-load('C:\Users\z5151460\workspace\gaitrecon\experiments\tcd-s5-walking2-Dxxx+ZUPT+C001.mat')
 updateFigureContents('Hips');
 clf; grlib.viz.plotStateComparison(estState2, actState, 1, 60);
 
@@ -17,7 +16,6 @@ clf; grlib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
 updateFigureContents('RAnkleRel');
 clf; grlib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
 
-load('C:\Users\z5151460\workspace\gaitrecon\experiments\tcd-s5-walking2-Dxxx+ZUPT+C002.mat')
 updateFigureContents('Hips2');
 clf; grlib.viz.plotStateComparison(estState2, actState, 1, 60);
 
@@ -74,6 +72,27 @@ updateFigureContents('Position2');
 actBodyRel = actBody.changeRefFrame('MIDPEL');
 estBodyRel = estBody.changeRefFrame('MIDPEL');
 grlib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'});
+
+% Constraint Info
+d_pelvis = norm(actBody.LFEP(1,:) - actBody.RFEP(1,:));
+d_lfemur = norm(actBody.LFEP(1,:) - actBody.LFEO(1,:));
+d_rfemur = norm(actBody.RFEP(1,:) - actBody.RFEO(1,:));
+d_ltibia = norm(actBody.LFEO(1,:) - actBody.LTIO(1,:));
+d_rtibia = norm(actBody.RFEO(1,:) - actBody.RTIO(1,:));
+
+updateFigureContents('Constraint Check');
+grlib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, ...
+    d_lfemur, d_rfemur, d_ltibia, d_rtibia);
+hold on;
+cstrStateL = sum(estState2.cstrStateU(:,1:3), 2) > 0;
+cstrStateLV = zeros(estBody.nSamples, 1);
+cstrStateLV(~cstrStateL) = nan;
+cstrStateR = sum(estState2.cstrStateU(:,4:6), 2) > 0;
+cstrStateRV = zeros(estBody.nSamples, 1);
+cstrStateRV(~cstrStateR) = nan;
+t = 1:estBody.nSamples;
+scatter(t, cstrStateLV, '<c'); scatter(t, cstrStateRV, '>c');
+legend('Hips', 'LFemur', 'RFemur', 'LTibia', 'RTibia', 'LCstr', 'RCstr');
 
 % Animation
 actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];

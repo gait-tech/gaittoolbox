@@ -1,15 +1,42 @@
-%% Reconstruct motion using kf_3_kmus (KF with constraints)
-% Steps:
-% - calculate orientation (from Xsens or CAHRS)
-% - calculate root position by double integration
-% - measure angle and position RMSE
-% - reconstruct skeleton to feed into visualization
-% Sample Run:
-% dataV = loadBVHasAnimatedata('Data/s1/acting1_BlenderZXY_YmZ.bvh', 'mm');
-% dataS = loadSensors('Data/s1/Acting1_Xsens_AuxFields.sensors');
-% animateTrialSample05(dataV, dataS, 60);
-% animateTrialSample05('Data/s1/acting1_BlenderZXY_YmZ.bvh', 'Data/s1/Acting1_Xsens_AuxFields.sensors', 60);
-
+% ======================================================================
+%> @brief [DEPRECATED] Run experiment on an instance of the TCD dataset
+%> @author Luke Sy
+%> 
+%> Please use tcdExperiment03.m if you're only using grlib.est.kf_3_kmus_v3
+%> 
+%> Setup parameters:
+%> - label: label to be saved in the results table
+%> - est: filter type to be used.
+%>      - ekfv2: grlib.est.kf_3_kmus_v2
+%>      - ekfv3: grlib.est.kf_3_kmus_v3
+%> - accData: acceleration data to be used
+%>      - v: vicon
+%>      - x: xsens
+%>      - xf: xsens filtered
+%> - oriData: orientation data to be used
+%>      - v: vicon
+%>      - x: xsens
+%> - zuptData: step detection data to be used
+%>      - v: fixed variance on tibia vicon data
+%>      - x: fixed variance on tibia xsens data
+%> - zupt: zupt measurement configuration number
+%> - uwb: uwb measurement configuration number
+%> - hjc: constraint configuration number
+%> - cstr: constraint configuration number
+%> - kneeangle: knee angle constraint configuration number
+%> - accbias: acceleration bias tracking configuration number
+%> - Qacc: Q matrix sigma (variance)
+%> - P: initial P matrix
+%>
+%> @param fnameV tcd bvh filename or loaded tcdlib.BVHBody
+%> @param fnameS tcd xsens measurement filename or loaded tcdlib.XsensBody
+%> @param fnameCIB filename of the calibration file from sensor to bone frame
+%> @param fnameCIR filename of the calibration file from sensor to vicon frame
+%> @param name name of the experiment
+%> @param setups list of experiment parameters (struct) to be run. see
+%> details above
+%> @param savedir filepath to save .mat output/debug files (optional)
+% ======================================================================
 function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
                                    name, setups, savedir)
     %% Inputs and Input Check

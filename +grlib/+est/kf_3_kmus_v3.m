@@ -45,19 +45,20 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %   dLTibia   - left tibia length
 %   uwb_mea    - a structure containing the range measurements (m) between
 %   options   - struct containing the ff. settings:
-%       applyZupt - turn on/off zero velocity update. boolean
+%       applyMeas - turn on/off zero velocity update. boolean
 %           001: standard zupt
 %           002: standard zupt + floor assumption
 %           003: standard zupt + floor assumption + reset at both foot
 %           004: standard zupt + floor assumption + series reset at both foot
-%       applyUwb - turn on/off uwb measurement update. boolean
-%       applyAccBias - turn on/off acc bias in the model. boolean
-%       applyConst - turn on/off constraints.
+%           021: standard zupt + floor assumption + estimate projection (W=P^-1) assuming perfect orientation
+%       applyCstr - turn on/off constraints.
 %           001: estimate projection (W=P^-1) assuming perfect orientation
 %           002: estimate projection (W=I) assuming perfect orientation
 %           003: least squares estimate w/ full confidence on pelvis (P=0 at pelvis) + no P update
 %           004: maximum probability estimate w/ force equal foot covariance + no P update
 %           005: maximum probability estimate if P is well conditioned + P update
+%           006: soft maximum probability estimate + P update
+%           007: maximum probability estimate of constraint subset + P update
 %           011: fmincon (interior point) linear hjc in world frame, W = P^-1
 %           012: fmincon (sqp) linear hjc in world frame, W = P^-1
 %           013: fmincon (active set) linear hjc in world frame, W = P^-1
@@ -66,12 +67,35 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %           016: fmincon (active set) linear hjc in world frame, W = I
 %           021: PELVIS frame constraint update, maximum probability estimate + no P update
 %           022: PELVIS frame constraint update, least squares estimate + no P update
+%           023: maximum probability estimate of constraint subset + P update
 %           031: fmincon (interior point) linear hjc in pelvis frame, W = P^-1
 %           032: fmincon (sqp) linear hjc in pelvis frame, W = P^-1
 %           033: fmincon (active set) linear hjc in pelvis frame, W = P^-1
 %           034: fmincon (interior point) linear hjc in pelvis frame, W = I
 %           035: fmincon (sqp) linear hjc in pelvis frame, W = I
 %           036: fmincon (active set) linear hjc in pelvis frame, W = I
+%           051: estimate projection (W=P^-1) assuming perfect orientation 
+%                + MP/LA/RA zpos = floor zpos
+%           052: estimate projection (W=I) assuming perfect orientation
+%                + MP/LA/RA zpos = floor zpos
+%           053: least squares estimate w/ full confidence on pelvis (P=0 at pelvis)
+%                + MP/LA/RA zpos = floor zpos + no P update
+%           054: maximum probability estimate of constraint subset 
+%                + MP/LA/RA zpos = floor zpos + P update
+%           071: estimate projection (W=P^-1) assuming perfect orientation
+%                + lowest point = floor
+%           072: estimate projection (W=I) assuming perfect orientation
+%                + lowest point = floor
+%           073: least squares estimate w/ full confidence on pelvis (P=0 at pelvis) + no P update
+%                + lowest point = floor
+%           074: maximum probability estimate w/ force equal foot covariance + no P update
+%                + lowest point = floor
+%           075: maximum probability estimate if P is well conditioned + P update
+%                + lowest point = floor
+%           076: soft maximum probability estimate + P update
+%                + lowest point = floor
+%           077: maximum probability estimate of constraint subset + P update
+%                + lowest point = floor
 %           101: fmincon interior-point (W=P^-1) + MDR const + no P update
 %           102: fmincon interior-point (W=P^-1) + MDR const + no P update
 %           103: fmincon interior-point (W=P^-1) + MDR const + no P update
@@ -79,8 +103,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %           105: fmincon interior-point (W=I) + MDR const + no P update
 %           106: fmincon interior-point (W=I) + MDR const + no P update
 
-    fOpt = struct('fs', 60, 'applyZupt', false, 'applyUwb', false, ...
-        'applyAccBias', false, 'applyConst', 0, ...
+    fOpt = struct('fs', 60, 'applyMeas', false, 'applyUwb', false, ...
+        'applyAccBias', false, 'applyCstr', 0, ...
         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
         'sigmaQOriMP', 1e5, 'sigmaQOriLA', 1e5, 'sigmaQOriRA', 1e5, ...
         'sigmaROriMP', 1e-1, 'sigmaROriLA', 1e-1, 'sigmaROriRA', 1e-1, ...
@@ -220,11 +244,12 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     debug_dat.uwbuptP = nan(nStates, nStates, nSamples);
     debug_dat.cstrState = nan(nSamples, nStates);
     debug_dat.cstrP = nan(nStates, nStates, nSamples);
+    debug_dat.cstrStateU = false(nSamples, 1);
     
     debug_dat.zuptStateL = bIsStatLA;
     debug_dat.zuptStateR = bIsStatRA;
     
-    if fOpt.applyZupt
+    if fOpt.applyMeas
         idxMVelMP = nMeasure+1:nMeasure+3;
         idxMVelLA = nMeasure+4:nMeasure+6;
         idxMVelRA = nMeasure+7:nMeasure+9;
@@ -243,10 +268,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         y_k(end+1:end+9, :) = zeros(9, nSamples);
     end
     
-    if fOpt.applyZupt >= 2 % add more zupt features
-        floorZ = mean([x0(idxPosLA(3)), x0(idxPosRA(3))]);
+    if fOpt.applyMeas >= 2 % add more zupt features
+        floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
         
-        switch (fOpt.applyZupt)
+        switch (fOpt.applyMeas)
             case 2
                 targetL = idxPosLA(3);
                 targetR = idxPosRA(3);
@@ -256,6 +281,9 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             case 4
                 targetL = idxPosLA;
                 targetR = idxPosRA;
+            case 21
+                targetL = idxPosLA(3);
+                targetR = idxPosRA(3);
         end
 
         targetLN = length(targetL); targetRN = length(targetR);
@@ -274,6 +302,24 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         R = diag(Rdiag);
 
         y_k(end+1:end+targetN, :) = floorZ*ones(targetN, nSamples);  
+    end
+    
+    if fOpt.applyMeas >= 21 && fOpt.applyMeas <= 21
+        idxMLHjc = nMeasure+1:nMeasure+3;
+        idxMRHjc = nMeasure+4:nMeasure+6;
+        nMeasure = nMeasure + 6;
+        
+        H(end+1:end+6, :) = zeros(6, nStates);
+        H(idxMLHjc, idxPosMP) = -eye(3, 3);
+        H(idxMLHjc, idxPosLA) = eye(3, 3);
+        H(idxMRHjc, idxPosMP) = -eye(3, 3);
+        H(idxMRHjc, idxPosRA) = eye(3, 3);
+        
+        Rdiag = diag(R);
+        Rdiag(end+1:end+6) = repelem((fOpt.sigmaCPos)^2, 6);
+        R = diag(Rdiag);
+        
+        y_k(end+1:end+6, :) = zeros(6, nSamples); 
     end
     
     if fOpt.applyUwb
@@ -298,7 +344,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         R_uwb(3,3) = (fOpt.sigmaUwbLARA)^2;
     end
     
-    if fOpt.applyConst >= 1 && fOpt.applyConst <= 7
+    if (fOpt.applyCstr >= 1 && fOpt.applyCstr <= 7) || ...
+        (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77)
+        floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
+    
         D = zeros(6, nStates);
         D(1:3,idxPosMP) = -eye(3, 3);
         D(1:3,idxPosLA) = eye(3, 3);
@@ -310,7 +359,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         P_custom(idxPosMP,idxPosMP) = 0;
         
         debug_dat.cstrStateU = true(nSamples, 6);
-    elseif fOpt.applyConst >= 11 && fOpt.applyConst <= 16
+    elseif fOpt.applyCstr >= 11 && fOpt.applyCstr <= 16
         x2cxIdx = [idxPosMP, idxVelMP, idxPosLA, idxVelLA, idxPosRA, idxVelRA];
         nCStates = 18;
         D = zeros(6, nCStates);
@@ -325,11 +374,13 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             'ConstraintTolerance', fOpt.optimConstraintTolerance, ...
             'MaxFunctionEvaluations', fOpt.optimMaxFunctionEvaluations, ...
             'UseParallel', fOpt.optimUseParallel);
-    elseif fOpt.applyConst >= 21 && fOpt.applyConst <= 23
+    elseif fOpt.applyCstr >= 21 && fOpt.applyCstr <= 23
         D = zeros(6, nStates);
         D(1:3,idxPosLA) = eye(3, 3);
         D(4:6,idxPosRA) = eye(3, 3);
-    elseif fOpt.applyConst >= 31 && fOpt.applyConst <= 36
+        
+        debug_dat.cstrStateU = true(nSamples, 6);
+    elseif fOpt.applyCstr >= 31 && fOpt.applyCstr <= 36
         x2cxIdx = [idxPosLA, idxVelLA, idxPosRA, idxVelRA];
         nCStates = 12;
         D = zeros(6, nCStates);
@@ -342,7 +393,26 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             'ConstraintTolerance', fOpt.optimConstraintTolerance, ...
             'MaxFunctionEvaluations', fOpt.optimMaxFunctionEvaluations, ...
             'UseParallel', fOpt.optimUseParallel);
-    elseif fOpt.applyConst >= 101 && fOpt.applyConst <= 106
+    elseif fOpt.applyCstr >= 51 && fOpt.applyCstr <= 54
+        % 01 constraints + MP/LA/RA zpos = floor zpos
+        floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
+        
+        D = zeros(9, nStates);
+        D(1:3,idxPosMP) = -eye(3, 3);
+        D(1:3,idxPosLA) = eye(3, 3);
+        D(4:6,idxPosMP) = -eye(3, 3);
+        D(4:6,idxPosRA) = eye(3, 3);
+        D(7:7,idxPosMP(3)) = eye(1, 1);
+        D(8:8,idxPosLA(3)) = eye(1, 1);
+        D(9:9,idxPosRA(3)) = eye(1, 1);
+        
+        I_CN = eye(9, 9);
+        P_custom = eye(nStates);
+        P_custom(idxPosMP,idxPosMP) = 0;
+        
+        debug_dat.cstrStateU = true(nSamples, 9);
+        debug_dat.cstrStateU(:,7:9) = false;
+    elseif fOpt.applyCstr >= 101 && fOpt.applyCstr <= 106
         optimOpt = optimoptions('fmincon', 'Algorithm', 'sqp', ...
             'Display', 'off', ...
             'OptimalityTolerance', fOpt.optimOptimalityTolerance, ...
@@ -377,26 +447,51 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     % the variables in the state estimate vector, xhat, to the measurement
     % domain. In this case we are using
         idx = [idxMOriMP idxMOriLA idxMOriRA];
-        if fOpt.applyZupt >= 1
+        if fOpt.applyMeas >= 1
             if bIsStatMP(n) idx(end+1:end+3) = idxMVelMP; end
             if bIsStatLA(n) idx(end+1:end+3) = idxMVelLA; end
             if bIsStatRA(n) idx(end+1:end+3) = idxMVelRA; end
         end
-        if fOpt.applyZupt == 2
-            if bIsStatLA(n) idx(end+1:end+length(idxMPosLA)) = idxMPosLA; end
-            if bIsStatRA(n) idx(end+1:end+length(idxMPosRA)) = idxMPosRA; end
-        elseif fOpt.applyZupt == 3
-            if bIsStatLA(n) 
+        if fOpt.applyMeas == 2
+            if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+length(idxMPosLA)) = idxMPosLA; 
+            end
+            if bIsStatRA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+length(idxMPosRA)) = idxMPosRA; 
+            end
+        elseif fOpt.applyMeas == 3
+            if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ 
                 idx(end+1:end+length(idxMPosLA)) = idxMPosLA;
                 y_k(idxMPosLA(1:2), n) = x_min(idxPosLA(1:2));
             end
-            if bIsStatRA(n)
+            if bIsStatRA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+length(idxMPosRA)) = idxMPosRA;
                 y_k(idxMPosRA(1:2), n) = x_min(idxPosRA(1:2));
             end
-        elseif fOpt.applyZupt == 4
-            if bIsStatLA(n) idx(end+1:end+1) = idxMPosLA(3); end
-            if bIsStatRA(n) idx(end+1:end+1) = idxMPosRA(3); end
+        elseif fOpt.applyMeas == 4
+            if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+1) = idxMPosLA(3);
+            end
+            if bIsStatRA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+1) = idxMPosRA(3); 
+            end
+        elseif fOpt.applyMeas == 21
+            if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+1) = idxMPosLA;
+            end
+            if bIsStatRA(n) || x_min(idxPosRA(3), 1) < floorZ
+                idx(end+1:end+1) = idxMPosRA; 
+            end
+            idx(end+1:end+6) = [idxMLHjc idxMRHjc];
+            
+            LTIB_CS = quat2rotm(y_k(idxMOriLA, n)');
+            RTIB_CS = quat2rotm(y_k(idxMOriRA, n)');
+            PELV_CS = quat2rotm(y_k(idxMOriMP, n)');
+        
+            y_k([idxMLHjc idxMRHjc], n) = solve_linhjc_d(x_min(idxPosMP,1), ...
+                x_min(idxPosLA,1), x_min(idxPosRA,1), ...
+                PELV_CS, LTIB_CS, RTIB_CS, ...
+                dPelvis, dLFemur, dRFemur, dLTibia, dRTibia);
         end
         
         res = y_k(idx, n) - H(idx, :) * x_min;
@@ -405,7 +500,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         x_min1 = x_min + K * res;
         P_min1 = (I_N - K * H(idx, :)) * P_min;
         
-        if fOpt.applyZupt == 4
+        if fOpt.applyMeas == 4
             idx = [idxMPosLA(1:2) idxMPosRA(1:2)];
             y_k(idx) = [x_min(idxPosLA(1:2)) x_min(idxPosRA(1:2))];
             K = P_min * H(idx, :)' /(H(idx, :) * P_min * H(idx,:)' + R(idx, idx));
@@ -413,7 +508,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             P_min1 = (I_N - K * H(idx, :)) * P_min1;
         end
         
-        if fOpt.applyZupt
+        if fOpt.applyMeas
             debug_dat.zuptState(n,:) = x_min1;
             debug_dat.zuptP(:,:,n) = P_min1;
         end
@@ -482,17 +577,16 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         PELV_CS = quat2rotm(x_plus(idxOriMP,1)');
         % Test frankenstein constraint
         
-        if fOpt.applyConst == 0
+        if fOpt.applyCstr == 0
             x_tilde = x_plus;
             P_tilde = P_plus;
-        elseif fOpt.applyConst >= 1 && fOpt.applyConst <= 7 % projection (W=I) assuming perfect orientation
-            % calculate the location of the knee
-            
+        elseif (fOpt.applyCstr >= 1 && fOpt.applyCstr <= 7 ) || ...
+            (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77 )          
             d_k = solve_linhjc_d(x_plus(idxPosMP,1), x_plus(idxPosLA,1), ...
                     x_plus(idxPosRA,1), PELV_CS, LTIB_CS, RTIB_CS, ...
                     dPelvis, dLFemur, dRFemur, dLTibia, dRTibia);
                 
-            switch (fOpt.applyConst)
+            switch (mod(fOpt.applyCstr, 70))
                 case 1 % maximum probability estimate + no P update
                     Kk = P_plus*D'*(D*P_plus*D')^(-1);
                     x_tilde = x_plus + Kk*(d_k - D * x_plus);
@@ -541,7 +635,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                     end
                     debug_dat.cstrStateU(n, :) = idx;
             end
-        elseif fOpt.applyConst >= 11 && fOpt.applyConst <= 16 % fmincon linear const
+        elseif fOpt.applyCstr >= 11 && fOpt.applyCstr <= 16 % fmincon linear const
             % calculate the location of the knee
             
             d_k = solve_linhjc_d(x_plus(idxPosMP,1), x_plus(idxPosLA,1), ...
@@ -550,7 +644,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             x_hat = x_plus(x2cxIdx,1);
             x_hat0 = x_plus(x2cxIdx,1);
             
-            switch (fOpt.applyConst)
+            switch (fOpt.applyCstr)
                 case 11 % fmincon (interior point) linear hjc, W = P^-1
                     optimOpt.Algorithm = 'interior-point';
                     P_hat = P_plus(x2cxIdx, x2cxIdx);
@@ -577,7 +671,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             x_tilde = x_plus;
             x_tilde(x2cxIdx, 1) = x_hat;            
             P_tilde = P_plus;
-        elseif fOpt.applyConst >= 21 && fOpt.applyConst <= 23
+        elseif fOpt.applyCstr >= 21 && fOpt.applyCstr <= 23
             x_plus2 = grlib.est.changeStateRefFrame(x_plus', 'MIDPEL', ...
                             'kf_3_kmus_v3')';
             
@@ -589,7 +683,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                     x_plus2(idxPosRA,1), PELV_CS2, LTIB_CS2, RTIB_CS2, ...
                     dPelvis, dLFemur, dRFemur, dLTibia, dRTibia);
             
-            switch (fOpt.applyConst)
+            switch (fOpt.applyCstr)
                 case 21 % maximum probability estimate + no P update
                     Kk = P_plus*D'*(D*P_plus*D')^(-1);
                     x_tilde2 = x_plus2 + Kk*(d_k - D * x_plus2);
@@ -623,7 +717,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 quatrotate(quatconj(x_plus(idxOriMP,1)'), x_tilde2(idxPosRA,1)')';
             x_tilde(idxVelRA,1) = x_plus(idxVelMP,1) + ...
                 quatrotate(quatconj(x_plus(idxOriMP,1)'), x_tilde2(idxVelRA,1)')';
-        elseif fOpt.applyConst >= 31 && fOpt.applyConst <= 36 % fmincon linear const
+        elseif fOpt.applyCstr >= 31 && fOpt.applyCstr <= 36 % fmincon linear const
             % calculate the location of the knee
             
             x_plus2 = grlib.est.changeStateRefFrame(x_plus', 'MIDPEL', ...
@@ -639,7 +733,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 
             x_hat0 = x_plus2(x2cxIdx,1);
             
-            switch (fOpt.applyConst)
+            switch (fOpt.applyCstr)
                 case 31 % fmincon (interior point) linear hjc, W = P^-1
                     optimOpt.Algorithm = 'interior-point';
                     P_hat = P_plus(x2cxIdx, x2cxIdx);
@@ -674,8 +768,60 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 quatrotate(quatconj(x_plus(idxOriMP,1)'), x_hat(10:12,1)')';
             
             P_tilde = P_plus;
-        elseif fOpt.applyConst >= 101 && fOpt.applyConst <= 106 % fmincon
-            switch (fOpt.applyConst)
+        elseif fOpt.applyCstr >= 51 && fOpt.applyCstr <= 54
+            % 001 constraints + MP/LA/RA zpos = floor zpos         
+            d_k = solve_linhjc_d(x_plus(idxPosMP,1), x_plus(idxPosLA,1), ...
+                    x_plus(idxPosRA,1), PELV_CS, LTIB_CS, RTIB_CS, ...
+                    dPelvis, dLFemur, dRFemur, dLTibia, dRTibia);
+                
+            idx = 1:6;
+            lowestpoints = x_plus([idxPosMP(3), idxPosLA(3), idxPosRA(3)]);
+            [lpy lpi] = min(lowestpoints);
+            if lpy < floorZ
+                idx(end+1) = lpi+6;
+                d_k(end+1) = floorZ;
+            elseif lpi == 2 && bIsStatLA(n)
+                idx(end+1) = 8;
+                d_k(end+1) = floorZ;
+            elseif lpi == 3 && bIsStatRA(n)
+                idx(end+1) = 9;
+                d_k(end+1) = floorZ;
+            end
+            
+            D2 = D(idx,:);
+            switch (fOpt.applyCstr)
+                case 51 % maximum probability estimate + no P update
+                    Kk = P_plus*D2'*(D2*P_plus*D2')^(-1);
+                    x_tilde = x_plus + Kk*(d_k - D2 * x_plus);
+                    P_tilde = P_plus;
+                case 52 % least squares estimate + no P update
+                    Kk = D2'*(D2*D2')^(-1);
+                    x_tilde = x_plus + Kk*(d_k - D2 * x_plus);
+                    P_tilde = P_plus;
+                case 53 % soft maximum probability estimate + P update
+                    R_tilde = fOpt.sigmaCPos*eye(length(idx));
+                    Kk = P_plus * D2' * (D2 * P_plus * D2' + R_tilde)^(-1);
+                    x_tilde = x_plus + Kk*(d_k - D2 * x_plus);
+                    P_tilde = (I_N-Kk*D2)*P_plus*(I_N-Kk*D2)' + Kk*R_tilde*Kk';
+                case 54 % maximum probability estimate of constraint subset + P update
+                    P_cstr = D2*P_plus*D2';
+                    idx2 = diag(P_cstr) > 1e-5;
+                    
+                    if sum(idx2) > 0
+                        D3 = D2(idx2, :);
+                        Kk = P_plus*D3'*(P_cstr(idx2, idx2))^(-1);
+                        x_tilde = x_plus + Kk*(d_k(idx2,:) - D3 * x_plus);
+                        P_tilde = (I_N-Kk*D3)*P_plus*(I_N-Kk*D3)';
+                    else
+                        x_tilde = x_plus;
+                        P_tilde = P_plus;
+                    end
+                    debug_dat.cstrStateU(n, 1:6) = idx2(1:6);
+            end
+            
+            debug_dat.cstrStateU(n, idx(end)) = true;
+        elseif fOpt.applyCstr >= 101 && fOpt.applyCstr <= 106 % fmincon
+            switch (fOpt.applyCstr)
                 case 101
                     optimOpt.Algorithm = 'interior-point';
                     W = P_plus;
@@ -708,6 +854,16 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             P_tilde = P_plus;
         end
 
+        if fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77
+            % 001 constraints + MP/LA/RA zpos = floor zpos         
+            idx = [idxPosMP(3), idxPosLA(3), idxPosRA(3)];
+            [lpy lpi] = min(x_tilde(idx));
+            if lpy < floorZ || (lpi == 2 && bIsStatLA(n)) || ...
+                    (lpi == 3 && bIsStatRA(n))
+                x_tilde(idx) = x_tilde(idx) - x_tilde(idx(lpi)) + floorZ;
+            end
+        end
+        
         xhat_con(n, :) = x_tilde;
         P_con(:, :, n)  = P_tilde;
         debug_dat.cstrState(n,:) = x_tilde;
