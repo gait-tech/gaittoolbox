@@ -109,11 +109,13 @@ figure
 for k=1:3                              % plot results
   subplot(nDim,1,k)
   hold on
-  plot((1:N_MP)/fs, pos_est_rel_MPFR(1:N_MP,k), '-', (1:N_MP)/fs, pos_act_rel_MPFR(1:N_MP,k), '--')
+  plot((1:N_MP)/fs, pos_est_rel_MPFR(1:N_MP,k), '-', (1:N_MP)/fs, pos_act_rel_MPFR(1:N_MP,k), '--',...
+'LineWidth', 2)
   ylabel(strcat('state ',num2str(k)))
   xlabel('time (s)')
   legend('est pos','tru pos','act. vel. int.','est. vel. int.')
   set(gca,'fontsize',15)
+  %axis([0 N_MP*1/fs/10 -2 1])
   box on
 end
 suptitle(strcat('rel. pos. of',pIntS,'in MP frame'))
@@ -129,19 +131,21 @@ figure
 for k=1:3                              % plot results
   subplot(nDim+1,1,k)
   hold on
-  plot((1:N_MP)/fs,  pos_act_rel_MPFR(1:N_MP,k) - pos_est_rel_MPFR(1:N_MP,k))
+  plot((1:N_MP)/fs,  pos_est_rel_MPFR(1:N_MP,k) - pos_act_rel_MPFR(1:N_MP,k),...
+'Linewidth', 2)
   ylabel(strcat('state ',num2str(k)))
   xlabel('time (s)')
   box on
   set(gca,'fontsize',15)
+  
   %legend('est pos','tru pos','act. vel. int.','est. vel. int.')
 end
 subplot(nDim+1,1,nDim+1)
 ylabel('rms')
 pos_res = [pos_act_rel_MPFR(1:N_MP,:) - pos_est_rel_MPFR(1:N_MP,:)]';
 pos_res_rms = sqrt(sum(pos_res.^2,1));
-plot((1:N_MP)/fs,pos_res_rms)
-suptitle(strcat(pIntS,'pos residual (tru - est)'))
+plot((1:N_MP)/fs,pos_res_rms, 'Linewidt', 2)
+suptitle(strcat(pIntS,'pos residual (est - tru)'))
 hold off
 set(gcf, 'Position', [100, 100, plotWidth, plotHeight])
 set(gca,'fontsize',15)
