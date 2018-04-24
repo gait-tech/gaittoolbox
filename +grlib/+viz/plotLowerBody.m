@@ -1,5 +1,5 @@
 % ======================================================================
-%> @brief Plot the lower body
+%> @brief Plot the lower body using the joint positions
 %> @author Luke Sy
 %>
 %> Plot the lower body

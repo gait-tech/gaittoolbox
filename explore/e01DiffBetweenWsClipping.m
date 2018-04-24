@@ -1,12 +1,13 @@
 % Show the absolute and relative position
+fs=100;
 updateFigureContents('Hips');
-clf; grlib.viz.plotStateComparison(estState2, actState, 1, 60);
+clf; grlib.viz.plotStateComparison(estState2, actState, 1, fs);
 
 updateFigureContents('LAnkle');
-clf; grlib.viz.plotStateComparison(estState2, actState, 11, 60);
+clf; grlib.viz.plotStateComparison(estState2, actState, 11, fs);
 
 updateFigureContents('RAnkle');
-clf; grlib.viz.plotStateComparison(estState2, actState, 21, 60);
+clf; grlib.viz.plotStateComparison(estState2, actState, 21, fs);
 
 estStateRel2 = grlib.est.changeStateRefFrame(estState2);
 actStateRel = grlib.est.changeStateRefFrame(actState);
@@ -105,7 +106,7 @@ while i <= actBody.nSamples
     xlabel('x'); ylabel('y'); zlabel('z');
     view(20, 30);
     grlib.viz.plotLowerBody(actBody, i);
-    i = i+1;
+    i = i+2;
     pause(1/1000);
 end
 
@@ -159,15 +160,17 @@ end
 %     
 %         
 updateFigureContents('Animation');
-xlabel('x'); ylabel('y'); zlabel('z');
-actBodyLimitsRel = [actBodyRel.xlim() actBodyRel.ylim() actBodyRel.zlim()];
-for i=1:actBodyRel.nSamples
+actBodyRelLimits = [actBodyRel.xlim() actBodyRel.ylim() actBodyRel.zlim()];
+i = 1;
+while i <= actBody.nSamples
     clf; grid;
-    xlim(actBodyLimitsRel(1:2)); 
-    ylim(actBodyLimitsRel(3:4)); 
-    zlim(actBodyLimitsRel(5:6));  
-    view(40, 30);
+    xlim(actBodyRelLimits(1:2)); 
+    ylim(actBodyRelLimits(3:4)); 
+    zlim(actBodyRelLimits(5:6));  
+    xlabel('x'); ylabel('y'); zlabel('z');
+    view(20, 30);
     grlib.viz.plotLowerBody(actBodyRel, i);
+    i = i+2;
     pause(1/1000);
 end
 

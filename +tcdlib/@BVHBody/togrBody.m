@@ -23,10 +23,11 @@ function out = togrBody(obj, idx, args)
     end
     
     % convert TCD ori convention to biomechanical convention
-    qTCD2BM = rotm2quat([0 -1 0; -1 0 0; 0 0 -1]);
+%     qTCD2BM = rotm2quat([0 -1 0; -1 0 0; 0 0 -1]);
     for i=1:length(key2)
         data = (obj.(key2{i}));
-        out.(val2{i}) = quatmultiply(data(idx,:), qTCD2BM);
+%         out.(val2{i}) = quatmultiply(data(idx,:), qTCD2BM);
+        out.(val2{i}) = data(idx,:);
     end
     
     out.MIDPEL = [mean([obj.LeftUpLeg(idx,1) obj.RightUpLeg(idx,1)], 2),...

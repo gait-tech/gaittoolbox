@@ -76,8 +76,6 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
     % Initialize other variables
     fs = 60;
     qV2W = rotm2quat([1 0 0; 0 0 -1; 0 1 0]);
-    sIdx = 1; eIdx = fnameV.nSamples-1;
-    idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
 
     setupDefault = struct('label', 'ekfv3', 'est', 'ekfv3', ...
         'accData', 'v', 'accDataNoise', 0.0, 'oriData', 'v', ...
@@ -97,7 +95,6 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
     
     % convert vicon to world frame
     dataV = dataV.toWorldFrame(qV2W);
-    
     nSamples = min(dataV.nSamples, dataS.nSamples);
     key = {'Pelvis', 'L_UpLeg', 'R_UpLeg',...
         'L_LowLeg', 'R_LowLeg', 'L_Foot', 'R_Foot'};
@@ -109,6 +106,8 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
         dataV.(val{i}) = dataV.(val{i})(1:nSamples,:)/1000;
     end
     dataV.posUnit = 'm';
+    sIdx = 1; eIdx = length(dataV.Hips(:,1)) - 1;
+    idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
     
     %% Calculate Orientation
     qOri = {};
@@ -136,9 +135,9 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
     qOri.x.RTIB = quatmultiply(qRankleEst0(sIdx:eIdx, :), qTCD2BM);
     
     % orientation from vicon
-    qOri.v.PELV = quatmultiply(dataV.qHips(sIdx+1:eIdx+1, :), qTCD2BM);
-    qOri.v.LTIB = quatmultiply(dataV.qLeftLeg(sIdx+1:eIdx+1, :), qTCD2BM);
-    qOri.v.RTIB = quatmultiply(dataV.qRightLeg(sIdx+1:eIdx+1, :), qTCD2BM);
+    qOri.v.PELV = dataV.qHips(sIdx+1:eIdx+1, :);
+    qOri.v.LTIB = dataV.qLeftLeg(sIdx+1:eIdx+1, :);
+    qOri.v.RTIB = dataV.qRightLeg(sIdx+1:eIdx+1, :);
     
     %% Position, Velocity, Acceleration
     gfrAcc = {};

@@ -78,8 +78,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + MP/LA/RA zpos = floor zpos
 %           052: estimate projection (W=I) assuming perfect orientation
 %                + MP/LA/RA zpos = floor zpos
-%           053: least squares estimate w/ full confidence on pelvis (P=0 at pelvis)
-%                + MP/LA/RA zpos = floor zpos + no P update
+%           053: soft maximum probability estimate 
+%			     + MP/LA/RA zpos = floor zpos + P update
 %           054: maximum probability estimate of constraint subset 
 %                + MP/LA/RA zpos = floor zpos + P update
 %           071: estimate projection (W=P^-1) assuming perfect orientation
