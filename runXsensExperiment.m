@@ -8,11 +8,10 @@
 %> - est: filter type to be used.
 %>      - ekfv3: grlib.est.kf_3_kmus_v3
 %> - accData: acceleration data to be used
-%>      - x: xsens
+%>      - raw: raw xsens measurements
+%>      - sim: simulated xsens measurements
 %> - oriData: orientation data to be used
 %>      - x: xsens
-%> - stepDetection: step detection algorithm to be used
-%>      - x: fixed variance on tibia xsens data
 %> - applyMeas: measurement configuration number
 %> - applyCstr: constraint configuration number
 %> - sigmaQAcc: Q acceleration sigma (variance)
@@ -55,7 +54,7 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
     qV2W = rotm2quat([1 0 0; 0 0 -1; 0 1 0]);
     
     setupDefault = struct('label', 'ekfv3', 'est', 'ekfv3', ...
-        'accData', 'v', 'accDataNoise', 0.0, 'oriData', 'v', ...
+        'accData', 'raw', 'accDataNoise', 0.0, 'oriData', 'x', ...
         'stepDetectWindow', 0.25, 'stepDetectThreshold', 1, ...
         'meas', 0, 'cstr', 0, ...
         'sigmaQAcc', 0.5, 'P', 100);
@@ -83,7 +82,7 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
         dataBVH.(val{i}) = dataBVH.(val{i})(1:nSamples,:)/1000;
     end
     dataBVH.posUnit = 'm';
-    sIdx = 1; eIdx = length(dataBVH.Hips(:,1)) - 1;
+    sIdx = 3; eIdx = length(dataBVH.Hips(:,1)) - 1;
     idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
     
     %% Calculate Orientation  
@@ -96,16 +95,16 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
     gfrAcc = {};
     
     % gfrAcc from xsens
-    gfrAcc.x = {};
-    gfrAcc.x.MP = quatrotate(quatconj(dataRaw.Pelvis.ori), ...
+    gfrAcc.raw = {};
+    gfrAcc.raw.MP = quatrotate(quatconj(dataRaw.Pelvis.ori), ...
                             dataRaw.Pelvis.acc) - [0 0 9.81];
-    gfrAcc.x.MP = gfrAcc.x.MP(sIdx:eIdx,:);
-    gfrAcc.x.LA = quatrotate(quatconj(dataRaw.L_LowLeg.ori), ...
+    gfrAcc.raw.MP = gfrAcc.raw.MP(sIdx:eIdx,:);
+    gfrAcc.raw.LA = quatrotate(quatconj(dataRaw.L_LowLeg.ori), ...
                             dataRaw.L_LowLeg.acc) - [0 0 9.81];
-    gfrAcc.x.LA = gfrAcc.x.LA(sIdx:eIdx,:);
-    gfrAcc.x.RA = quatrotate(quatconj(dataRaw.R_LowLeg.ori), ...
+    gfrAcc.raw.LA = gfrAcc.raw.LA(sIdx:eIdx,:);
+    gfrAcc.raw.RA = quatrotate(quatconj(dataRaw.R_LowLeg.ori), ...
                             dataRaw.R_LowLeg.acc) - [0 0 9.81];
-    gfrAcc.x.RA = gfrAcc.x.RA(sIdx:eIdx,:);
+    gfrAcc.raw.RA = gfrAcc.raw.RA(sIdx:eIdx,:);
     
     MIDPEL_act = [mean([dataBVH.LeftUpLeg(:,1) dataBVH.RightUpLeg(:,1)], 2),...
                   mean([dataBVH.LeftUpLeg(:,2) dataBVH.RightUpLeg(:,2)], 2),...
@@ -123,6 +122,14 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
     x0_vel_MP = gfr_vel_MP_act(sIdx,:);
     x0_vel_LA = gfr_vel_LA_act(sIdx,:);
     x0_vel_RA = gfr_vel_RA_act(sIdx,:);
+    
+    gfrAcc.sim = {};
+    gfrAcc.sim.MP = [0 0 0; diff(MIDPEL_act, 2, 1)*fs*fs];
+    gfrAcc.sim.MP = gfrAcc.sim.MP(sIdx:eIdx,:);
+    gfrAcc.sim.LA = [0 0 0; diff(dataBVH.LeftFoot, 2, 1)*fs*fs];
+    gfrAcc.sim.LA = gfrAcc.sim.LA(sIdx:eIdx,:);
+    gfrAcc.sim.RA = [0 0 0; diff(dataBVH.RightFoot, 2, 1)*fs*fs];
+    gfrAcc.sim.RA = gfrAcc.sim.RA(sIdx:eIdx,:);
     
     %% UWB measurements
     %  Simulate uwb measurement by generating pairwise combinations, using the
@@ -155,7 +162,7 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
         
         cs = setups{sI};
         
-        csGfrAcc = gfrAcc.(getVLabel(cs.accData, cs.accDataNoise));
+        csGfrAcc = gfrAcc.(cs.accData);
         csQOri = qOri.(cs.oriData);
         
         % step detection
@@ -209,12 +216,8 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
                    gfr_vel_LA_act(sIdx:eIdx,:) qOri.x.LTIB...
                    dataBVH.RightFoot(sIdx:eIdx,:) ...
                    gfr_vel_RA_act(sIdx:eIdx,:) qOri.x.RTIB];
-                estAcc = [csGfrAcc.MP(sIdx:eIdx,:) ...
-                          csGfrAcc.LA(sIdx:eIdx,:) ...
-                          csGfrAcc.RA(sIdx:eIdx,:)];
-                actAcc = [gfrAcc.x.MP(sIdx:eIdx,:) ...
-                          gfrAcc.x.LA(sIdx:eIdx,:) ...
-                          gfrAcc.x.RA(sIdx:eIdx,:)];
+                estAcc = [csGfrAcc.MP csGfrAcc.LA csGfrAcc.RA];
+                actAcc = [gfrAcc.sim.MP gfrAcc.sim.LA gfrAcc.sim.RA];
             end
             
             estBodyRel = estBody.changeRefFrame('MIDPEL');
@@ -235,17 +238,5 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
         results(resultsIdx) = results0;
         display(sprintf("Index %3d/%3d: Running time: %.4f", resultsIdx, setupN, cputime-t0));
         resultsIdx = resultsIdx + 1;
-    end
-end
-
-function label = getVLabel(data_source, sigma)
-    if data_source == 'v'
-        if sigma == 0
-            label = 'v';
-        else
-           label = strrep(sprintf('v%.1f', sigma), '.', '');
-        end
-    else
-        label = data_source;
     end
 end

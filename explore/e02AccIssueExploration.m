@@ -1,5 +1,5 @@
 % Acc Exploration
-fs=60;
+fs=100;
 estAccMP1 = estAcc(:,1:3); estAccLA1 = estAcc(:,4:6); estAccRA1 = estAcc(:,7:9); 
 actAccMP1 = actAcc(:,1:3); actAccLA1 = actAcc(:,4:6); actAccRA1 = actAcc(:,7:9);
 

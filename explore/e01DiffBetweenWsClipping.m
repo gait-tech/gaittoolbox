@@ -74,6 +74,12 @@ actBodyRel = actBody.changeRefFrame('MIDPEL');
 estBodyRel = estBody.changeRefFrame('MIDPEL');
 grlib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'});
 
+updateFigureContents('Joint Angles (Hips)');
+grlib.viz.plotJointAngles({actBody, estBody}, {'LHip', 'RHip'})
+
+updateFigureContents('Joint Angles (Knee)');
+grlib.viz.plotJointAngles({actBody, estBody}, {'LKnee', 'RKnee'})
+
 % Constraint Info
 d_pelvis = norm(actBody.LFEP(1,:) - actBody.RFEP(1,:));
 d_lfemur = norm(actBody.LFEP(1,:) - actBody.LFEO(1,:));
@@ -96,17 +102,20 @@ scatter(t, cstrStateLV, '<c'); scatter(t, cstrStateRV, '>c');
 legend('Hips', 'LFemur', 'RFemur', 'LTibia', 'RTibia', 'LCstr', 'RCstr');
 
 % Animation
+updateFigureContents('Animation');
+xlabel('x'); ylabel('y'); zlabel('z');
 actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
 i = 1;
 while i <= actBody.nSamples
+    [az, el] = view;
     clf; grid;
     xlim(actBodyLimits(1:2)); 
     ylim(actBodyLimits(3:4)); 
     zlim(actBodyLimits(5:6));  
     xlabel('x'); ylabel('y'); zlabel('z');
-    view(20, 30);
-    grlib.viz.plotLowerBody(actBody, i);
-    i = i+2;
+    view(az, el);
+    grlib.viz.plotLowerBody(actBody, i, true, false);
+    i = i+5;
     pause(1/1000);
 end
 
@@ -122,22 +131,46 @@ while i <= estBody.nSamples
     ylim(estBodyLimits(3:4)); 
     zlim(estBodyLimits(5:6));  
     view(az, el);
-    grlib.viz.plotLowerBody(estBody, i);
-    i = i+1;
+    grlib.viz.plotLowerBody(estBody, i, true, false);
+    i = i+5;
     pause(1/1000);
 end
 
 % Act and Est Body Shadowing
 updateFigureContents('Act and Est Shadowing');
 i = 1;
+actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
 az = 0; el = 0;
 while i <= actBody.nSamples
     [az, el] = view;
     clf; grid;
+    xlim(actBodyLimits(1:2)); 
+    ylim(actBodyLimits(3:4)); 
+    zlim(actBodyLimits(5:6));
     xlabel('x'); ylabel('y'); zlabel('z');
     view(az, el);
-    grlib.viz.plotLowerBody(estBody, i, true);
-    grlib.viz.plotLowerBody(actBody, i, true);
+    grlib.viz.plotLowerBody(estBody, i, true, false);
+%     grlib.viz.plotLowerBody(actBody, i, true, false);
+    i = i+10;
+    pause(1/1000);
+end
+
+% Act and Est Rel Body Shadowing
+updateFigureContents('Act and Est Rel Shadowing');
+actBodyRel = actBody.changeRefFrame('MIDPEL');
+estBodyRel = estBody.changeRefFrame('MIDPEL');
+i = 1;
+az = 0; el = 0;
+while i <= actBody.nSamples
+    [az, el] = view;
+    clf; grid;
+    xlim(actBodyRelLimits(1:2)); 
+    ylim(actBodyRelLimits(3:4)); 
+    zlim(actBodyRelLimits(5:6));  
+    xlabel('x'); ylabel('y'); zlabel('z');
+    view(az, el);
+    grlib.viz.plotLowerBody(estBodyRel, i);
+    grlib.viz.plotLowerBody(actBodyRel, i);
     i = i+10;
     pause(1/1000);
 end
@@ -169,8 +202,8 @@ while i <= actBody.nSamples
     zlim(actBodyRelLimits(5:6));  
     xlabel('x'); ylabel('y'); zlabel('z');
     view(20, 30);
-    grlib.viz.plotLowerBody(actBodyRel, i);
-    i = i+2;
+    grlib.viz.plotLowerBody(actBodyRel, i, true, false);
+    i = i+5;
     pause(1/1000);
 end
 

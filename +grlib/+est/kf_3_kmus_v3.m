@@ -567,6 +567,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             P_plus = P_min1;
         end
         
+        x_plus(idxOriMP,1) = quatnormalize(x_plus(idxOriMP,1)')';
+        x_plus(idxOriLA,1) = quatnormalize(x_plus(idxOriLA,1)')';
+        x_plus(idxOriRA,1) = quatnormalize(x_plus(idxOriRA,1)')';
+        
         xhat_pos(n, :) = x_plus;
         P_pos(:, :, n)  = P_plus;
         
@@ -873,16 +877,22 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         debug_dat.RFEO(n, :) = x_tilde(idxPosRA) + dRTibia * RTIB_CS(:, 3);
         debug_dat.LFEP(n, :) = x_tilde(idxPosMP) + dPelvis/2 * PELV_CS(:, 2);
         debug_dat.RFEP(n, :) = x_tilde(idxPosMP) - dPelvis/2 * PELV_CS(:, 2);
-        LFEM_z = (debug_dat.LFEP(n,:)-debug_dat.LFEO(n,:))';
+        LFEM_z = (debug_dat.LFEP(n,:)-debug_dat.LFEO(n,:))'; 
         LFEM_y = LTIB_CS(:,2);
         LFEM_x = cross(LFEM_y, LFEM_z);
+        LFEM_z = LFEM_z / norm(LFEM_z);
+        LFEM_y = LFEM_y / norm(LFEM_y);
+        LFEM_x = LFEM_x / norm(LFEM_x);
         RFEM_z = (debug_dat.RFEP(n,:)-debug_dat.RFEO(n,:))';
         RFEM_y = RTIB_CS(:,2);
         RFEM_x = cross(RFEM_y, RFEM_z);
+        RFEM_y = RFEM_y / norm(RFEM_y);
+        RFEM_z = RFEM_z / norm(RFEM_z);
+        RFEM_x = RFEM_x / norm(RFEM_x);
         debug_dat.qLTH(n, :) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
         debug_dat.qRTH(n, :) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
     end
-    end
+end
 
     function d = solve_linhjc_d(pMP, pLA, pRA, PELV_CS, LTIB_CS, RTIB_CS, ...
                             dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)

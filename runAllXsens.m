@@ -21,13 +21,18 @@ options = struct('Pelvis', '00B40B91', ...
     'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
 
 setups = {
-    struct('est', 'ekfv3', 'accData', 'x', 'oriData', 'x', 'accDataNoise', 0.5, ...
+    struct('est', 'ekfv3', 'accData', 'raw', 'oriData', 'x', ...
+           'applyMeas', 21, 'applyCstr', 0, 'P', 0.5), ...
+    struct('est', 'ekfv3', 'accData', 'sim', 'oriData', 'x', ...
            'applyMeas', 21, 'applyCstr', 0, 'P', 0.5), ...
 };
 for mI = [0 1:4]
     for cI = [0 1:7 21:23 51:54 71:77]
         setups{end+1} = struct('est', 'ekfv3', ...
-           'accData', 'x', 'oriData', 'x', 'accDataNoise', 0.5, ...
+           'accData', 'raw', 'oriData', 'x', ...
+           'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
+        setups{end+1} = struct('est', 'ekfv3', ...
+           'accData', 'sim', 'oriData', 'x', ...
            'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
     end
 end
@@ -70,14 +75,14 @@ end
 save(sprintf("%s/results.mat", expDir), 'results')
 
 function label = getLabel(setup)
-    if setup.accData == 'v'
-        if setup.accDataNoise == 0 
-            aD = 'v';
+    if setup.accData == 'sim'
+        if ~isfield(setup, 'accDataNoise') || setup.accDataNoise == 0 
+            aD = 's';
         else
-            aD = strrep(sprintf('v%.1f', setup.accDataNoise), '.', '');
+            aD = strrep(sprintf('s%.1f', setup.accDataNoise), '.', '');
         end
     else
-        aD = setup.accData;
+        aD = setup.accData(1);
     end
     label = sprintf('D%s%s+M%02d+C%03d', aD, setup.oriData, ...
         setup.applyMeas, setup.applyCstr);

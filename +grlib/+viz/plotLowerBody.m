@@ -6,13 +6,16 @@
 %> 
 %> @param body Body instance to be plotted
 %> @param t time point to be plotted
+%> @param showOrientation show coordinate system of each body segment
 %> @param showGround show ground
 %> @retval p plot object
 % ======================================================================
-function p = plotLowerBody(body, t, showGround)    
+function p = plotLowerBody(body, t, showOrientation, showGround)    
     if nargin <= 2
+        showOrientation = false;
         showGround = false;
     end
+    hold on;
     
     pelvL = line([body.LFEP(t,1) body.MIDPEL(t,1) body.RFEP(t,1)], ...
                  [body.LFEP(t,2) body.MIDPEL(t,2) body.RFEP(t,2)], ...
@@ -39,6 +42,21 @@ function p = plotLowerBody(body, t, showGround)
                  [body.RFEO(t,3) body.RTIO(t,3)],...
                  'Color', char(body.xyzColor(1)), 'LineWidth', 2);
     rtibL.Marker = body.ptSymbol;
+    
+    if showOrientation
+        points = [ repmat(body.MIDPEL(t,:), [3, 1]); ...
+                   repmat(body.LFEO(t,:), [3, 1]); ...
+                   repmat(body.RFEO(t,:), [3, 1]); ...
+                   repmat(body.LTIO(t,:), [3, 1]); ...
+                   repmat(body.RTIO(t,:), [3, 1]) ];
+        arrows = [ quat2rotm(body.qRPV(t, :))'; ...
+                   quat2rotm(body.qLTH(t, :))'; ...
+                   quat2rotm(body.qRTH(t, :))'; ...
+                   quat2rotm(body.qLSK(t, :))'; ...
+                   quat2rotm(body.qRSK(t, :))' ];
+        quiver3(points(:, 1), points(:, 2), points(:, 3), ...
+                arrows(:, 1), arrows(:, 2), arrows(:, 3));
+    end
     if showGround
         [ptsX, ptsY, ptsZ] = body.groundCoordinates();
         patch(ptsX, ptsY, ptsZ, 'k', 'FaceAlpha', .5, 'LineStyle', ':')
