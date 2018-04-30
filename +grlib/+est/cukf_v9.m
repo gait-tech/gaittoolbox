@@ -451,8 +451,8 @@ LFEM_z__TIB = LTIB_CS\LFEM_z__N;
 RFEM_z__TIB = RTIB_CS\RFEM_z__N;
 
 %global alpha_lk alpha_rk 
-alpha_lk = atan2(-LFEM_z__TIB(1), -LFEM_z__TIB(3)) + 0.5*pi;
-alpha_rk = atan2(-RFEM_z__TIB(1), -RFEM_z__TIB(3)) + 0.5*pi;
+alpha_lk = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
+alpha_rk = atan2(-RFEM_z__TIB(3), -RFEM_z__TIB(1)) + 0.5*pi;
 
 % setup the constraint equations
 d_k = [ (d_pelvis/2*PELV_CS(:,2) ...

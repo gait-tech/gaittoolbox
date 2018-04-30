@@ -227,9 +227,9 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
                      'estState2', 'estAcc', 'actAcc')
             end
     %         results(resultsIdx) = estBody.diffRMSE(actBody);
-            results0 = estBodyRel.diffRelRMSE(actBodyRel);
+            results0 = estBodyRel.diffRMSE(actBodyRel);
 %         catch
-%             results0 = actBody.diffRelRMSE(nan);
+%             results0 = actBody.diffRMSE(nan);
 %         end
         
         results0.name = name;

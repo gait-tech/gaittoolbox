@@ -59,6 +59,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %           005: maximum probability estimate if P is well conditioned + P update
 %           006: soft maximum probability estimate + P update
 %           007: maximum probability estimate of constraint subset + P update
+%           008: maximum probability estimate + soft P update
 %           011: fmincon (interior point) linear hjc in world frame, W = P^-1
 %           012: fmincon (sqp) linear hjc in world frame, W = P^-1
 %           013: fmincon (active set) linear hjc in world frame, W = P^-1
@@ -96,12 +97,51 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + lowest point = floor
 %           077: maximum probability estimate of constraint subset + P update
 %                + lowest point = floor
+%           078: maximum probability estimate + soft P update
+%                + lowest point = floor
 %           101: fmincon interior-point (W=P^-1) + MDR const + no P update
 %           102: fmincon interior-point (W=P^-1) + MDR const + no P update
 %           103: fmincon interior-point (W=P^-1) + MDR const + no P update
 %           104: fmincon interior-point (W=I) + MDR const + no P update
 %           105: fmincon interior-point (W=I) + MDR const + no P update
 %           106: fmincon interior-point (W=I) + MDR const + no P update
+%           201: estimate projection (W=P^-1) assuming perfect orientation
+%                + knee angle inequality constraint
+%           202: estimate projection (W=I) assuming perfect orientation
+%                + knee angle inequality constraint
+%           203: least squares estimate w/ full confidence on pelvis (P=0 at pelvis) 
+%                + no P update + knee angle inequality constraint
+%           204: maximum probability estimate w/ force equal foot covariance 
+%                + no P update + knee angle inequality constraint
+%           205: maximum probability estimate if P is well conditioned 
+%                + P update + knee angle inequality constraint
+%           206: soft maximum probability estimate + P update
+%                + knee angle inequality constraint
+%           207: maximum probability estimate of constraint subset 
+%                + P update + knee angle inequality constraint
+%           208: maximum probability estimate + soft P update
+%           221: PELVIS frame constraint update, maximum probability estimate 
+%                + no P update + knee angle inequality constraint
+%           222: PELVIS frame constraint update, least squares estimate 
+%                + no P update + knee angle inequality constraint
+%           223: maximum probability estimate of constraint subset 
+%                + P update + knee angle inequality constraint
+%           271: estimate projection (W=P^-1) assuming perfect orientation
+%                + lowest point = floor + knee angle inequality constraint
+%           272: estimate projection (W=I) assuming perfect orientation
+%                + lowest point = floor + knee angle inequality constraint
+%           273: least squares estimate w/ full confidence on pelvis (P=0 at pelvis) + no P update
+%                + lowest point = floor + knee angle inequality constraint
+%           274: maximum probability estimate w/ force equal foot covariance + no P update
+%                + lowest point = floor + knee angle inequality constraint
+%           275: maximum probability estimate if P is well conditioned + P update
+%                + lowest point = floor + knee angle inequality constraint
+%           276: soft maximum probability estimate + P update
+%                + lowest point = floor + knee angle inequality constraint
+%           277: maximum probability estimate of constraint subset + P update
+%                + lowest point = floor + knee angle inequality constraint
+%           278: maximum probability estimate + soft P update
+%                + lowest point = floor + knee angle inequality constraint
 
     fOpt = struct('fs', 60, 'applyMeas', false, 'applyUwb', false, ...
         'applyAccBias', false, 'applyCstr', 0, ...
@@ -232,8 +272,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     debug_dat = struct;
     debug_dat.LFEO = nan(nSamples, 3); debug_dat.RFEO = nan(nSamples, 3);
     debug_dat.LFEP = nan(nSamples, 3); debug_dat.RFEP = nan(nSamples, 3);
-    debug_dat.qLFemur = nan(nSamples, 4); debug_dat.qRFemur = nan(nSamples, 4);
-    
+    debug_dat.qLTH = nan(nSamples, 4); debug_dat.qRTH = nan(nSamples, 4);
+
     debug_dat.predState = nan(nSamples, nStates);
     debug_dat.predP = nan(nStates, nStates, nSamples);
 %     debug_dat.zuptStateL = false(nSamples, 1);
@@ -344,8 +384,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         R_uwb(3,3) = (fOpt.sigmaUwbLARA)^2;
     end
     
-    if (fOpt.applyCstr >= 1 && fOpt.applyCstr <= 7) || ...
-        (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77)
+    if (fOpt.applyCstr >= 1 && fOpt.applyCstr <= 8) || ...
+        (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 78) || ...
+        (fOpt.applyCstr >= 201 && fOpt.applyCstr <= 208) || ...
+        (fOpt.applyCstr >= 271 && fOpt.applyCstr <= 278)
         floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
     
         D = zeros(6, nStates);
@@ -374,7 +416,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             'ConstraintTolerance', fOpt.optimConstraintTolerance, ...
             'MaxFunctionEvaluations', fOpt.optimMaxFunctionEvaluations, ...
             'UseParallel', fOpt.optimUseParallel);
-    elseif fOpt.applyCstr >= 21 && fOpt.applyCstr <= 23
+    elseif (fOpt.applyCstr >= 21 && fOpt.applyCstr <= 23) || ...
+           (fOpt.applyCstr >= 221 && fOpt.applyCstr <= 223)
         D = zeros(6, nStates);
         D(1:3,idxPosLA) = eye(3, 3);
         D(4:6,idxPosRA) = eye(3, 3);
@@ -584,13 +627,21 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         if fOpt.applyCstr == 0
             x_tilde = x_plus;
             P_tilde = P_plus;
-        elseif (fOpt.applyCstr >= 1 && fOpt.applyCstr <= 7 ) || ...
-            (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77 )          
-            d_k = solve_linhjc_d(x_plus(idxPosMP,1), x_plus(idxPosLA,1), ...
-                    x_plus(idxPosRA,1), PELV_CS, LTIB_CS, RTIB_CS, ...
-                    dPelvis, dLFemur, dRFemur, dLTibia, dRTibia);
-                
-            switch (mod(fOpt.applyCstr, 70))
+        elseif (fOpt.applyCstr >= 1 && fOpt.applyCstr <= 8 ) || ...
+            (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 78 ) || ...
+            (fOpt.applyCstr >= 201 && fOpt.applyCstr <= 208 ) || ...
+            (fOpt.applyCstr >= 271 && fOpt.applyCstr <= 278 )
+            if fOpt.applyCstr < 100
+                d_k = solve_linhjc_d(x_plus(idxPosMP,1), x_plus(idxPosLA,1), ...
+                        x_plus(idxPosRA,1), PELV_CS, LTIB_CS, RTIB_CS, ...
+                        dPelvis, dLFemur, dRFemur, dLTibia, dRTibia);
+            else
+                d_k = solve_linhjc_kac_d(x_plus(idxPosMP,1), x_plus(idxPosLA,1), ...
+                        x_plus(idxPosRA,1), PELV_CS, LTIB_CS, RTIB_CS, ...
+                        dPelvis, dLFemur, dRFemur, dLTibia, dRTibia);
+            end
+            
+            switch (mod(fOpt.applyCstr, 10))
                 case 1 % maximum probability estimate + no P update
                     Kk = P_plus*D'*(D*P_plus*D')^(-1);
                     x_tilde = x_plus + Kk*(d_k - D * x_plus);
@@ -638,6 +689,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                         P_tilde = P_plus;
                     end
                     debug_dat.cstrStateU(n, :) = idx;
+                case 8 % maximum probability estimate + soft P update
+                    Kk = P_plus * D' * (D * P_plus * D')^(-1);
+                    x_tilde = x_plus + Kk*(d_k - D * x_plus);
+                    P_tilde = (I_N-Kk*D)*P_plus*(I_N-Kk*D)' + Kk*fOpt.sigmaCPos*I_CN*Kk';
             end
         elseif fOpt.applyCstr >= 11 && fOpt.applyCstr <= 16 % fmincon linear const
             % calculate the location of the knee
@@ -675,7 +730,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             x_tilde = x_plus;
             x_tilde(x2cxIdx, 1) = x_hat;            
             P_tilde = P_plus;
-        elseif fOpt.applyCstr >= 21 && fOpt.applyCstr <= 23
+        elseif (fOpt.applyCstr >= 21 && fOpt.applyCstr <= 23) || ...
+               (fOpt.applyCstr >= 221 && fOpt.applyCstr <= 223)
             x_plus2 = grlib.est.changeStateRefFrame(x_plus', 'MIDPEL', ...
                             'kf_3_kmus_v3')';
             
@@ -683,11 +739,17 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             RTIB_CS2 = quat2rotm(x_plus2(idxOriRA,1)');
             PELV_CS2 = quat2rotm(x_plus2(idxOriMP,1)');
         
-            d_k = solve_linhjc_d(x_plus2(idxPosMP,1), x_plus2(idxPosLA,1), ...
+            if fOpt.applyCstr < 100
+                d_k = solve_linhjc_d(x_plus2(idxPosMP,1), x_plus2(idxPosLA,1), ...
                     x_plus2(idxPosRA,1), PELV_CS2, LTIB_CS2, RTIB_CS2, ...
                     dPelvis, dLFemur, dRFemur, dLTibia, dRTibia);
+            else
+                d_k = solve_linhjc_kac_d(x_plus2(idxPosMP,1), x_plus2(idxPosLA,1), ...
+                    x_plus2(idxPosRA,1), PELV_CS2, LTIB_CS2, RTIB_CS2, ...
+                    dPelvis, dLFemur, dRFemur, dLTibia, dRTibia);
+            end           
             
-            switch (fOpt.applyCstr)
+            switch (mod(fOpt.applyCstr, 100))
                 case 21 % maximum probability estimate + no P update
                     Kk = P_plus*D'*(D*P_plus*D')^(-1);
                     x_tilde2 = x_plus2 + Kk*(d_k - D * x_plus2);
@@ -877,24 +939,27 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         debug_dat.RFEO(n, :) = x_tilde(idxPosRA) + dRTibia * RTIB_CS(:, 3);
         debug_dat.LFEP(n, :) = x_tilde(idxPosMP) + dPelvis/2 * PELV_CS(:, 2);
         debug_dat.RFEP(n, :) = x_tilde(idxPosMP) - dPelvis/2 * PELV_CS(:, 2);
-        LFEM_z = (debug_dat.LFEP(n,:)-debug_dat.LFEO(n,:))'; 
-        LFEM_y = LTIB_CS(:,2);
-        LFEM_x = cross(LFEM_y, LFEM_z);
-        LFEM_z = LFEM_z / norm(LFEM_z);
-        LFEM_y = LFEM_y / norm(LFEM_y);
-        LFEM_x = LFEM_x / norm(LFEM_x);
-        RFEM_z = (debug_dat.RFEP(n,:)-debug_dat.RFEO(n,:))';
-        RFEM_y = RTIB_CS(:,2);
-        RFEM_x = cross(RFEM_y, RFEM_z);
-        RFEM_y = RFEM_y / norm(RFEM_y);
-        RFEM_z = RFEM_z / norm(RFEM_z);
-        RFEM_x = RFEM_x / norm(RFEM_x);
-        debug_dat.qLTH(n, :) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
-        debug_dat.qRTH(n, :) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
+        
+        if fOpt.applyCstr
+            LFEM_z = (debug_dat.LFEP(n,:)-debug_dat.LFEO(n,:))'; 
+            LFEM_y = LTIB_CS(:,2);
+            LFEM_x = cross(LFEM_y, LFEM_z);
+            LFEM_z = LFEM_z / norm(LFEM_z);
+            LFEM_y = LFEM_y / norm(LFEM_y);
+            LFEM_x = LFEM_x / norm(LFEM_x);
+            RFEM_z = (debug_dat.RFEP(n,:)-debug_dat.RFEO(n,:))';
+            RFEM_y = RTIB_CS(:,2);
+            RFEM_x = cross(RFEM_y, RFEM_z);
+            RFEM_y = RFEM_y / norm(RFEM_y);
+            RFEM_z = RFEM_z / norm(RFEM_z);
+            RFEM_x = RFEM_x / norm(RFEM_x);
+            debug_dat.qLTH(n, :) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
+            debug_dat.qRTH(n, :) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
+        end
     end
 end
 
-    function d = solve_linhjc_d(pMP, pLA, pRA, PELV_CS, LTIB_CS, RTIB_CS, ...
+function d = solve_linhjc_d(pMP, pLA, pRA, PELV_CS, LTIB_CS, RTIB_CS, ...
                             dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
     LKNE = pLA + dLTibia*LTIB_CS(:,3);
     RKNE = pRA + dRTibia*RTIB_CS(:,3);
@@ -911,6 +976,44 @@ end
     alpha_lk = acos(dot(LFEM_z, LTIB_z)/(norm(LFEM_z)*norm(LTIB_z)));
     alpha_rk = acos(dot(RFEM_z, RTIB_z)/(norm(RFEM_z)*norm(RTIB_z)));
 
+    % setup the constraint equations
+    d = [ (dPelvis/2*PELV_CS(:,2) ...
+             -dLFemur*cos(alpha_lk)*LTIB_CS(:,3) ...
+             +dLFemur*sin(alpha_lk)*LTIB_CS(:,1) ...
+             -dLTibia*LTIB_CS(:,3)) ; ...
+            (-dPelvis/2*PELV_CS(:,2)+ ...
+             -dRFemur*cos(alpha_rk)*RTIB_CS(:,3) ...
+             +dRFemur*sin(alpha_rk)*RTIB_CS(:,1) ...
+             -dRTibia*RTIB_CS(:,3)) ];
+end
+
+function d = solve_linhjc_kac_d(pMP, pLA, pRA, PELV_CS, LTIB_CS, RTIB_CS, ...
+                            dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
+    LKNE = pLA + dLTibia*LTIB_CS(:,3);
+    RKNE = pRA + dRTibia*RTIB_CS(:,3);
+
+    % calculate the z axis of the femur
+    LFEM_z = pMP+dPelvis/2*PELV_CS(:,2)-LKNE;
+    RFEM_z = pMP-dPelvis/2*PELV_CS(:,2)-RKNE;
+
+    % normalize z-axis of femur
+    LFEM_z = LFEM_z/norm(LFEM_z);
+    RFEM_z = RFEM_z/norm(RFEM_z);
+
+    % _TIB_CS is _TIB_CS described in world frame, or rotm from tib2world frame
+    % therefore, inverse is from wrold to tib frame
+    LFEM_z__TIB = LTIB_CS\LFEM_z;
+    RFEM_z__TIB = RTIB_CS\RFEM_z;
+
+    %global alpha_lk alpha_rk 
+    alpha_lk = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
+    alpha_rk = atan2(-RFEM_z__TIB(3), -RFEM_z__TIB(1)) + 0.5*pi;
+
+    if alpha_lk < 0, alpha_lk = 0;
+    elseif alpha_lk > pi, alpha_lk = pi; end
+    if alpha_rk < 0, alpha_rk = 0;
+    elseif alpha_rk > pi, alpha_rk = pi; end
+    
     % setup the constraint equations
     d = [ (dPelvis/2*PELV_CS(:,2) ...
              -dLFemur*cos(alpha_lk)*LTIB_CS(:,3) ...
@@ -984,5 +1087,4 @@ function [c, ceq] = hjc_nonlcon(x, dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
 
     c = [];
 end
-
     
