@@ -176,7 +176,7 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
         movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc.RA .^2, 2)), VAR_WIN);
         bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
         
-%         try
+        try
             if cs.est == 'ekfv3'
                 x0 = [x0_pos_MP x0_vel_MP zeros(1,4) ...
                       x0_pos_LA x0_vel_LA zeros(1,4) ...
@@ -228,9 +228,9 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
             end
     %         results(resultsIdx) = estBody.diffRMSE(actBody);
             results0 = estBodyRel.diffRMSE(actBodyRel);
-%         catch
-%             results0 = actBody.diffRMSE(nan);
-%         end
+        catch
+            results0 = actBody.diffRMSE(nan);
+        end
         
         results0.name = name;
         results0.label = cs.label;

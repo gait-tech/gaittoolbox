@@ -99,12 +99,42 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + lowest point = floor
 %           078: maximum probability estimate + soft P update
 %                + lowest point = floor
-%           101: fmincon interior-point (W=P^-1) + MDR const + no P update
-%           102: fmincon interior-point (W=P^-1) + MDR const + no P update
-%           103: fmincon interior-point (W=P^-1) + MDR const + no P update
-%           104: fmincon interior-point (W=I) + MDR const + no P update
-%           105: fmincon interior-point (W=I) + MDR const + no P update
-%           106: fmincon interior-point (W=I) + MDR const + no P update
+%           101: nonlinear fmincon interior-point (W=P^-1) + knee lock + no P update
+%           102: nonlinear fmincon sqp (W=P^-1) + knee lock + no P update
+%           103: nonlinear fmincon active set (W=P^-1) + knee lock + no P update
+%           104: nonlinear fmincon interior-point (W=I) + knee lock  + no P update
+%           105: nonlinear fmincon sqp (W=I) + knee lock + no P update
+%           106: nonlinear fmincon active set (W=I) + knee lock + no P update
+%           111: nonlinear fmincon interior-point (W=P^-1) + knee lock and ineq + no P update
+%           112: nonlinear fmincon sqp (W=P^-1) + knee lock and ineq + no P update
+%           113: nonlinear fmincon active set (W=P^-1) + knee lock and ineq + no P update
+%           114: nonlinear fmincon interior-point (W=I) + knee lock and ineq + no P update
+%           115: nonlinear fmincon sqp (W=I) + knee lock and ineq + no P update
+%           116: nonlinear fmincon active set (W=I) + knee lock and ineq + no P update
+%           121: nonlinear fmincon interior-point (W=P^-1) + x=pos only 
+%                + adj knee + no P update
+%           122: nonlinear fmincon sqp (W=P^-1) + x=pos only
+%                + adj knee + no P update
+%           123: nonlinear fmincon active set (W=P^-1) + x=pos only 
+%                + adj knee + no P update
+%           124: nonlinear fmincon interior-point (W=I) + x=pos only
+%                + adj knee + no P update
+%           125: nonlinear fmincon sqp (W=I) + x=pos only 
+%                + adj knee + no P update
+%           126: nonlinear fmincon active set (W=I) + x=pos only 
+%                + adj knee + no P update
+%           131: nonlinear fmincon interior-point (W=P^-1) + x=pos only 
+%                + adj knee + knee ineq + no P update
+%           132: nonlinear fmincon sqp (W=P^-1) + x=pos only 
+%                + adj knee + knee ineq + no P update
+%           133: nonlinear fmincon active set (W=P^-1) + x=pos only 
+%                + adj knee + knee ineq + no P update
+%           134: nonlinear fmincon interior-point (W=I) + x=pos only 
+%                + adj knee + knee ineq + no P update
+%           135: nonlinear fmincon sqp (W=I) + x=pos only 
+%                + adj knee + knee ineq + no P update
+%           136: nonlinear fmincon active set (W=I) + x=pos only 
+%                + adj knee + knee ineq + no P update
 %           201: estimate projection (W=P^-1) assuming perfect orientation
 %                + knee angle inequality constraint
 %           202: estimate projection (W=I) assuming perfect orientation
@@ -455,7 +485,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         
         debug_dat.cstrStateU = true(nSamples, 9);
         debug_dat.cstrStateU(:,7:9) = false;
-    elseif fOpt.applyCstr >= 101 && fOpt.applyCstr <= 106
+    elseif (fOpt.applyCstr >= 101 && fOpt.applyCstr <= 106) || ...
+        (fOpt.applyCstr >= 111 && fOpt.applyCstr <= 116) || ...
+        (fOpt.applyCstr >= 121 && fOpt.applyCstr <= 126) || ...
+        (fOpt.applyCstr >= 131 && fOpt.applyCstr <= 136)
         optimOpt = optimoptions('fmincon', 'Algorithm', 'sqp', ...
             'Display', 'off', ...
             'OptimalityTolerance', fOpt.optimOptimalityTolerance, ...
@@ -619,9 +652,9 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         
     %% -----------------------------------------------------------------------
     % Constraint update step ---- 
+        PELV_CS = quat2rotm(x_plus(idxOriMP,1)');
         LTIB_CS = quat2rotm(x_plus(idxOriLA,1)');
         RTIB_CS = quat2rotm(x_plus(idxOriRA,1)');
-        PELV_CS = quat2rotm(x_plus(idxOriMP,1)');
         % Test frankenstein constraint
         
         if fOpt.applyCstr == 0
@@ -886,34 +919,168 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             end
             
             debug_dat.cstrStateU(n, idx(end)) = true;
-        elseif fOpt.applyCstr >= 101 && fOpt.applyCstr <= 106 % fmincon
+        elseif (fOpt.applyCstr >= 101 && fOpt.applyCstr <= 106) || ... % fmincon
+            (fOpt.applyCstr >= 111 && fOpt.applyCstr <= 116)
+        
             switch (fOpt.applyCstr)
                 case 101
                     optimOpt.Algorithm = 'interior-point';
+                    nonlcon = @(x_tilde) hjc_nonlcon(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
                     W = P_plus;
                 case 102
                     optimOpt.Algorithm = 'sqp';
+                    nonlcon = @(x_tilde) hjc_nonlcon(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
                     W = P_plus;
                 case 103
                     optimOpt.Algorithm = 'active-set';
+                    nonlcon = @(x_tilde) hjc_nonlcon(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
                     W = P_plus;
                 case 104
                     optimOpt.Algorithm = 'interior-point';
+                    nonlcon = @(x_tilde) hjc_nonlcon(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
                     W = I_N;
                 case 105
                     optimOpt.Algorithm = 'sqp';
+                    nonlcon = @(x_tilde) hjc_nonlcon(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
                     W = I_N;
                 case 106
                     optimOpt.Algorithm = 'active-set';
+                    nonlcon = @(x_tilde) hjc_nonlcon(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = I_N;
+                case 111
+                    optimOpt.Algorithm = 'interior-point';
+                    nonlcon = @(x_tilde) hjc_nonlcon_kac(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = P_plus;
+                case 112
+                    optimOpt.Algorithm = 'sqp';
+                    nonlcon = @(x_tilde) hjc_nonlcon_kac(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = P_plus;
+                case 113
+                    optimOpt.Algorithm = 'active-set';
+                    nonlcon = @(x_tilde) hjc_nonlcon_kac(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = P_plus;
+                case 114
+                    optimOpt.Algorithm = 'interior-point';
+                    nonlcon = @(x_tilde) hjc_nonlcon_kac(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = I_N;
+                case 115
+                    optimOpt.Algorithm = 'sqp';
+                    nonlcon = @(x_tilde) hjc_nonlcon_kac(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = I_N;
+                case 116
+                    optimOpt.Algorithm = 'active-set';
+                    nonlcon = @(x_tilde) hjc_nonlcon_kac(x_tilde, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
                     W = I_N;
             end
             
-            x_tilde = fmincon(@(x_tilde) L2Dist(x_tilde, x_plus, W), ...
-                x_plus, [], [], [], [], [], [], ...
-                @(x_tilde) hjc_nonlcon(x_tilde, dPelvis, ...
-                dLFemur, dRFemur, dLTibia, dRTibia), optimOpt);
+            x_tilde = fmincon(@(x_tilde) L2Dist(x_tilde, x_plus, W, 20), ...
+                x_plus, [], [], [], [], [], [], nonlcon, optimOpt);
             
             % normalize the quaternions
+            x_tilde(idxOriMP) = quatnormalize(x_tilde(idxOriMP, 1)');
+            x_tilde(idxOriLA) = quatnormalize(x_tilde(idxOriLA, 1)');
+            x_tilde(idxOriRA) = quatnormalize(x_tilde(idxOriRA, 1)');
+            P_tilde = P_plus;
+            
+        elseif (fOpt.applyCstr >= 121 && fOpt.applyCstr <= 126) || ... % fmincon
+            (fOpt.applyCstr >= 131 && fOpt.applyCstr <= 136)
+        
+            idx = [idxPosMP, idxPosLA, idxPosRA];
+            switch (fOpt.applyCstr)
+                case 121
+                    optimOpt.Algorithm = 'interior-point';
+                    nonlcon = @(x) hjc_nonlcon_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = P_plus(idx, idx);
+                case 122
+                    optimOpt.Algorithm = 'sqp';
+                    nonlcon = @(x) hjc_nonlcon_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = P_plus(idx, idx);
+                case 123
+                    optimOpt.Algorithm = 'active-set';
+                    nonlcon = @(x) hjc_nonlcon_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = P_plus(idx, idx);
+                case 124
+                    optimOpt.Algorithm = 'interior-point';
+                    nonlcon = @(x) hjc_nonlcon_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = eye(9);
+                case 125
+                    optimOpt.Algorithm = 'sqp';
+                    nonlcon = @(x) hjc_nonlcon_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = eye(9);
+                case 126
+                    optimOpt.Algorithm = 'active-set';
+                    nonlcon = @(x) hjc_nonlcon_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = eye(9);
+                case 131
+                    optimOpt.Algorithm = 'interior-point';
+                    nonlcon = @(x) hjc_nonlcon_kac_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = P_plus(idx, idx);
+                case 132
+                    optimOpt.Algorithm = 'sqp';
+                    nonlcon = @(x) hjc_nonlcon_kac_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = P_plus(idx, idx);
+                case 133
+                    optimOpt.Algorithm = 'active-set';
+                    nonlcon = @(x) hjc_nonlcon_kac_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = P_plus(idx, idx);
+                case 134
+                    optimOpt.Algorithm = 'interior-point';
+                    nonlcon = @(x) hjc_nonlcon_kac_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = eye(9);
+                case 135
+                    optimOpt.Algorithm = 'sqp';
+                    nonlcon = @(x) hjc_nonlcon_kac_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = eye(9);
+                case 136
+                    optimOpt.Algorithm = 'active-set';
+                    nonlcon = @(x) hjc_nonlcon_kac_poska(x, ...
+                                PELV_CS, LTIB_CS, RTIB_CS, dPelvis, ...
+                                dLFemur, dRFemur, dLTibia, dRTibia);
+                    W = eye(9);
+            end
+            
+            x0 = x_plus(idx);
+            
+            x = fmincon(@(x) L2(x, x0, W, 20), ...
+                x0, [], [], [], [], [], [], nonlcon, optimOpt);
+            
+            % normalize the quaternions
+            x_tilde = x_plus;
+            x_tilde(idx) = x;
             x_tilde(idxOriMP) = quatnormalize(x_tilde(idxOriMP, 1)');
             x_tilde(idxOriLA) = quatnormalize(x_tilde(idxOriLA, 1)');
             x_tilde(idxOriRA) = quatnormalize(x_tilde(idxOriRA, 1)');
@@ -1025,7 +1192,37 @@ function d = solve_linhjc_kac_d(pMP, pLA, pRA, PELV_CS, LTIB_CS, RTIB_CS, ...
              -dRTibia*RTIB_CS(:,3)) ];
 end
 
-function y = L2Dist(x, x0, S)
+function [la ra] = calcKneeAngle(x, PELV_CS, LTIB_CS, RTIB_CS, ...
+                        dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
+    idxPosMP = 1:3;
+	idxOriMP = 7:10; % column idx corresponding to the mid-pelvis orientation
+    idxPosLA = 11:13; % column idx corresponding to the left ankle position
+    idxOriLA = 17:20; % column idx corresponding to the left ankle orientation
+    idxPosRA = 21:23; % column idx corresponding to the right ankle position
+    idxOriRA = 27:30; % column idx corresponding to the right ankle orientation
+
+    LKNE = x(idxPosLA) + dLTibia*LTIB_CS(:,3);
+    RKNE = x(idxPosRA) + dRTibia*RTIB_CS(:,3);
+
+    % calculate the z axis of the femur
+    LFEM_z = x(idxPosMP)+dPelvis/2*PELV_CS(:,2)-LKNE;
+    RFEM_z = x(idxPosMP)-dPelvis/2*PELV_CS(:,2)-RKNE;
+
+    % normalize z-axis of femur
+    LFEM_z = LFEM_z/norm(LFEM_z);
+    RFEM_z = RFEM_z/norm(RFEM_z);
+
+    % _TIB_CS is _TIB_CS described in world frame, or rotm from tib2world frame
+    % therefore, inverse is from wrold to tib frame
+    LFEM_z__TIB = LTIB_CS\LFEM_z;
+    RFEM_z__TIB = RTIB_CS\RFEM_z;
+
+    %global alpha_lk alpha_rk 
+    la = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
+    ra = atan2(-RFEM_z__TIB(3), -RFEM_z__TIB(1)) + 0.5*pi;
+end
+
+function y = L2Dist(x, x0, S, exponent)
 %x^2 is monotomically increasing at any point not at 0, so traditional
 %L2 norm involving sqrt is unnecessary, can use x^2 to find same
 %location of min cost in constrained region with less computational
@@ -1037,8 +1234,8 @@ function y = L2Dist(x, x0, S)
     qIdx = [7:10 17:20 27:30]';
     res(qIdx) = qW*res(qIdx);
     res = S\res; %add res*inv(S) to scale cost by certainty
-    n = 1000; %have also tried 2,4,6,8,14,100,1000 around >= 14 greatly increases speed of finding solution, not much difference etween 100 and 1000
-    y = (res'*res)^n;
+    %have also tried 2,4,6,8,14,100,1000 around >= 14 greatly increases speed of finding solution, not much difference etween 100 and 1000
+    y = (res'*res)^exponent;
 end
 
 function y = L2(x, x0, S, exponent)
@@ -1067,6 +1264,11 @@ function [c, ceq] = hjc_nonlcon(x, dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
     % calculate the z axis of the femur
     LFEM_z = x(idxPosMP,1)+dPelvis/2*PELV_CS(:,2)-LKNE;
     RFEM_z = x(idxPosMP,1)-dPelvis/2*PELV_CS(:,2)-RKNE;
+    
+    % normalize z-axis of femur
+    LFEM_z = LFEM_z/norm(LFEM_z);
+    RFEM_z = RFEM_z/norm(RFEM_z);
+    
     % calculate the z axis of the tibia
     LTIB_z = LTIB_CS(:,3);
     RTIB_z = RTIB_CS(:,3);
@@ -1087,4 +1289,113 @@ function [c, ceq] = hjc_nonlcon(x, dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
 
     c = [];
 end
+
+function [c, ceq] = hjc_nonlcon_kac(x, dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
+    idxPosMP = 1:3; % column idx corresponding to the mid-pelvis position
+    % idxVelMP = 4:6; % column idx corresponding to the mid-pelvis velocity
+	idxOriMP = 7:10; % column idx corresponding to the mid-pelvis orientation
+    idxPosLA = 11:13; % column idx corresponding to the left ankle position
+    % idxVelLA = 14:16; % column idx corresponding to the left ankle velocity
+    idxOriLA = 17:20; % column idx corresponding to the left ankle orientation
+    idxPosRA = 21:23; % column idx corresponding to the right ankle position
+    % idxVelRA = 24:26; % column idx corresponding to the right ankle velocity
+    idxOriRA = 27:30; % column idx corresponding to the right ankle orientation
+
+    LTIB_CS = quat2rotm(x(idxOriLA,1)');
+    RTIB_CS = quat2rotm(x(idxOriRA,1)');
+    PELV_CS = quat2rotm(x(idxOriMP,1)');
+
+    LKNE = x(idxPosLA,1) + dLTibia*LTIB_CS(:,3);
+    RKNE = x(idxPosRA,1) + dRTibia*RTIB_CS(:,3);
+
+    % calculate the z axis of the femur
+    LFEM_z = x(idxPosMP,1)+dPelvis/2*PELV_CS(:,2)-LKNE;
+    RFEM_z = x(idxPosMP,1)-dPelvis/2*PELV_CS(:,2)-RKNE;
+
+    % normalize z-axis of femur
+    LFEM_z = LFEM_z/norm(LFEM_z);
+    RFEM_z = RFEM_z/norm(RFEM_z);
     
+    % _TIB_CS is _TIB_CS described in world frame, or rotm from tib2world frame
+    % therefore, inverse is from wrold to tib frame
+    LFEM_z__TIB = LTIB_CS\LFEM_z;
+    RFEM_z__TIB = RTIB_CS\RFEM_z;
+
+    %global alpha_lk alpha_rk 
+    alpha_lk = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
+    alpha_rk = atan2(-RFEM_z__TIB(3), -RFEM_z__TIB(1)) + 0.5*pi;
+
+%     if alpha_lk < 0, alpha_lk = 0;
+%     elseif alpha_lk > pi, alpha_lk = pi; end
+%     if alpha_rk < 0, alpha_rk = 0;
+%     elseif alpha_rk > pi, alpha_rk = pi; end
+    
+    % setup the constraint equations
+    ceq = [x(idxPosLA) - x(idxPosMP) - (dPelvis/2*PELV_CS(:,2) ...
+        -dLFemur*cos(alpha_lk)*LTIB_CS(:,3) ...
+        +dLFemur*sin(alpha_lk)*LTIB_CS(:,1) ...
+        -dLTibia*LTIB_CS(:,3)) ; ...
+        x(idxPosRA) - x(idxPosMP) - (-dPelvis/2*PELV_CS(:,2)+ ...
+        -dRFemur*cos(alpha_rk)*RTIB_CS(:,3) ...
+        +dRFemur*sin(alpha_rk)*RTIB_CS(:,1) ...
+        -dRTibia*RTIB_CS(:,3)) ];
+
+    c = [-alpha_lk; alpha_lk - pi;
+         -alpha_rk; alpha_rk - pi];
+end
+
+function [c, ceq] = hjc_nonlcon_poska(x, PELV_CS, LTIB_CS, RTIB_CS, ...
+    dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
+    idxPosMP = 1:3; % column idx corresponding to the mid-pelvis position
+    idxPosLA = 4:6; % column idx corresponding to the left ankle position
+    idxPosRA = 7:9; % column idx corresponding to the right ankle position
+    
+    LKNE = x(idxPosLA,1) + dLTibia*LTIB_CS(:,3);
+    RKNE = x(idxPosRA,1) + dRTibia*RTIB_CS(:,3);
+
+    % calculate the z axis of the femur
+    LFEM_z = x(idxPosMP,1)+dPelvis/2*PELV_CS(:,2)-LKNE;
+    RFEM_z = x(idxPosMP,1)-dPelvis/2*PELV_CS(:,2)-RKNE;
+    
+    % setup the constraint equations
+    ceq = [norm(LFEM_z, 2) - dLFemur;
+        norm(RFEM_z, 2) - dRFemur;
+        dot(LFEM_z, LTIB_CS(:,2)); 
+        dot(RFEM_z, RTIB_CS(:,2)) ];
+
+    c = [];
+end
+
+function [c, ceq] = hjc_nonlcon_kac_poska(x, PELV_CS, LTIB_CS, RTIB_CS, ...
+    dPelvis, dLFemur, dRFemur, dLTibia, dRTibia)
+    idxPosMP = 1:3; % column idx corresponding to the mid-pelvis position
+    idxPosLA = 4:6; % column idx corresponding to the left ankle position
+    idxPosRA = 7:9; % column idx corresponding to the right ankle position
+    
+    LKNE = x(idxPosLA,1) + dLTibia*LTIB_CS(:,3);
+    RKNE = x(idxPosRA,1) + dRTibia*RTIB_CS(:,3);
+
+    % calculate the z axis of the femur
+    LFEM_z = x(idxPosMP,1)+dPelvis/2*PELV_CS(:,2)-LKNE;
+    RFEM_z = x(idxPosMP,1)-dPelvis/2*PELV_CS(:,2)-RKNE;
+    
+    % _TIB_CS is _TIB_CS described in world frame, or rotm from tib2world frame
+    % therefore, inverse is from wrold to tib frame
+    LFEM_z__TIB = LTIB_CS\(LFEM_z/norm(LFEM_z));
+    RFEM_z__TIB = RTIB_CS\(RFEM_z/norm(RFEM_z));
+
+    %global alpha_lk alpha_rk 
+    alpha_lk = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
+    alpha_rk = atan2(-RFEM_z__TIB(3), -RFEM_z__TIB(1)) + 0.5*pi;
+    
+    % setup the constraint equations
+    ceq = [norm(LFEM_z) - dLFemur;
+        norm(RFEM_z) - dRFemur;
+        dot(LFEM_z, LTIB_CS(:,2)); 
+        dot(RFEM_z, RTIB_CS(:,2)) ];
+
+    c = [-alpha_lk; 
+         alpha_lk - pi*8/9;
+         -alpha_rk;
+         alpha_rk - pi*8/9];
+end

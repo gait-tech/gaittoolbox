@@ -143,5 +143,6 @@ classdef grBody < matlab.mixin.Copyable
         
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);
+        out = toWorldFrame(obj, pos, ori);
     end
 end
