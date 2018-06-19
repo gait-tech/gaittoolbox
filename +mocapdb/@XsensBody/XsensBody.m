@@ -40,6 +40,8 @@ classdef XsensBody < handle
                obj.(varargin{i}) = varargin{i+1};
             end
         end
+        
+        out = calcCalibSB(obj, refBody)
     end
     
     methods (Hidden, Static)

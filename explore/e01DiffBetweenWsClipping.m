@@ -176,7 +176,7 @@ while i <= estBody.nSamples
     view(az, el);
     pelib.viz.plotLowerBody(estBody2, i, true, false);
     pelib.viz.plotLowerBody(actBody2, i, true, false);
-    i = i+20;
+    i = i+10;
     pause(1/1000);
 end
 

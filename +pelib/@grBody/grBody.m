@@ -126,7 +126,7 @@ classdef grBody < matlab.mixin.Copyable
         end
 
         function theta = calcJointAnglesLHip(obj)
-            theta = pelib.grBody.calcJointAngles(obj.qRPV, obj.qLTH);
+            theta = pelib.grBody.calcJointAngles(obj.qRPV, obj.qLTH) .* [-1 1 -1];
         end
         
         function theta = calcJointAnglesRHip(obj)
@@ -134,7 +134,7 @@ classdef grBody < matlab.mixin.Copyable
         end
 
         function theta = calcJointAnglesLKnee(obj)
-            theta = pelib.grBody.calcJointAngles(obj.qLTH, obj.qLSK);
+            theta = pelib.grBody.calcJointAngles(obj.qLTH, obj.qLSK) .* [-1 1 -1];
         end
         
         function theta = calcJointAnglesRKnee(obj)
