@@ -10,13 +10,14 @@
 %>      - ekfv3: pelib.est.kf_3_kmus_v3
 %> - accData: acceleration data to be used
 %>      - v: vicon
+%>      - s: sparse
 %>      - x: xsens
 %> - oriData: orientation data to be used
 %>      - v: vicon
+%>      - s: sparse
 %>      - x: xsens
 %> - stepDetection: step detection algorithm to be used
-%>      - v: fixed variance on tibia vicon data
-%>      - x: fixed variance on tibia xsens data
+%>      - 1: fixed variance on tibia accData
 %> - applyMeas: measurement configuration number
 %> - applyCstr: constraint configuration number
 %> - sigmaQAcc: Q acceleration sigma (variance)
@@ -31,10 +32,12 @@
 %> details above
 %> @param savedir filepath to save .mat output/debug files (optional)
 % ======================================================================
-function results = runNeuRAExperiment(dataV, dataS, name, setups, savedir)
+function results = runNeuRAExperiment(dataV, dataS, dataX, name, setups, savedir)
     %% Inputs and Input Check
     validateattributes(dataV, {'mocapdb.ViconBody'}, {});
     validateattributes(dataS, {'mocapdb.XsensBody'}, {});
+    validateattributes(dataX, {'mocapdb.BVHBody'}, {});
+    
     if nargin <= 4
         savedir = '';
     end
@@ -64,14 +67,17 @@ function results = runNeuRAExperiment(dataV, dataS, name, setups, savedir)
     nSamples = min(dataV.nSamples, dataS.nSamples);
     key = {'Pelvis', 'L_UpLeg', 'R_UpLeg',...
         'L_LowLeg', 'R_LowLeg', 'L_Foot', 'R_Foot'};
-    val = {'PELV', 'LFEP', 'RFEP',...
+    val1 = {'PELV', 'LFEP', 'RFEP',...
         'LFEO', 'RFEO', 'LTIO', 'RTIO'};
-    m = containers.Map(key, val);
+    val2 = {'Hips', 'LeftUpLeg', 'RightUpLeg',...
+        'LeftLeg', 'RightLeg', 'LeftFoot', 'RightFoot'};
     for i=1:length(key)
         dataS.(key{i}) = dataS.(key{i})(1:nSamples,:);
-        dataV.(val{i}) = dataV.(val{i})(1:nSamples,:)/1000;
+        dataV.(val1{i}) = dataV.(val1{i})(1:nSamples,:)/1000;
+        dataX.(val2{i}) = dataX.(val2{i})(1:nSamples,:)/1000;
     end
     dataV.posUnit = 'm';
+    dataX.posUnit = 'm';
     
     sIdx = 1; eIdx = length(dataV.PELV(:,1)) - 1;
     idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
@@ -85,23 +91,28 @@ function results = runNeuRAExperiment(dataV, dataS, name, setups, savedir)
     %% Calculate Orientation
     qOri = {};
     
-    % orientation from xsens
-    qOri.x = {};
-    % orientation of body from xsens
+    % orientation of body from sparse sensor
     qPelvisEst0 = quatmultiply(dataS.Pelvis.ori, quatconj(calibIB.Pelvis.ori));
     qLankleEst0 = quatmultiply(dataS.L_LowLeg.ori, quatconj(calibIB.L_LowLeg.ori));
     qRankleEst0 = quatmultiply(dataS.R_LowLeg.ori, quatconj(calibIB.R_LowLeg.ori));
-    qOri.x.PELV = qPelvisEst0(sIdx:eIdx, :);
-    qOri.x.LTIB = qLankleEst0(sIdx:eIdx, :);
-    qOri.x.RTIB = qRankleEst0(sIdx:eIdx, :);
+    qOri.s.PELV = qPelvisEst0(sIdx:eIdx, :);
+    qOri.s.LTIB = qLankleEst0(sIdx:eIdx, :);
+    qOri.s.RTIB = qRankleEst0(sIdx:eIdx, :);
     
     % orientation of body from vicon
     qOri.v.PELV = dataV.qRPV(sIdx+1:eIdx+1, :);
     qOri.v.LTIB = dataV.qLSK(sIdx+1:eIdx+1, :);
     qOri.v.RTIB = dataV.qRSK(sIdx+1:eIdx+1, :);
     
+    % orientation of body from xsens
+    qOri.x.PELV = dataX.qHips(sIdx:eIdx, :);
+    qOri.x.LTIB = dataX.qLeftLeg(sIdx:eIdx, :);
+    qOri.x.RTIB = dataX.qRightLeg(sIdx:eIdx, :);
+    
     %% Position, Velocity, Acceleration
     gfrAcc = {};
+    
+    % gfrAcc from vicon
     MIDPEL_act = [mean([dataV.LFEP(:,1) dataV.RFEP(:,1)], 2),...
                   mean([dataV.LFEP(:,2) dataV.RFEP(:,2)], 2),...
                   mean([dataV.LFEP(:,3) dataV.RFEP(:,3)], 2)];
@@ -133,27 +144,39 @@ function results = runNeuRAExperiment(dataV, dataS, name, setups, savedir)
                              + randn(eIdx,3).*vsigma(i);
     end
     
-    % gfrAcc from xsens
-    gfrAcc.x = {};
-    gfrAcc.x.MP = quatrotate(quatconj(dataS.Pelvis.ori), ...
+    % gfrAcc from sparse
+    gfrAcc.s = {};
+    gfrAcc.s.MP = quatrotate(quatconj(dataS.Pelvis.ori), ...
                             dataS.Pelvis.acc) - [0 0 9.81];
-    gfrAcc.x.MP = gfrAcc.x.MP(sIdx:eIdx,:);
+    gfrAcc.s.MP = gfrAcc.s.MP(sIdx:eIdx,:);
 %     gfr_acc_MP = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_MP);
-    gfrAcc.x.LA = quatrotate(quatconj(dataS.L_LowLeg.ori), ...
+    gfrAcc.s.LA = quatrotate(quatconj(dataS.L_LowLeg.ori), ...
                             dataS.L_LowLeg.acc) - [0 0 9.81];
-    gfrAcc.x.LA = gfrAcc.x.LA(sIdx:eIdx,:);
+    gfrAcc.s.LA = gfrAcc.s.LA(sIdx:eIdx,:);
 %     gfr_acc_LA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_LA);
-    gfrAcc.x.RA = quatrotate(quatconj(dataS.R_LowLeg.ori), ...
+    gfrAcc.s.RA = quatrotate(quatconj(dataS.R_LowLeg.ori), ...
                             dataS.R_LowLeg.acc) - [0 0 9.81];
-    gfrAcc.x.RA = gfrAcc.x.RA(sIdx:eIdx,:);
+    gfrAcc.s.RA = gfrAcc.s.RA(sIdx:eIdx,:);
 %     gfr_acc_RA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_RA);
     
-    % gfrAcc from filtered xsens
+    % gfrAcc from filtered sparse
     fc = 10;
     [lpf_b, lpf_a] = butter(6, fc/(fs/2));
-    gfrAcc.xf.MP = filter(lpf_b, lpf_a, gfrAcc.x.MP);
-    gfrAcc.xf.LA = filter(lpf_b, lpf_a, gfrAcc.x.LA);
-    gfrAcc.xf.RA = filter(lpf_b, lpf_a, gfrAcc.x.RA);
+    gfrAcc.sf.MP = filter(lpf_b, lpf_a, gfrAcc.s.MP);
+    gfrAcc.sf.LA = filter(lpf_b, lpf_a, gfrAcc.s.LA);
+    gfrAcc.sf.RA = filter(lpf_b, lpf_a, gfrAcc.s.RA);
+    
+    % gfrAcc from xsens
+    MIDPEL_Xsens = [mean([dataX.LeftUpLeg(:,1) dataX.RightUpLeg(:,1)], 2),...
+                  mean([dataX.LeftUpLeg(:,2) dataX.RightUpLeg(:,2)], 2),...
+                  mean([dataX.LeftUpLeg(:,3) dataX.RightUpLeg(:,3)], 2)];
+    gfrAcc.x = {};
+    gfrAcc.x.MP = [0 0 0; diff(MIDPEL_Xsens, 2, 1)*fs*fs];
+    gfrAcc.x.MP = gfrAcc.x.MP(sIdx:eIdx,:);
+    gfrAcc.x.LA = [0 0 0; diff(dataX.LeftFoot, 2, 1)*fs*fs];
+    gfrAcc.x.LA = gfrAcc.x.LA(sIdx:eIdx,:);
+    gfrAcc.x.RA = [0 0 0; diff(dataX.RightFoot, 2, 1)*fs*fs];
+    gfrAcc.x.RA = gfrAcc.x.RA(sIdx:eIdx,:);
     
     %% UWB measurements
     %  Simulate uwb measurement by generating pairwise combinations, using the
