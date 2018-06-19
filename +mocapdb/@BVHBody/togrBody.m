@@ -7,7 +7,7 @@
 %> @retval out instance of grBody class.
 % ======================================================================
 function out = togrBody(obj, idx, args)
-    out = grlib.grBody(args{:});
+    out = pelib.grBody(args{:});
     
     key1 = {'RightUpLeg', 'RightLeg', 'RightFoot', ...
             'LeftUpLeg', 'LeftLeg', 'LeftFoot'};

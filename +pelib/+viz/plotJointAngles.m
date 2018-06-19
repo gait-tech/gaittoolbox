@@ -53,7 +53,7 @@ function plotJointAngles(bodys, parts)
         end
         
         if nBody == 2
-            errVal = grlib.rmse(grlib.anglediff(data{1}, data{2}));
+            errVal = pelib.rmse(pelib.anglediff(data{1}, data{2}));
         end
         
         for j=1:3

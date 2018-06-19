@@ -36,7 +36,7 @@ function plotPosition(bodys, parts)
         end
         
         if nBody == 2
-            erVal = grlib.rmse(bodys{1}.(parts{i})-bodys{2}.(parts{i}));
+            erVal = pelib.rmse(bodys{1}.(parts{i})-bodys{2}.(parts{i}));
         end
         
         for j=1:3

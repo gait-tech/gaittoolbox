@@ -555,7 +555,7 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
         q4LFEM = qLFEM(4);
 
 %vector diff form
-grlib.est.genLAMPRelVel_v4
+pelib.est.genLAMPRelVel_v4
 
 %---Trig differentiation, results in singularity---%
 %         r_LA_MP = xhat(idx_pos_LA) - xhat(idx_pos_MP);
@@ -579,10 +579,10 @@ grlib.est.genLAMPRelVel_v4
     %described in frame N (eqivalent to gfr)
     
     %gen std vel. eq.
-    %grlib.est.genLAMPRelVel_v2
+    %pelib.est.genLAMPRelVel_v2
     
     %manually generate rel vel from mp (diff pos-level pin joint eq)
-    %grlib.est.genLAMPRelVel_v3
+    %pelib.est.genLAMPRelVel_v3
     
     %Golden Rule Differentiation
 %     relVel_LANK_PELo_N = PELV_CS*cross([wxPEL;wyPEL;wzPEL],[0; d_pelvis/2; 0])...
@@ -590,7 +590,7 @@ grlib.est.genLAMPRelVel_v4
 %         -LTIB_CS*cross([wxLTIB; wyLTIB; wzLTIB],[0;0;d_ltibia]);
 %     
     %gen manual velocity eq
-    %grlib.est.genLAMPRelVel
+    %pelib.est.genLAMPRelVel
     
         d_k_v(1:3,1) = relVel_LANK_PELo_N;
 
@@ -615,7 +615,7 @@ grlib.est.genLAMPRelVel_v4
         q4RFEM = qRFEM(4);
 
 %vector diff form
-grlib.est.genRAMPRelVel_v4
+pelib.est.genRAMPRelVel_v4
 
 %-------------Trig diff results insinguarity-----%
 %     r_RA_RHP = -d_rfemur*cos(alpha_rk)*RTIB_CS(:,3) ...
@@ -639,10 +639,10 @@ grlib.est.genRAMPRelVel_v4
     %described in frame N (eqivalent to gfr)
     
     %gen std. vel. from MP
-    %grlib.est.genRAMPRelVel_v2
+    %pelib.est.genRAMPRelVel_v2
     
     %manual generate rel vel from MP
-    %grlib.est.genRAMPRelVel_v3
+    %pelib.est.genRAMPRelVel_v3
     
     %Golden Rule Differentiation
 %     relVel_RANK_PELo_N = PELV_CS*cross([wxPEL;wyPEL;wzPEL],[0; -d_pelvis/2; 0])...
@@ -650,7 +650,7 @@ grlib.est.genRAMPRelVel_v4
 %         -RTIB_CS*cross([wxRTIB; wyRTIB; wzRTIB],[0;0;d_rtibia]);
 %     
     %gen right ankle rel vel from MP
-    %grlib.est.genRAMPRelVel
+    %pelib.est.genRAMPRelVel
         d_k_v(4:6,1) = relVel_RANK_PELo_N;
     
 

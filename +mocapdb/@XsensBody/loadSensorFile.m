@@ -27,7 +27,7 @@ function obj = loadSensorFile(fname)
         data0{i} = [];
     end
     
-    obj = tcdlib.XsensBody('srcFileName', fname, 'nSamples', nFrames, ...
+    obj = mocapdb.XsensBody('srcFileName', fname, 'nSamples', nFrames, ...
                            'frame', 'sensor');
                            
     field = {};

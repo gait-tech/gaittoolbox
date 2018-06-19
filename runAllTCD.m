@@ -5,7 +5,7 @@
 % varfun(@mean, results, 'InputVariables', @isnumeric, 'GroupingVariables', 'label')
 % writetable(rTable, '
 dir = 'totalcapture';
-expDir = "./eTCD";
+expDir = "./totalcapture/explore";
 
 dataList = { ...
     struct('subj', 's1', 'act', 'Acting1'), ...
@@ -55,9 +55,9 @@ dataList = { ...
     struct('subj', 's5', 'act', 'rom3'), ...
     struct('subj', 's5', 'act', 'walking2'), ...
 };
-% dataList = {
-%     struct('subj', 's5', 'act', 'walking2'), ...
-% };
+dataList = {
+    struct('subj', 's5', 'act', 'walking2'), ...
+};
 
 setups = {
     struct('est', 'ekfv3', 'accData', 'x', 'oriData', 'x', 'accDataNoise', 0, ...
@@ -66,16 +66,17 @@ setups = {
            'applyMeas', 21, 'applyCstr', 0, 'P', 0.5), ...
 };
 
-for mI = [0]
-    for cI = [0 1:7 21:23 51:54 71:77]
-        setups{end+1} = struct('est', 'ekfv3', ...
-           'accData', 'v', 'oriData', 'v', 'accDataNoise', 0, ...
-           'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
-    end
-end
+% for mI = [0]
+%     for cI = [0 1:7 21:23 51:54 71:77]
+%         setups{end+1} = struct('est', 'ekfv3', ...
+%            'accData', 'v', 'oriData', 'v', 'accDataNoise', 0, ...
+%            'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
+%     end
+% end
 
-for mI = [0 1:4]
-    for cI = [0 1:8 21:23 51:54 71:78 201:208 221:223 271:278]
+for mI = [2]
+    %for cI = [0 1:8 21:23 51:54 71:78 201:208 221:223 271:278]
+    for cI = [222]
         setups{end+1} = struct('est', 'ekfv3', ...
            'accData', 'x', 'oriData', 'x', 'accDataNoise', 0, ...
            'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
@@ -103,11 +104,11 @@ for i = 1:dataN
             'fnameCIB', sprintf('%s/imu/%s/%s_%s_calib_imu_bone.txt', dir, n.subj, n.subj, lower(n.act)), ...
             'fnameCIR', sprintf('%s/imu/%s/%s_%s_calib_imu_ref.txt', dir, n.subj, n.subj, lower(n.act)) ...
             );
-        data.dataV = tcdlib.BVHBody.loadBVHFile(data.fnameV, 'mm');
-        data.dataV = tcdlib.BVHBody.loadBVHFile(data.fnameV, 'mm');
-        data.dataS = tcdlib.XsensBody.loadSensorFile(data.fnameS);
-        data.calibIB = tcdlib.XsensBody.loadCalib(data.fnameCIB);
-        data.calibIR = tcdlib.XsensBody.loadCalib(data.fnameCIR);
+        data.dataV = mocapdb.BVHBody.loadBVHFile(data.fnameV, 'mm');
+        data.dataV = mocapdb.BVHBody.loadBVHFile(data.fnameV, 'mm');
+        data.dataS = mocapdb.XsensBody.loadSensorFile(data.fnameS);
+        data.calibIB = mocapdb.XsensBody.loadCalib(data.fnameCIB);
+        data.calibIR = mocapdb.XsensBody.loadCalib(data.fnameCIR);
         save(dataPath, 'data');
     end
     display(sprintf("Data %3d/%3d: %s", i, dataN, data.name));

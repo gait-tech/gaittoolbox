@@ -6,7 +6,7 @@
 %> Setup parameters:
 %> - label: data instance name (e.g. s1-acting1 or s2-walking1)
 %> - est: filter type to be used.
-%>      - ekfv3: grlib.est.kf_3_kmus_v3
+%>      - ekfv3: pelib.est.kf_3_kmus_v3
 %> - accData: acceleration data to be used
 %>      - raw: raw xsens measurements
 %>      - sim: simulated xsens measurements
@@ -17,9 +17,9 @@
 %> - sigmaQAcc: Q acceleration sigma (variance)
 %> - P: initial P matrix
 %>
-%> @param fnameBVH bvh filename or loaded tcdlib.BVHBody 
+%> @param fnameBVH bvh filename or loaded mocapdb.BVHBody 
 %>              (e.g. totalcapture/vicon/s1/acting1_BlenderZXY_YmZ.bvh)
-%> @param fnameRAW raw xsens measurement filename or loaded tcdlib.XsensBody
+%> @param fnameRAW raw xsens measurement filename or loaded mocapdb.XsensBody
 %>              (e.g. totalcapture/gyroMag/s1/Acting1_Xsens_AuxFields.sensors)
 %> @param name name of the experiment
 %> @param setups list of experiment parameters (struct) to be run. see
@@ -28,8 +28,8 @@
 % ======================================================================
 function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
     %% Inputs and Input Check
-    validateattributes(fnameBVH, {'char', 'tcdlib.BVHBody'}, {});
-    validateattributes(fnameRaw, {'char', 'tcdlib.XsensBody'}, {});
+    validateattributes(fnameBVH, {'char', 'mocapdb.BVHBody'}, {});
+    validateattributes(fnameRaw, {'char', 'mocapdb.XsensBody'}, {});
     if nargin <= 4
         savedir = ''
     end
@@ -37,14 +37,14 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
     %% Initialization   
     % Load video orientation and position for each body segment
     if ischar(fnameBVH)
-        dataBVH = tcdlib.BVHBody.loadBVHFile(fnameBVH, 'mm');
+        dataBVH = mocapdb.BVHBody.loadBVHFile(fnameBVH, 'mm');
     else
         dataBVH = fnameBVH;
     end     
     
     % Load sensor orientation and position for each body segment
     if ischar(fnameRaw) 
-        dataRaw = tcdlib.XsensBody.loadSensorFile(fnameRaw);
+        dataRaw = mocapdb.XsensBody.loadSensorFile(fnameRaw);
     else
         dataRaw = fnameRaw;
     end
@@ -185,14 +185,14 @@ function results = runXsensExperiment(fnameBVH, fnameRaw, name, setups, savedir)
                     'applyCstr', cs.applyCstr, 'sigmaQAccMP', cs.sigmaQAcc, ...
                     'sigmaQAccLA', cs.sigmaQAcc, 'sigmaQAccRA', cs.sigmaQAcc);
                 
-                [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v3( ...
+                [ x_pri_v2, x_pos_v2, t_dat_v2 ] = pelib.est.kf_3_kmus_v3( ...
                     x0, cs.P, csGfrAcc.MP, bIsStatMP, csQOri.PELV, ...
                     csGfrAcc.LA, bIsStatLA, csQOri.LTIB, ...
                     csGfrAcc.RA, bIsStatRA, csQOri.RTIB, ...
                     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, ...
                     uwb_mea, v3Options);
                 
-                estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+                estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                    'lnSymbol', '--', 'ptSymbol', 'o', 'frame', 'vicon', ...
                    'xyzColor', {'r', 'g', 'b'}, ...
                    'MIDPEL', x_pos_v2(idx0, 1:3), ...

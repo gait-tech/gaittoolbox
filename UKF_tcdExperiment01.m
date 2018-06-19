@@ -28,19 +28,19 @@ validateattributes(fnameS, {'char', 'struct'}, {});
 fs = 60;
 
 % Load calibration data
-calibIB = tcdlib.XsensBody.loadCalib(fnameCIB);
-calibIR = tcdlib.XsensBody.loadCalib(fnameCIR);
+calibIB = mocapdb.XsensBody.loadCalib(fnameCIB);
+calibIR = mocapdb.XsensBody.loadCalib(fnameCIR);
 
 % Load video orientation and position for each body segment
 if ischar(fnameV)
-    dataV = tcdlib.BVHBody.loadBVHFile(fnameV, 'mm');
+    dataV = mocapdb.BVHBody.loadBVHFile(fnameV, 'mm');
 else
     dataV = fnameV;
 end
 
 % Load sensor orientation and position for each body segment
 if ischar(fnameS)
-    dataS = tcdlib.XsensBody.loadSensorFile(fnameS);
+    dataS = mocapdb.XsensBody.loadSensorFile(fnameS);
 else
     dataS = fnameS;
 end
@@ -265,7 +265,7 @@ sI = 1;
         cs_qRankle = qRankleAct(sIdx+1:end,:);
     end
     
-    %         [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v2(fs, ...
+    %         [ x_pri_v2, x_pos_v2, t_dat_v2 ] = pelib.est.kf_3_kmus_v2(fs, ...
     %             cs.Qacc, cs.Qacc, cs.Qacc, cs.P, ...
     %             x0_pos_MP, x0_vel_MP, cs_gfr_acc_MP, ...
     %             bIsStatMP_act(sIdx:end,:), cs_qPelvis, ...
@@ -298,7 +298,7 @@ sI = 1;
     
     %N_MP = 50;
     %TODO: return removed estimated values of knee and femur pos/or
-    [x_rec, xa_rec, qFEM] = grlib.est.cukf_v4(x0,P,Q,R,N_MP,nMeas,gfr_acc,fs, qPelvisEst,...
+    [x_rec, xa_rec, qFEM] = pelib.est.cukf_v4(x0,P,Q,R,N_MP,nMeas,gfr_acc,fs, qPelvisEst,...
         qLankleEst, qRankleEst, d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia,...
         isConstr);
     
@@ -321,9 +321,9 @@ sI = 1;
 %     plot(x_rec(20,:)-x_rec(2,:))
 %     subplot(3,1,3)
 %     plot(x_rec(21,:)-x_rec(3,:))
-    %grlib.viz.UKF_Rel_LPVA_plot
+    %pelib.viz.UKF_Rel_LPVA_plot
     %% other stuff
-    estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+    estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
         'lnSymbol', '--', 'ptSymbol', 'o', ...
         'xyzColor', {'r', 'g', 'b'}, ...
         'MIDPEL', x_pos_v2(idx0,MP_pos_Idx), ...
@@ -342,9 +342,9 @@ sI = 1;
     resultsIdx = resultsIdx + 1;
     
 % end
-grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'LA')
-grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA')
-grlib.struct2csvstr(results, true)
+pelib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'LA')
+pelib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA')
+pelib.struct2csvstr(results, true)
 %gelib.viz.plotPositionDiff(estBody, actBody, cell{'MIDPEL'; 'LTIO'; 'RTIO'})
 %% previous KF iterations
 %     [ x_pri_v2, x_pos_v2, t_dat_v2 ] = kf_3_kmus_v2(fs, ...
@@ -371,20 +371,20 @@ grlib.struct2csvstr(results, true)
 %     %  Further Validation
 % Static Plots
 %     updateFigureContents('Position');
-%     grlib.viz.plotPosition({estBody, actBody}, {'MIDPEL', 'LTIO', 'RTIO'});
+%     pelib.viz.plotPosition({estBody, actBody}, {'MIDPEL', 'LTIO', 'RTIO'});
 %
 %     updateFigureContents('Animation Freeze');
 %     grid; view(0, 90); hold on;
 %     for i=idx0(1):30:idx0(end)
-%         grlib.viz.plotLowerBody(estBody, i);
-%         grlib.viz.plotLowerBody(actBody, i);
+%         pelib.viz.plotLowerBody(estBody, i);
+%         pelib.viz.plotLowerBody(actBody, i);
 %     end
 % %
 % %     updateFigureContents('GFR Acc Diff');
 % %     diff_gfr_acc_MP = gfr_acc_MP(1:end-1,:) - gfr_acc_MP_act;
 % %     diff_gfr_acc_LA = gfr_acc_LA(1:end-1,:) - gfr_acc_LA_act;
 % %     diff_gfr_acc_RA = gfr_acc_RA(1:end-1,:) - gfr_acc_RA_act;
-% %     grlib.viz.plotXYZ(diff_gfr_acc_MP, diff_gfr_acc_LA, diff_gfr_acc_RA);
+% %     pelib.viz.plotXYZ(diff_gfr_acc_MP, diff_gfr_acc_LA, diff_gfr_acc_RA);
 %
 %     % Animation
 %     updateFigureContents('Animation');
@@ -396,7 +396,7 @@ grlib.struct2csvstr(results, true)
 %         ylim(estBodyLimits(3:4));
 %         zlim(estBodyLimits(5:6));
 %         view(0, 180);
-%         grlib.viz.plotLowerBody(estBody, i);
+%         pelib.viz.plotLowerBody(estBody, i);
 %         pause(1/1000);
 %     end
 %
@@ -409,7 +409,7 @@ grlib.struct2csvstr(results, true)
 %         ylim(actBodyLimits(3:4));
 %         zlim(actBodyLimits(5:6));
 %         view(0, 180);
-%         grlib.viz.plotLowerBody(actBody, i);
+%         pelib.viz.plotLowerBody(actBody, i);
 %         pause(1/1000);
 %     end
 % end

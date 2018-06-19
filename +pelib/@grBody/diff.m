@@ -44,9 +44,9 @@ function out = diff(obj1, obj2, seq)
 %             eul2 = [r1 r2 r3];
 % 
 %             if obj1.oriUnit == 'deg'
-%                 out.(oriList{i}) = grlib.anglediff(eul1, eul2)*180/pi;
+%                 out.(oriList{i}) = pelib.anglediff(eul1, eul2)*180/pi;
 %             else
-%                 out.(oriList{i}) = grlib.anglediff(eul1, eul2);
+%                 out.(oriList{i}) = pelib.anglediff(eul1, eul2);
 %             end
 %         end
 %     end

@@ -2,12 +2,12 @@
 %> @brief Run experiment on an instance of the TCD dataset
 %> @author Luke Sy
 %> 
-%> 2018 April 19 changes: Removing support for grlib.est.kf_3_kmus_v2.
+%> 2018 April 19 changes: Removing support for pelib.est.kf_3_kmus_v2.
 %>
 %> Setup parameters:
 %> - label: data instance name (e.g. s1-acting1 or s2-walking1)
 %> - est: filter type to be used.
-%>      - ekfv3: grlib.est.kf_3_kmus_v3
+%>      - ekfv3: pelib.est.kf_3_kmus_v3
 %> - accData: acceleration data to be used
 %>      - v: vicon
 %>      - x: xsens
@@ -22,9 +22,9 @@
 %> - sigmaQAcc: Q acceleration sigma (variance)
 %> - P: initial P matrix
 %>
-%> @param fnameV tcd bvh filename or loaded tcdlib.BVHBody 
+%> @param fnameV tcd bvh filename or loaded mocapdb.BVHBody 
 %>              (e.g. totalcapture/vicon/s1/acting1_BlenderZXY_YmZ.bvh)
-%> @param fnameS tcd xsens measurement filename or loaded tcdlib.XsensBody
+%> @param fnameS tcd xsens measurement filename or loaded mocapdb.XsensBody
 %>              (e.g. totalcapture/gyroMag/s1/Acting1_Xsens_AuxFields.sensors)
 %> @param fnameCIB filename of the calibration file from sensor to bone frame
 %>                  (e.g. totalcapture/imu/s1/s1_acting1_calib_imu_bone.txt)
@@ -38,10 +38,10 @@
 function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
                                     name, setups, savedir)
     %% Inputs and Input Check
-    validateattributes(fnameV, {'char', 'tcdlib.BVHBody'}, {});
-    validateattributes(fnameS, {'char', 'tcdlib.XsensBody'}, {});
-    validateattributes(fnameCIB, {'char', 'tcdlib.XsensBody'}, {});
-    validateattributes(fnameCIR, {'char', 'tcdlib.XsensBody'}, {});
+    validateattributes(fnameV, {'char', 'string', 'mocapdb.BVHBody'}, {});
+    validateattributes(fnameS, {'char', 'string', 'mocapdb.XsensBody'}, {});
+    validateattributes(fnameCIB, {'char', 'string', 'mocapdb.XsensBody'}, {});
+    validateattributes(fnameCIR, {'char', 'string', 'mocapdb.XsensBody'}, {});
     if nargin <= 6
         savedir = ''
     end
@@ -49,26 +49,26 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
     %% Initialization
     % Load calibration data
     if ischar(fnameCIB)
-        calibIB = tcdlib.XsensBody.loadCalib(fnameCIB);
+        calibIB = mocapdb.XsensBody.loadCalib(fnameCIB);
     else
         calibIB = fnameCIB;
     end
     if ischar(fnameCIR)
-        calibIR = tcdlib.XsensBody.loadCalib(fnameCIR);
+        calibIR = mocapdb.XsensBody.loadCalib(fnameCIR);
     else
         calibIR = fnameCIR;
     end
     
     % Load video orientation and position for each body segment
     if ischar(fnameV)
-        dataV = tcdlib.BVHBody.loadBVHFile(fnameV, 'mm');
+        dataV = mocapdb.BVHBody.loadBVHFile(fnameV, 'mm');
     else
         dataV = fnameV;
     end     
     
     % Load sensor orientation and position for each body segment
     if ischar(fnameS) 
-        dataS = tcdlib.XsensBody.loadSensorFile(fnameS);
+        dataS = mocapdb.XsensBody.loadSensorFile(fnameS);
     else
         dataS = fnameS;
     end
@@ -266,14 +266,14 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
                     'applyCstr', cs.applyCstr, 'sigmaQAccMP', cs.sigmaQAcc, ...
                     'sigmaQAccLA', cs.sigmaQAcc, 'sigmaQAccRA', cs.sigmaQAcc);
                 
-                [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v3( ...
+                [ x_pri_v2, x_pos_v2, t_dat_v2 ] = pelib.est.kf_3_kmus_v3( ...
                     x0, cs.P, csGfrAcc.MP, bIsStatMP, csQOri.PELV, ...
                     csGfrAcc.LA, bIsStatLA, csQOri.LTIB, ...
                     csGfrAcc.RA, bIsStatRA, csQOri.RTIB, ...
                     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, ...
                     uwb_mea, v3Options);
                 
-                estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+                estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                    'lnSymbol', '--', 'ptSymbol', 'o', 'frame', 'vicon', ...
                    'xyzColor', {'r', 'g', 'b'}, ...
                    'MIDPEL', x_pos_v2(idx0, 1:3), ...

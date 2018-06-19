@@ -2,13 +2,13 @@
 %> @brief [DEPRECATED] Run experiment on an instance of the TCD dataset
 %> @author Luke Sy
 %> 
-%> Please use tcdExperiment03.m if you're only using grlib.est.kf_3_kmus_v3
+%> Please use tcdExperiment03.m if you're only using pelib.est.kf_3_kmus_v3
 %> 
 %> Setup parameters:
 %> - label: label to be saved in the results table
 %> - est: filter type to be used.
-%>      - ekfv2: grlib.est.kf_3_kmus_v2
-%>      - ekfv3: grlib.est.kf_3_kmus_v3
+%>      - ekfv2: pelib.est.kf_3_kmus_v2
+%>      - ekfv3: pelib.est.kf_3_kmus_v3
 %> - accData: acceleration data to be used
 %>      - v: vicon
 %>      - x: xsens
@@ -28,8 +28,8 @@
 %> - Qacc: Q matrix sigma (variance)
 %> - P: initial P matrix
 %>
-%> @param fnameV tcd bvh filename or loaded tcdlib.BVHBody
-%> @param fnameS tcd xsens measurement filename or loaded tcdlib.XsensBody
+%> @param fnameV tcd bvh filename or loaded mocapdb.BVHBody
+%> @param fnameS tcd xsens measurement filename or loaded mocapdb.XsensBody
 %> @param fnameCIB filename of the calibration file from sensor to bone frame
 %> @param fnameCIR filename of the calibration file from sensor to vicon frame
 %> @param name name of the experiment
@@ -45,10 +45,10 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
 %     fnameCIB = 'totalcapture/imu/s1/s1_acting1_calib_imu_bone.txt';
 %     fnameCIR = 'totalcapture/imu/s1/s1_acting1_calib_imu_ref.txt';
     % Check function input
-    validateattributes(fnameV, {'char', 'tcdlib.BVHBody'}, {});
-    validateattributes(fnameS, {'char', 'tcdlib.XsensBody'}, {});
-    validateattributes(fnameCIB, {'char', 'tcdlib.XsensBody'}, {});
-    validateattributes(fnameCIR, {'char', 'tcdlib.XsensBody'}, {});
+    validateattributes(fnameV, {'char', 'mocapdb.BVHBody'}, {});
+    validateattributes(fnameS, {'char', 'mocapdb.XsensBody'}, {});
+    validateattributes(fnameCIB, {'char', 'mocapdb.XsensBody'}, {});
+    validateattributes(fnameCIR, {'char', 'mocapdb.XsensBody'}, {});
     if nargin <= 6
         savedir = ''
     end
@@ -59,26 +59,26 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
     
     % Load calibration data
     if ischar(fnameCIB)
-        calibIB = tcdlib.XsensBody.loadCalib(fnameCIB);
+        calibIB = mocapdb.XsensBody.loadCalib(fnameCIB);
     else
         calibIB = fnameCIB;
     end
     if ischar(fnameCIR)
-        calibIR = tcdlib.XsensBody.loadCalib(fnameCIR);
+        calibIR = mocapdb.XsensBody.loadCalib(fnameCIR);
     else
         calibIR = fnameCIR;
     end
     
     % Load video orientation and position for each body segment
     if ischar(fnameV)
-        dataV = tcdlib.BVHBody.loadBVHFile(fnameV, 'mm');
+        dataV = mocapdb.BVHBody.loadBVHFile(fnameV, 'mm');
     else
         dataV = fnameV;
     end     
     
     % Load sensor orientation and position for each body segment
     if ischar(fnameS)
-        dataS = tcdlib.XsensBody.loadSensorFile(fnameS);
+        dataS = mocapdb.XsensBody.loadSensorFile(fnameS);
     else
         dataS = fnameS;
     end
@@ -284,7 +284,7 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
         
         try
             if cs.est == 'ekfv2'
-                [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v2(fs, ...
+                [ x_pri_v2, x_pos_v2, t_dat_v2 ] = pelib.est.kf_3_kmus_v2(fs, ...
                     cs.Qacc, cs.Qacc, cs.Qacc, cs.P, ...
                     x0_pos_MP, x0_vel_MP, cs_gfr_acc_MP, ...
                     bIsStatMP_act(sIdx:end,:), cs_qPelvis, ...
@@ -295,7 +295,7 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
                     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, uwb_mea, ...
                     cs.zupt, cs.uwb, cs.hjc, cs.fdist, cs.kneeangle, cs.accbias);
                 
-                estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+                estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                    'lnSymbol', '--', 'ptSymbol', 'o', 'frame', 'vicon', ...
                    'xyzColor', {'r', 'g', 'b'}, ...
                    'MIDPEL', x_pos_v2(idx0, 1:3), ...
@@ -330,7 +330,7 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
                     'applyUwb', cs.uwb, 'applyAccBias', cs.accbias, ...
                     'applyConst', cs.cstr, 'sigmaQAccMP', cs.Qacc, ...
                     'sigmaQAccLA', cs.Qacc, 'sigmaQAccRA', cs.Qacc);
-                [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v3( ...
+                [ x_pri_v2, x_pos_v2, t_dat_v2 ] = pelib.est.kf_3_kmus_v3( ...
                     x0, cs.P, ...
                     cs_gfr_acc_MP, bIsStatMP_act(sIdx:end,:), cs_qPelvis, ...
                     cs_gfr_acc_LA, bIsStatLA_act(sIdx:end,:), cs_qLankle, ...
@@ -338,7 +338,7 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
                     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, ...
                     uwb_mea, v3Options);
                 
-                estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+                estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                    'lnSymbol', '--', 'ptSymbol', 'o', 'frame', 'vicon', ...
                    'xyzColor', {'r', 'g', 'b'}, ...
                    'MIDPEL', x_pos_v2(idx0, 1:3), ...
@@ -390,9 +390,9 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
         resultsIdx = resultsIdx + 1;
     end
     
-%     grlib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia)
+%     pelib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia)
 %     struct2table(results)
-%     grlib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'})
+%     pelib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'})
 %     
 %     [ x_pri_v2, x_pos_v2, t_dat_v2 ] = kf_3_kmus_v2(fs, ...
 %         sigma_acc, sigma_acc, sigma_acc, P, ...
@@ -413,7 +413,7 @@ function results = tcdExperiment01(fnameV, fnameS, fnameCIB, fnameCIR, ...
 %     actState = [MIDPEL_act gfr_vel_MP_act ...
 %                 dataV.LeftFoot gfr_vel_LA_act ...
 %                 dataV.RightFoot gfr_vel_RA_act];
-%     grlib.viz.plotStateComparison(t_dat_v2, actState(1:end-1), 7)
+%     pelib.viz.plotStateComparison(t_dat_v2, actState(1:end-1), 7)
 % 
 %     %% --------------------------------------------------------------------
 %     %  Further Validation

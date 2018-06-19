@@ -24,19 +24,19 @@
     fs = 60;
     
     % Load calibration data
-    calibIB = tcdlib.XsensBody.loadCalib(fnameCIB);
-    calibIR = tcdlib.XsensBody.loadCalib(fnameCIR);
+    calibIB = mocapdb.XsensBody.loadCalib(fnameCIB);
+    calibIR = mocapdb.XsensBody.loadCalib(fnameCIR);
     
     % Load video orientation and position for each body segment
     if ischar(fnameV)
-        dataV = tcdlib.BVHBody.loadBVHFile(fnameV, 'mm');
+        dataV = mocapdb.BVHBody.loadBVHFile(fnameV, 'mm');
     else
         dataV = fnameV;
     end     
     
     % Load sensor orientation and position for each body segment
     if ischar(fnameS)
-        dataS = tcdlib.XsensBody.loadSensorFile(fnameS);
+        dataS = mocapdb.XsensBody.loadSensorFile(fnameS);
     else
         dataS = fnameS;
     end
@@ -204,7 +204,7 @@
                 d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, uwb_mea, ...
                 true, false, true, false, false);
 
-            estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+            estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                        'lnSymbol', '--', 'ptSymbol', 'o', ...
                        'xyzColor', {'r', 'g', 'b'}, ...
                        'MIDPEL', x_pos_v2(idx,1:3), ...
@@ -224,7 +224,7 @@
         
 %         struct2csvstr(trial)
         
-        results(resultsIdx) = grlib.diffRMSEMean(trial);
+        results(resultsIdx) = pelib.diffRMSEMean(trial);
         resultsIdx = resultsIdx + 1;
     end
     
@@ -238,13 +238,13 @@
     %  Further Validation
     % Static Plots
     updateFigureContents('Position');
-    grlib.viz.plotPosition({estBody, actBody}, {'MIDPEL', 'LTIO', 'RTIO'});
+    pelib.viz.plotPosition({estBody, actBody}, {'MIDPEL', 'LTIO', 'RTIO'});
     
     updateFigureContents('Animation Freeze');
     grid; view(0, 90); hold on;
     for i=idx(1):20:idx(end)
-        grlib.viz.plotLowerBody(estBody, i);
-        grlib.viz.plotLowerBody(actBody, i);
+        pelib.viz.plotLowerBody(estBody, i);
+        pelib.viz.plotLowerBody(actBody, i);
     end
     
     % Animation
@@ -257,7 +257,7 @@
 %         ylim(estBodyLimits(3:4)); 
 %         zlim(estBodyLimits(5:6));  
 %         view(0, 180);
-%         grlib.viz.plotLowerBody(estBody, i);
+%         pelib.viz.plotLowerBody(estBody, i);
 %         pause(1/1000);
 %     end
 
@@ -270,7 +270,7 @@
 %         ylim(actBodyLimits(3:4)); 
 %         zlim(actBodyLimits(5:6));  
 %         view(0, 180);
-%         grlib.viz.plotLowerBody(actBody, i);
+%         pelib.viz.plotLowerBody(actBody, i);
 %         pause(1/1000);
 %     end
 % end

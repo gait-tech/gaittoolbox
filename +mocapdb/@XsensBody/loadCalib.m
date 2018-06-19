@@ -12,7 +12,7 @@ function obj = loadCalib(fname)
     validateattributes(fname, {'char'}, {});
 
     %% Variable initialization
-    obj = tcdlib.XsensBody('srcFileName', fname, 'nSamples', 1, ...
+    obj = mocapdb.XsensBody('srcFileName', fname, 'nSamples', 1, ...
                            'frame', 'calib');
     
     %% Load calibration data

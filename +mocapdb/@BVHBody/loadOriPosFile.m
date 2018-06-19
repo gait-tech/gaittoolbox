@@ -25,7 +25,7 @@ function obj = loadOriPosFile(fname_ori, fname_pos, unit)
         unit = "inch";
     end
     
-    obj = tcdlib.BVHBody('srcFileName', {fname_ori, fname_pos}, ...
+    obj = mocapdb.BVHBody('srcFileName', {fname_ori, fname_pos}, ...
                          'posUnit', unit, 'frame', 'vicon');
     
     %% Load orientation data

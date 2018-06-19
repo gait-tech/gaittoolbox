@@ -56,8 +56,8 @@ for i = 1:dataN
         data = struct('name', name, ...
             'fnameBVH', sprintf('%s/%s.bvh', dir, n.act), ...
             'fnameRaw', sprintf('%s/%s', dir, n.act));
-        data.dataBVH = tcdlib.BVHBody.loadXsensBVHFile(data.fnameBVH, "mm");
-        data.dataRaw = tcdlib.XsensBody.loadMTExport(data.fnameRaw, options);
+        data.dataBVH = mocapdb.BVHBody.loadXsensBVHFile(data.fnameBVH, "mm");
+        data.dataRaw = mocapdb.XsensBody.loadMTExport(data.fnameRaw, options);
         save(dataPath, 'data');
     end
     display(sprintf("Data %3d/%3d: %s", i, dataN, data.name));

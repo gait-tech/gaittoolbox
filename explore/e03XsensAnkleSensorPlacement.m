@@ -23,9 +23,9 @@ end
 
 RUpLeg = out.R_UpLeg; RLowLeg = out.R_LowLeg; RAnkle = out.R_Ankle;
 updateFigureContents('RLeg Quaternion');
-grlib.viz.plotQuaternion(RUpLeg, RLowLeg, RAnkle);
+pelib.viz.plotQuaternion(RUpLeg, RLowLeg, RAnkle);
 
-RKneeAngle_RLowLeg = grlib.grBody.calcJointAngles(RUpLeg, RLowLeg)*180/pi;
-RKneeAngle_RAnkle = grlib.grBody.calcJointAngles(RUpLeg, RAnkle)*180/pi;
+RKneeAngle_RLowLeg = pelib.grBody.calcJointAngles(RUpLeg, RLowLeg)*180/pi;
+RKneeAngle_RAnkle = pelib.grBody.calcJointAngles(RUpLeg, RAnkle)*180/pi;
 updateFigureContents('RKnee Joint Angles');
-grlib.viz.plotXYZ(RKneeAngle_RLowLeg, RKneeAngle_RAnkle)
+pelib.viz.plotXYZ(RKneeAngle_RLowLeg, RKneeAngle_RAnkle)

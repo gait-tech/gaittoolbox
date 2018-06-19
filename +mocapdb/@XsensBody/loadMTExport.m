@@ -25,7 +25,7 @@ function obj = loadMTExport(name, options)
     bs = fieldnames(options); 
     bsN = length(bs);
     
-    obj = tcdlib.XsensBody('srcFileName', name, 'frame', 'sensor');
+    obj = mocapdb.XsensBody('srcFileName', name, 'frame', 'sensor');
     nSamples = inf;
     for i = 1:bsN
         fpath = sprintf("%s-000_%s.txt", name, options.(bs{i}));

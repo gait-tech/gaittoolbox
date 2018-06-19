@@ -7,7 +7,7 @@
 %> @retval out BVHBody in world frame.
 % ======================================================================
 function out = toWorldFrame(obj, qR)
-    out = tcdlib.BVHBody();
+    out = mocapdb.BVHBody();
     out.srcFileName = obj.srcFileName;
     out.frame = 'world';
     out.posUnit = obj.posUnit;

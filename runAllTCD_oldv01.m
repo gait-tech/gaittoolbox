@@ -237,11 +237,11 @@ for i = 1:dataN
             'fnameCIB', sprintf('%s/imu/%s/%s_%s_calib_imu_bone.txt', dir, n.subj, n.subj, lower(n.act)), ...
             'fnameCIR', sprintf('%s/imu/%s/%s_%s_calib_imu_ref.txt', dir, n.subj, n.subj, lower(n.act)) ...
             );
-        data.dataV = tcdlib.BVHBody.loadBVHFile(data.fnameV, 'mm');
-        data.dataV = tcdlib.BVHBody.loadBVHFile(data.fnameV, 'mm');
-        data.dataS = tcdlib.XsensBody.loadSensorFile(data.fnameS);
-        data.calibIB = tcdlib.XsensBody.loadCalib(data.fnameCIB);
-        data.calibIR = tcdlib.XsensBody.loadCalib(data.fnameCIR);
+        data.dataV = mocapdb.BVHBody.loadBVHFile(data.fnameV, 'mm');
+        data.dataV = mocapdb.BVHBody.loadBVHFile(data.fnameV, 'mm');
+        data.dataS = mocapdb.XsensBody.loadSensorFile(data.fnameS);
+        data.calibIB = mocapdb.XsensBody.loadCalib(data.fnameCIB);
+        data.calibIR = mocapdb.XsensBody.loadCalib(data.fnameCIR);
         save(dataPath, 'data');
     end
     display(sprintf("Data %3d/%3d: %s", i, dataN, data.name));

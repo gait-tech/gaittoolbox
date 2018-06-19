@@ -1,38 +1,38 @@
 % Show the absolute and relative position
 fs=100;
 updateFigureContents('Hips');
-clf; grlib.viz.plotStateComparison(estState2, actState, 1, fs);
+clf; pelib.viz.plotStateComparison(estState2, actState, 1, fs);
 
 updateFigureContents('LAnkle');
-clf; grlib.viz.plotStateComparison(estState2, actState, 11, fs);
+clf; pelib.viz.plotStateComparison(estState2, actState, 11, fs);
 
 updateFigureContents('RAnkle');
-clf; grlib.viz.plotStateComparison(estState2, actState, 21, fs);
+clf; pelib.viz.plotStateComparison(estState2, actState, 21, fs);
 
-estStateRel2 = grlib.est.changeStateRefFrame(estState2);
-actStateRel = grlib.est.changeStateRefFrame(actState);
+estStateRel2 = pelib.est.changeStateRefFrame(estState2);
+actStateRel = pelib.est.changeStateRefFrame(actState);
 updateFigureContents('LAnkleRel');
-clf; grlib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
+clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
 
 updateFigureContents('RAnkleRel');
-clf; grlib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
+clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
 
 updateFigureContents('Hips2');
-clf; grlib.viz.plotStateComparison(estState2, actState, 1, 60);
+clf; pelib.viz.plotStateComparison(estState2, actState, 1, 60);
 
 updateFigureContents('LAnkle2');
-clf; grlib.viz.plotStateComparison(estState2, actState, 11, 60);
+clf; pelib.viz.plotStateComparison(estState2, actState, 11, 60);
 
 updateFigureContents('RAnkle2');
-clf; grlib.viz.plotStateComparison(estState2, actState, 21, 60);
+clf; pelib.viz.plotStateComparison(estState2, actState, 21, 60);
 
-estStateRel2 = grlib.est.changeStateRefFrame(estState2);
-actStateRel = grlib.est.changeStateRefFrame(actState);
+estStateRel2 = pelib.est.changeStateRefFrame(estState2);
+actStateRel = pelib.est.changeStateRefFrame(actState);
 updateFigureContents('LAnkleRel2');
-clf; grlib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
+clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
 
 updateFigureContents('RAnkleRel2');
-clf; grlib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
+clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
 
 % P exploration
 load('C:\Users\z5151460\workspace\gaitrecon\experiments\tcd-s1-acting1-Dxxx+ZUPT+C001.mat')
@@ -62,23 +62,23 @@ for i=1:nSamples
 end
 
 % Static Plots
-grlib.viz.plotPosition({actBody}, {'LTIO', 'RTIO'});
+pelib.viz.plotPosition({actBody}, {'LTIO', 'RTIO'});
 
 updateFigureContents('Position1');
 actBodyRel = actBody.changeRefFrame('MIDPEL');
 estBodyRel = estBody.changeRefFrame('MIDPEL');
-grlib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'});
+pelib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'});
 
 updateFigureContents('Position2');
 actBodyRel = actBody.changeRefFrame('MIDPEL');
 estBodyRel = estBody.changeRefFrame('MIDPEL');
-grlib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'});
+pelib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'});
 
 updateFigureContents('Joint Angles (Hips)');
-grlib.viz.plotJointAngles({actBody, estBody}, {'LHip', 'RHip'})
+pelib.viz.plotJointAngles({actBody, estBody}, {'LHip', 'RHip'})
 
 updateFigureContents('Joint Angles (Knee)');
-grlib.viz.plotJointAngles({actBody, estBody}, {'LKnee', 'RKnee'})
+pelib.viz.plotJointAngles({actBody, estBody}, {'LKnee', 'RKnee'})
 
 % Constraint Info
 d_pelvis = norm(actBody.LFEP(1,:) - actBody.RFEP(1,:));
@@ -88,7 +88,7 @@ d_ltibia = norm(actBody.LFEO(1,:) - actBody.LTIO(1,:));
 d_rtibia = norm(actBody.RFEO(1,:) - actBody.RTIO(1,:));
 
 updateFigureContents('Constraint Check');
-grlib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, ...
+pelib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, ...
     d_lfemur, d_rfemur, d_ltibia, d_rtibia);
 hold on;
 cstrStateL = sum(estState2.cstrStateU(:,1:3), 2) > 0;
@@ -114,7 +114,7 @@ while i <= actBody.nSamples
     zlim(actBodyLimits(5:6));  
     xlabel('x'); ylabel('y'); zlabel('z');
     view(az, el);
-    grlib.viz.plotLowerBody(actBody, i, true, false);
+    pelib.viz.plotLowerBody(actBody, i, true, false);
     i = i+5;
     pause(1/1000);
 end
@@ -133,7 +133,7 @@ while i <= estBody.nSamples
     ylim(estBodyLimits(3:4)); 
     zlim(estBodyLimits(5:6));  
     view(az, el);
-    grlib.viz.plotLowerBody(estBody, i, true, false);
+    pelib.viz.plotLowerBody(estBody, i, true, false);
     i = i+5;
     pause(1/1000);
 end
@@ -152,7 +152,7 @@ while i <= estBody.nSamples
     ylim(estBodyLimits(3:4)); 
     zlim(estBodyLimits(5:6));  
     view(az, el);
-    grlib.viz.plotLowerBody(estBody2, i, true, false);
+    pelib.viz.plotLowerBody(estBody2, i, true, false);
     i = i+5;
     pause(1/1000);
 end
@@ -174,8 +174,8 @@ while i <= estBody.nSamples
     zlim(estBodyLimits(5:6));  
     xlabel('x'); ylabel('y'); zlabel('z');
     view(az, el);
-    grlib.viz.plotLowerBody(estBody2, i, true, false);
-    grlib.viz.plotLowerBody(actBody2, i, true, false);
+    pelib.viz.plotLowerBody(estBody2, i, true, false);
+    pelib.viz.plotLowerBody(actBody2, i, true, false);
     i = i+20;
     pause(1/1000);
 end
@@ -193,8 +193,8 @@ while i <= actBody.nSamples
     zlim(actBodyLimits(5:6));
     xlabel('x'); ylabel('y'); zlabel('z');
     view(az, el);
-    grlib.viz.plotLowerBody(estBody, i, true, false);
-    grlib.viz.plotLowerBody(actBody, i, true, false);
+    pelib.viz.plotLowerBody(estBody, i, true, false);
+    pelib.viz.plotLowerBody(actBody, i, true, false);
     i = i+10;
     pause(1/1000);
 end
@@ -214,8 +214,8 @@ while i <= actBody.nSamples
     zlim(actBodyRelLimits(5:6));  
     xlabel('x'); ylabel('y'); zlabel('z');
     view(az, el);
-    grlib.viz.plotLowerBody(estBodyRel, i);
-    grlib.viz.plotLowerBody(actBodyRel, i);
+    pelib.viz.plotLowerBody(estBodyRel, i);
+    pelib.viz.plotLowerBody(actBodyRel, i);
     i = i+10;
     pause(1/1000);
 end
@@ -223,15 +223,15 @@ end
 %     updateFigureContents('Animation Freeze');
 %     grid; view(0, 90); hold on;
 %     for i=idx0(1):30:idx0(end)
-%         grlib.viz.plotLowerBody(estBody, i);
-%         grlib.viz.plotLowerBody(actBody, i);
+%         pelib.viz.plotLowerBody(estBody, i);
+%         pelib.viz.plotLowerBody(actBody, i);
 %     end
 % %     
 % %     updateFigureContents('GFR Acc Diff');
 % %     diff_gfr_acc_MP = gfr_acc_MP(1:end-1,:) - gfr_acc_MP_act;
 % %     diff_gfr_acc_LA = gfr_acc_LA(1:end-1,:) - gfr_acc_LA_act;
 % %     diff_gfr_acc_RA = gfr_acc_RA(1:end-1,:) - gfr_acc_RA_act;
-% %     grlib.viz.plotXYZ(diff_gfr_acc_MP, diff_gfr_acc_LA, diff_gfr_acc_RA);
+% %     pelib.viz.plotXYZ(diff_gfr_acc_MP, diff_gfr_acc_LA, diff_gfr_acc_RA);
 %     
 %     
 
@@ -247,7 +247,7 @@ while i <= actBody.nSamples
     zlim(actBodyRelLimits(5:6));  
     xlabel('x'); ylabel('y'); zlabel('z');
     view(20, 30);
-    grlib.viz.plotLowerBody(actBodyRel, i, true, false);
+    pelib.viz.plotLowerBody(actBodyRel, i, true, false);
     i = i+5;
     pause(1/1000);
 end
@@ -262,7 +262,7 @@ while i <= estBodyRel.nSamples
     ylim(estBodyLimitsRel(3:4)); 
     zlim(estBodyLimitsRel(5:6));  
     view(40, 30);
-    grlib.viz.plotLowerBody(estBodyRel, i, true, false);
+    pelib.viz.plotLowerBody(estBodyRel, i, true, false);
     i = i+20;
     pause(1/1000);
 end

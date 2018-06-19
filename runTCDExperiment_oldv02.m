@@ -29,19 +29,19 @@
     fs = 60;
     
     % Load calibration data
-    calibIB = tcdlib.XsensBody.loadCalib(fnameCIB);
-    calibIR = tcdlib.XsensBody.loadCalib(fnameCIR);
+    calibIB = mocapdb.XsensBody.loadCalib(fnameCIB);
+    calibIR = mocapdb.XsensBody.loadCalib(fnameCIR);
     
     % Load video orientation and position for each body segment
     if ischar(fnameV)
-        dataV = tcdlib.BVHBody.loadBVHFile(fnameV, 'mm');
+        dataV = mocapdb.BVHBody.loadBVHFile(fnameV, 'mm');
     else
         dataV = fnameV;
     end     
     
     % Load sensor orientation and position for each body segment
     if ischar(fnameS)
-        dataS = tcdlib.XsensBody.loadSensorFile(fnameS);
+        dataS = mocapdb.XsensBody.loadSensorFile(fnameS);
     else
         dataS = fnameS;
     end

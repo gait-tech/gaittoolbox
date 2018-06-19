@@ -14,9 +14,9 @@ function obj = loadBVHFile(fname, unit)
         unit = "inch";
     end
     
-    [bvh_data, time] = tcdlib.BVHBody.loadbvh(fname);
+    [bvh_data, time] = mocapdb.BVHBody.loadbvh(fname);
     
-    obj = tcdlib.BVHBody('srcFileName', fname, 'posUnit', unit, ...
+    obj = mocapdb.BVHBody('srcFileName', fname, 'posUnit', unit, ...
                          'frame', 'vicon');
         
     n = max(size(bvh_data));

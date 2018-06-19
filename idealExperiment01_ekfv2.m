@@ -79,7 +79,7 @@
     P = eye(18, 18)*100;
 %     sigma_acc = 0.5;
     sigma_acc = 0;
-    [ x_pri_v2, x_pos_v2, t_dat_v2 ] = grlib.est.kf_3_kmus_v2(fs, ...
+    [ x_pri_v2, x_pos_v2, t_dat_v2 ] = pelib.est.kf_3_kmus_v2(fs, ...
         sigma_acc, sigma_acc, sigma_acc, P, ...
         x0_pos_MP, x0_vel_MP, gfr_acc_MP_act, bIsStatMP, qPelvisEst, ...
         x0_pos_LA, x0_vel_LA, gfr_acc_LA_act, bIsStatLA, qLankleEst, ...
@@ -90,7 +90,7 @@
     %% --------------------------------------------------------------------
     %  Validation
     idx = 1:length(ideal.MIDPEL(:,1));
-    estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+    estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                'lnSymbol', '--', 'ptSymbol', 'o', ...
                'xyzColor', {'r', 'g', 'b'}, ...
                'MIDPEL', x_pos_v2(idx,1:3), ...
@@ -106,7 +106,7 @@
                'qRSK', qRankleEst(idx,:), ...
                'qLSK', qLankleEst(idx,:));
            
-    actBody = grlib.grBody('name', 'act', 'posUnit', 'm', 'oriUnit', 'deg', ...
+    actBody = pelib.grBody('name', 'act', 'posUnit', 'm', 'oriUnit', 'deg', ...
                      'lnSymbol', '-', 'ptSymbol', '.', ...
                      'xyzColor', {'m', 'y', 'c'}, ...
                      'MIDPEL', ideal.MIDPEL(idx,:), ...
@@ -128,8 +128,8 @@
 %     updateFigureContents('Animation Freeze 2');
 %     grid; view(0, 90); hold on;
 %     for i=idx(1):20:idx(end)
-%         grlib.viz.plotLowerBody(estBody, i);
-%         grlib.viz.plotLowerBody(actBody, i);
+%         pelib.viz.plotLowerBody(estBody, i);
+%         pelib.viz.plotLowerBody(actBody, i);
 %     end
     
     % Animation
@@ -142,7 +142,7 @@
         ylim(estBodyLimits(3:4)); 
         zlim(estBodyLimits(5:6));  
         view(-126, 26);
-        grlib.viz.plotLowerBody(estBody, i);
+        pelib.viz.plotLowerBody(estBody, i);
         pause(1/1000);
     end
 
@@ -155,15 +155,15 @@
         ylim(actBodyLimits(3:4)); 
         zlim(actBodyLimits(5:6));  
         view(-126, 26);
-        grlib.viz.plotLowerBody(actBody, i);
+        pelib.viz.plotLowerBody(actBody, i);
         pause(1/1000);
     end
     
     % Static Plots
     updateFigureContents('Position');
-    grlib.viz.plotPosition({estBody, actBody}, {'MIDPEL', 'LTIO', 'RTIO'});
-    % grlib.viz.plotPosition({estBody, actBody}, {'LFEO', 'RFEO'});
+    pelib.viz.plotPosition({estBody, actBody}, {'MIDPEL', 'LTIO', 'RTIO'});
+    % pelib.viz.plotPosition({estBody, actBody}, {'LFEO', 'RFEO'});
     
     updateFigureContents('State Comparison');
-    grlib.viz.plotStateComparison(t_dat_v2, actState, 1);
+    pelib.viz.plotStateComparison(t_dat_v2, actState, 1);
 % end

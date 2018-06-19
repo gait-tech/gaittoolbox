@@ -5,7 +5,7 @@ actBodyRel.xyzColor = {'k', 'k', 'k'};
 actBodyRel.lnSymbol = '--';
 estBodyRel = estBody.changeRefFrame('MIDPEL');
 estBodyRel.lnSymbol = '-';
-grlib.viz.plotPosition({estBodyRel, actBodyRel}, {'RTIO'});
+pelib.viz.plotPosition({estBodyRel, actBodyRel}, {'RTIO'});
 
 updateFigureContents('Animation');
 xlabel('x'); ylabel('y'); zlabel('z');
@@ -24,8 +24,8 @@ while i <= estBody.nSamples
     zlim(estBodyLimits(5:6));  
     xlabel('x'); ylabel('y'); zlabel('z');
     view(az, el);
-    grlib.viz.plotLowerBody(estBody2, i, true, false);
-    grlib.viz.plotLowerBody(actBody2, i, true, false);
+    pelib.viz.plotLowerBody(estBody2, i, true, false);
+    pelib.viz.plotLowerBody(actBody2, i, true, false);
     i = i+10;
     pause(1/1000);
 end
@@ -49,8 +49,8 @@ ylim([0.5 2.5]);
 zlim(estBodyLimits(5:6));  
 xlabel('x'); ylabel('y'); zlabel('z');
 view(az, el);
-grlib.viz.plotLowerBody(estBody2, i, true, false);
-grlib.viz.plotLowerBody(actBody2, i, true, false);
+pelib.viz.plotLowerBody(estBody2, i, true, false);
+pelib.viz.plotLowerBody(actBody2, i, true, false);
 i = i+20;
 
     

@@ -34,7 +34,7 @@ if data == dataSim
     tStart = tic;
     %N_MP = 50; %number rof timesteps to test on KF
     %TODO: return removed estimated values of knee and femur pos/or
-    [x_rec, xa_rec, qFEM] = grlib.est.cukf_v6(x0,P,Q,R,N_MP,nMeas,gfr_acc,fs, qPelvisEst,...
+    [x_rec, xa_rec, qFEM] = pelib.est.cukf_v6(x0,P,Q,R,N_MP,nMeas,gfr_acc,fs, qPelvisEst,...
         qLankleEst, qRankleEst, d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia,...
         isConstr);
     
@@ -66,11 +66,11 @@ if data == dataSim
     %isolate acc for ploting later
     x_acc_v2 = [x_rec(7:9,:)' x_rec(20:22,:)' x_rec(33:35,:)'];
     
-    %grlib.viz.UKF_Rel_LPVA_plot
+    %pelib.viz.UKF_Rel_LPVA_plot
     %% construct bodies
     %use tbl_markers.
 tsidx0 = 1:N_MP;
-    actBody = grlib.grBody('name', 'act', 'posUnit', 'm', 'oriUnit', 'deg', ...
+    actBody = pelib.grBody('name', 'act', 'posUnit', 'm', 'oriUnit', 'deg', ...
         'lnSymbol', '-', 'ptSymbol', '*', ...
         'xyzColor', {'m', 'y', 'c'}, ...
         'MIDPEL', tbl_markers.PELO(tsidx0,:), ...
@@ -88,7 +88,7 @@ tsidx0 = 1:N_MP;
     
     
     tsidx0_ = 1:N_MP;
-    estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+    estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
         'lnSymbol', '--', 'ptSymbol', 'o', ...
         'xyzColor', {'r', 'g', 'b'}, ...
         'MIDPEL', x_pos_v2(tsidx0_,MP_pos_Idx), ...
@@ -107,11 +107,11 @@ tsidx0 = 1:N_MP;
     %resultsIdx = resultsIdx + 1;
     
 % end
-grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'LA')
-grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA')
-%grlib.viz.UKF_plotAccel('LA',gfr_acc_LA_filt, x_acc_v2(:,LA_pos_Idx), N_MP, fs)
-%grlib.viz.UKF_plotAccel('RA',gfr_acc_RA_filt, x_acc_v2(:,RA_pos_Idx), N_MP, fs)
-%grlib.struct2csvstr(results, true)
+pelib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'LA')
+pelib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA')
+%pelib.viz.UKF_plotAccel('LA',gfr_acc_LA_filt, x_acc_v2(:,LA_pos_Idx), N_MP, fs)
+%pelib.viz.UKF_plotAccel('RA',gfr_acc_RA_filt, x_acc_v2(:,RA_pos_Idx), N_MP, fs)
+%pelib.struct2csvstr(results, true)
 %gelib.viz.plotPositionDiff(estBody, actBody, cell{'MIDPEL'; 'LTIO'; 'RTIO'})
 elseif data == dataTCD
     load('cukf_v6_testfile_txpexp01.mat')
@@ -154,7 +154,7 @@ elseif data == dataTCD
     N_MP = 1000; %number rof timesteps to test on KF
     %TODO: return removed estimated values of knee and femur pos/or
     trng = sIdx0:sIdx0+N_MP;
-    [x_rec, xa_rec, qFEM] = grlib.est.cukf_v6(x0,P,Q,R,N_MP,nMeas,gfr_acc(trng,:),fs, qPelvisEst(trng,:),...
+    [x_rec, xa_rec, qFEM] = pelib.est.cukf_v6(x0,P,Q,R,N_MP,nMeas,gfr_acc(trng,:),fs, qPelvisEst(trng,:),...
         qLankleEst(trng,:), qRankleEst(trng,:), d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia,...
         isConstr);
     
@@ -186,10 +186,10 @@ elseif data == dataTCD
     %isolate acc for ploting later
     x_acc_v2 = [x_rec(7:9,:)' x_rec(20:22,:)' x_rec(33:35,:)'];
     
-    %grlib.viz.UKF_Rel_LPVA_plot
+    %pelib.viz.UKF_Rel_LPVA_plot
     %% construct Est Body (actBody imported) 
     tsidx0_ = 1:N_MP;
-    estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+    estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
         'lnSymbol', '--', 'ptSymbol', 'o', ...
         'xyzColor', {'r', 'g', 'b'}, ...
         'MIDPEL', x_pos_v2(tsidx0_,MP_pos_Idx), ...
@@ -208,11 +208,11 @@ elseif data == dataTCD
     %resultsIdx = resultsIdx + 1;
     
 % end
-grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'LA')
-grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA')
-%grlib.viz.UKF_plotAccel('LA',gfr_acc_LA_filt, x_acc_v2(:,LA_pos_Idx), N_MP, fs)
-%grlib.viz.UKF_plotAccel('RA',gfr_acc_RA_filt, x_acc_v2(:,RA_pos_Idx), N_MP, fs)
-%grlib.struct2csvstr(results, true)
+pelib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'LA')
+pelib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA')
+%pelib.viz.UKF_plotAccel('LA',gfr_acc_LA_filt, x_acc_v2(:,LA_pos_Idx), N_MP, fs)
+%pelib.viz.UKF_plotAccel('RA',gfr_acc_RA_filt, x_acc_v2(:,RA_pos_Idx), N_MP, fs)
+%pelib.struct2csvstr(results, true)
 %gelib.viz.plotPositionDiff(estBody, actBody, cell{'MIDPEL'; 'LTIO'; 'RTIO'})
 else
     error('select data for filter')
