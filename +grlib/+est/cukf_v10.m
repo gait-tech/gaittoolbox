@@ -136,21 +136,21 @@ for k=1:N_MP
     RFEM_z = RFEM_z/norm(RFEM_z);
     
     LFEM_z__N = LFEM_z;
-RFEM_z__N = RFEM_z;
-
-% _TIB_CS is _TIB_CS described in wrod frame, or rotm from tib2world frame
-% therefore, inverse is from wrold to tib frame
-LFEM_z__TIB = LTIB_CS\LFEM_z__N;
-RFEM_z__TIB = RTIB_CS\RFEM_z__N;
-
-%global qklVec arkVec 
-% alpha_lk = atan2(-LFEM_z__TIB(1), -LFEM_z__TIB(3)) + 0.5*pi;
-% alpha_rk = atan2(-RFEM_z__TIB(1), -RFEM_z__TIB(3)) + 0.5*pi;
-alpha_lk = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
-alpha_rk = atan2(-RFEM_z__TIB(3), -RFEM_z__TIB(1)) + 0.5*pi;
-
-qlkVec(k) = alpha_lk;
-qrkVec(k) = alpha_rk;
+    RFEM_z__N = RFEM_z;
+    
+    % _TIB_CS is _TIB_CS described in wrod frame, or rotm from tib2world frame
+    % therefore, inverse is from wrold to tib frame
+    LFEM_z__TIB = LTIB_CS\LFEM_z__N;
+    RFEM_z__TIB = RTIB_CS\RFEM_z__N;
+    
+    %global qklVec arkVec
+    % alpha_lk = atan2(-LFEM_z__TIB(1), -LFEM_z__TIB(3)) + 0.5*pi;
+    % alpha_rk = atan2(-RFEM_z__TIB(1), -RFEM_z__TIB(3)) + 0.5*pi;
+    alpha_lk = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
+    alpha_rk = atan2(-RFEM_z__TIB(3), -RFEM_z__TIB(1)) + 0.5*pi;
+    
+    qlkVec(k) = alpha_lk;
+    qrkVec(k) = alpha_rk;
     LFEM_y = LTIB_CS(:,2);
     RFEM_y = RTIB_CS(:,2);
     
@@ -176,93 +176,93 @@ qrkVec(k) = alpha_rk;
     q4PEL = xhat(13);
     
     %calc left knee joint angl. vel.
-        qLKN = alpha_lk;
+    qLKN = alpha_lk;
     
-        wxLTIB = x(30);
-        wyLTIB = x(31);
-        wzLTIB = x(32);
-        
-        q1LTIB = x(26);
-        q2LTIB = x(27);
-        q3LTIB = x(28);
-        q4LTIB = x(29);
-
-        q1LFEM = qLFEM(1);
-        q2LFEM = qLFEM(2);
-        q3LFEM = qLFEM(3);
-        q4LFEM = qLFEM(4);
-
-      wxLFEM = wxLTIB*(4*(q1LFEM*q4LFEM+q2LFEM*q3LFEM)*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)+4*(q1LFEM*q3LFEM-q2LFEM*q4LFEM)*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)+(-1+2*q1LFEM^2+2*q2LFEM^2)*(-1+2*q1LTIB^2+2*q2LTIB^2)) + 2*wyLTIB*((q1LFEM*q4LFEM+q2LFEM*q3LFEM)*(-1+2*q1LTIB^2+2*q3LTIB^2)-2*(q1LTIB*q2LTIB+q3LTIB*q4LTIB)*(q1LFEM*q3LFEM-q2LFEM*q4LFEM)-(q1LTIB*q4LTIB-q2LTIB*q3LTIB)*(-1+2*q1LFEM^2+2*q2LFEM^2)) + 2*wzLTIB*((q1LTIB*q3LTIB+q2LTIB*q4LTIB)*(-1+2*q1LFEM^2+2*q2LFEM^2)-2*(q1LFEM*q4LFEM+q2LFEM*q3LFEM)*(q1LTIB*q2LTIB-q3LTIB*q4LTIB)-(q1LFEM*q3LFEM-q2LFEM*q4LFEM)*(-1+2*q1LTIB^2+2*q4LTIB^2));
-
-wzLFEM = wzLTIB*(4*(q1LFEM*q3LFEM+q2LFEM*q4LFEM)*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)+4*(q1LFEM*q2LFEM-q3LFEM*q4LFEM)*(q1LTIB*q2LTIB-q3LTIB*q4LTIB)+(-1+2*q1LFEM^2+2*q4LFEM^2)*(-1+2*q1LTIB^2+2*q4LTIB^2)) + 2*wxLTIB*((q1LFEM*q3LFEM+q2LFEM*q4LFEM)*(-1+2*q1LTIB^2+2*q2LTIB^2)-2*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)*(q1LFEM*q2LFEM-q3LFEM*q4LFEM)-(q1LTIB*q3LTIB-q2LTIB*q4LTIB)*(-1+2*q1LFEM^2+2*q4LFEM^2)) + 2*wyLTIB*((q1LTIB*q2LTIB+q3LTIB*q4LTIB)*(-1+2*q1LFEM^2+2*q4LFEM^2)-2*(q1LFEM*q3LFEM+q2LFEM*q4LFEM)*(q1LTIB*q4LTIB-q2LTIB*q3LTIB)-(q1LFEM*q2LFEM-q3LFEM*q4LFEM)*(-1+2*q1LTIB^2+2*q3LTIB^2));
-
-wyLFEM = 2*wxLFEM*((q1LTIB*q4LTIB+q2LTIB*q3LTIB)*(-1+2*q1LFEM^2+2*q3LFEM^2)-2*(q1LFEM*q2LFEM+q3LFEM*q4LFEM)*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)-(q1LFEM*q4LFEM-q2LFEM*q3LFEM)*(-1+2*q1LTIB^2+2*q2LTIB^2))/(4*(q1LFEM*q4LFEM+q2LFEM*q3LFEM)*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)+4*(q1LFEM*q3LFEM-q2LFEM*q4LFEM)*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)+(-1+2*q1LFEM^2+2*q2LFEM^2)*(-1+2*q1LTIB^2+2*q2LTIB^2));
-
-qLKN_dot = wyLTIB - wyLFEM;
-  
-%---------Trig def of qlkn' results in singularity ----%
-%                 r_LA_LHP = -d_lfemur*cos(alpha_lk)*LTIB_CS(:,3) ...
-%         +d_lfemur*sin(alpha_lk)*LTIB_CS(:,1) ...
-%         -d_ltibia*LTIB_CS(:,3);
-%         dl = norm(r_LA_LHP);
-%         v_LHP_MP__N = PELV_CS*cross([wxPEL; wyPEL; wzPEL],[0; d_pelvis/2; 0]);
-%         dl_dot = dot((xhat(idx_vel_LA)-(xhat(idx_vel_MP) + v_LHP_MP__N)),r_LA_LHP/norm(r_LA_LHP));
-%         Zl = (d_ltibia^2+d_lfemur^2-dl^2)/(2*d_ltibia*d_lfemur);
-%         Zl_dot = (-dl*dl_dot)/(d_ltibia*d_lfemur);
-%         w_LKN_scl = Zl_dot/(1-Zl^2)^(0.5);
-
-%             w_LKN_scl = wyLTIB + 2*(q1LTIB*q4LTIB-q2LTIB*q3LTIB)*(wxLTIB*cos(qLKN)+...
-%         wzLTIB*sin(qLKN))/(2*sin(qLKN)*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)+...
-%         cos(qLKN)*(-1+2*q1LTIB^2+2*q2LTIB^2));
-%     
+    wxLTIB = x(30);
+    wyLTIB = x(31);
+    wzLTIB = x(32);
+    
+    q1LTIB = x(26);
+    q2LTIB = x(27);
+    q3LTIB = x(28);
+    q4LTIB = x(29);
+    
+    q1LFEM = qLFEM(1);
+    q2LFEM = qLFEM(2);
+    q3LFEM = qLFEM(3);
+    q4LFEM = qLFEM(4);
+    
+    wxLFEM = wxLTIB*(4*(q1LFEM*q4LFEM+q2LFEM*q3LFEM)*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)+4*(q1LFEM*q3LFEM-q2LFEM*q4LFEM)*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)+(-1+2*q1LFEM^2+2*q2LFEM^2)*(-1+2*q1LTIB^2+2*q2LTIB^2)) + 2*wyLTIB*((q1LFEM*q4LFEM+q2LFEM*q3LFEM)*(-1+2*q1LTIB^2+2*q3LTIB^2)-2*(q1LTIB*q2LTIB+q3LTIB*q4LTIB)*(q1LFEM*q3LFEM-q2LFEM*q4LFEM)-(q1LTIB*q4LTIB-q2LTIB*q3LTIB)*(-1+2*q1LFEM^2+2*q2LFEM^2)) + 2*wzLTIB*((q1LTIB*q3LTIB+q2LTIB*q4LTIB)*(-1+2*q1LFEM^2+2*q2LFEM^2)-2*(q1LFEM*q4LFEM+q2LFEM*q3LFEM)*(q1LTIB*q2LTIB-q3LTIB*q4LTIB)-(q1LFEM*q3LFEM-q2LFEM*q4LFEM)*(-1+2*q1LTIB^2+2*q4LTIB^2));
+    
+    wzLFEM = wzLTIB*(4*(q1LFEM*q3LFEM+q2LFEM*q4LFEM)*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)+4*(q1LFEM*q2LFEM-q3LFEM*q4LFEM)*(q1LTIB*q2LTIB-q3LTIB*q4LTIB)+(-1+2*q1LFEM^2+2*q4LFEM^2)*(-1+2*q1LTIB^2+2*q4LTIB^2)) + 2*wxLTIB*((q1LFEM*q3LFEM+q2LFEM*q4LFEM)*(-1+2*q1LTIB^2+2*q2LTIB^2)-2*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)*(q1LFEM*q2LFEM-q3LFEM*q4LFEM)-(q1LTIB*q3LTIB-q2LTIB*q4LTIB)*(-1+2*q1LFEM^2+2*q4LFEM^2)) + 2*wyLTIB*((q1LTIB*q2LTIB+q3LTIB*q4LTIB)*(-1+2*q1LFEM^2+2*q4LFEM^2)-2*(q1LFEM*q3LFEM+q2LFEM*q4LFEM)*(q1LTIB*q4LTIB-q2LTIB*q3LTIB)-(q1LFEM*q2LFEM-q3LFEM*q4LFEM)*(-1+2*q1LTIB^2+2*q3LTIB^2));
+    
+    wyLFEM = 2*wxLFEM*((q1LTIB*q4LTIB+q2LTIB*q3LTIB)*(-1+2*q1LFEM^2+2*q3LFEM^2)-2*(q1LFEM*q2LFEM+q3LFEM*q4LFEM)*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)-(q1LFEM*q4LFEM-q2LFEM*q3LFEM)*(-1+2*q1LTIB^2+2*q2LTIB^2))/(4*(q1LFEM*q4LFEM+q2LFEM*q3LFEM)*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)+4*(q1LFEM*q3LFEM-q2LFEM*q4LFEM)*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)+(-1+2*q1LFEM^2+2*q2LFEM^2)*(-1+2*q1LTIB^2+2*q2LTIB^2));
+    
+    qLKN_dot = wyLTIB - wyLFEM;
+    
+    %---------Trig def of qlkn' results in singularity ----%
+    %                 r_LA_LHP = -d_lfemur*cos(alpha_lk)*LTIB_CS(:,3) ...
+    %         +d_lfemur*sin(alpha_lk)*LTIB_CS(:,1) ...
+    %         -d_ltibia*LTIB_CS(:,3);
+    %         dl = norm(r_LA_LHP);
+    %         v_LHP_MP__N = PELV_CS*cross([wxPEL; wyPEL; wzPEL],[0; d_pelvis/2; 0]);
+    %         dl_dot = dot((xhat(idx_vel_LA)-(xhat(idx_vel_MP) + v_LHP_MP__N)),r_LA_LHP/norm(r_LA_LHP));
+    %         Zl = (d_ltibia^2+d_lfemur^2-dl^2)/(2*d_ltibia*d_lfemur);
+    %         Zl_dot = (-dl*dl_dot)/(d_ltibia*d_lfemur);
+    %         w_LKN_scl = Zl_dot/(1-Zl^2)^(0.5);
+    
+    %             w_LKN_scl = wyLTIB + 2*(q1LTIB*q4LTIB-q2LTIB*q3LTIB)*(wxLTIB*cos(qLKN)+...
+    %         wzLTIB*sin(qLKN))/(2*sin(qLKN)*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)+...
+    %         cos(qLKN)*(-1+2*q1LTIB^2+2*q2LTIB^2));
+    %
     %calc right knee joint angl. vel.
     qRKN = alpha_rk;
     
     wxRTIB = x(46);
-        wyRTIB = x(47);
-        wzRTIB = x(48);
-        
-        q1RTIB = x(42);
-        q2RTIB = x(43);
-        q3RTIB = x(44);
-        q4RTIB = x(45);
-
-        q1RFEM = qRFEM(1);
-        q2RFEM = qRFEM(2);
-        q3RFEM = qRFEM(3);
-        q4RFEM = qRFEM(4);
-
-wxRFEM = wxRTIB*(4*(q1RFEM*q4RFEM+q2RFEM*q3RFEM)*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)+4*(q1RFEM*q3RFEM-q2RFEM*q4RFEM)*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)+(-1+2*q1RFEM^2+2*q2RFEM^2)*(-1+2*q1RTIB^2+2*q2RTIB^2)) + 2*wyRTIB*((q1RFEM*q4RFEM+q2RFEM*q3RFEM)*(-1+2*q1RTIB^2+2*q3RTIB^2)-2*(q1RTIB*q2RTIB+q3RTIB*q4RTIB)*(q1RFEM*q3RFEM-q2RFEM*q4RFEM)-(q1RTIB*q4RTIB-q2RTIB*q3RTIB)*(-1+2*q1RFEM^2+2*q2RFEM^2)) + 2*wzRTIB*((q1RTIB*q3RTIB+q2RTIB*q4RTIB)*(-1+2*q1RFEM^2+2*q2RFEM^2)-2*(q1RFEM*q4RFEM+q2RFEM*q3RFEM)*(q1RTIB*q2RTIB-q3RTIB*q4RTIB)-(q1RFEM*q3RFEM-q2RFEM*q4RFEM)*(-1+2*q1RTIB^2+2*q4RTIB^2));
-
-wzRFEM = wzRTIB*(4*(q1RFEM*q3RFEM+q2RFEM*q4RFEM)*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)+4*(q1RFEM*q2RFEM-q3RFEM*q4RFEM)*(q1RTIB*q2RTIB-q3RTIB*q4RTIB)+(-1+2*q1RFEM^2+2*q4RFEM^2)*(-1+2*q1RTIB^2+2*q4RTIB^2)) + 2*wxRTIB*((q1RFEM*q3RFEM+q2RFEM*q4RFEM)*(-1+2*q1RTIB^2+2*q2RTIB^2)-2*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)*(q1RFEM*q2RFEM-q3RFEM*q4RFEM)-(q1RTIB*q3RTIB-q2RTIB*q4RTIB)*(-1+2*q1RFEM^2+2*q4RFEM^2)) + 2*wyRTIB*((q1RTIB*q2RTIB+q3RTIB*q4RTIB)*(-1+2*q1RFEM^2+2*q4RFEM^2)-2*(q1RFEM*q3RFEM+q2RFEM*q4RFEM)*(q1RTIB*q4RTIB-q2RTIB*q3RTIB)-(q1RFEM*q2RFEM-q3RFEM*q4RFEM)*(-1+2*q1RTIB^2+2*q3RTIB^2));
-
-wyRFEM = 2*wxRFEM*((q1RTIB*q4RTIB+q2RTIB*q3RTIB)*(-1+2*q1RFEM^2+2*q3RFEM^2)-2*(q1RFEM*q2RFEM+q3RFEM*q4RFEM)*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)-(q1RFEM*q4RFEM-q2RFEM*q3RFEM)*(-1+2*q1RTIB^2+2*q2RTIB^2))/(4*(q1RFEM*q4RFEM+q2RFEM*q3RFEM)*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)+4*(q1RFEM*q3RFEM-q2RFEM*q4RFEM)*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)+(-1+2*q1RFEM^2+2*q2RFEM^2)*(-1+2*q1RTIB^2+2*q2RTIB^2));
-
-qRKN_dot = wyRTIB - wyRFEM;
-
-%----------- Tirg calc of qrk' results in singularity ----%
-%         r_RA_RHP = -d_rfemur*cos(alpha_rk)*RTIB_CS(:,3) ...
-%         +d_rfemur*sin(alpha_rk)*RTIB_CS(:,1) ...
-%         -d_rtibia*RTIB_CS(:,3);
-%         dr = norm(r_RA_RHP);
-%         v_RHP_MP__N = PELV_CS*cross([wxPEL; wyPEL; wzPEL],[0; -d_pelvis/2; 0]);
-%         dr_dot = dot((xhat(idx_vel_RA)-(xhat(idx_vel_MP) + v_RHP_MP__N)),r_RA_RHP/norm(r_RA_RHP));
-%         Zr = (d_rtibia^2+d_rfemur^2-dr^2)/(2*d_rtibia*d_rfemur);
-%         Zr_dot = (-dr*dr_dot)/(d_rtibia*d_rfemur);
-%         w_RKN_scl = Zr_dot/(1-Zr^2)^(0.5);
-
-        %qRKN = -qRKN;
+    wyRTIB = x(47);
+    wzRTIB = x(48);
+    
+    q1RTIB = x(42);
+    q2RTIB = x(43);
+    q3RTIB = x(44);
+    q4RTIB = x(45);
+    
+    q1RFEM = qRFEM(1);
+    q2RFEM = qRFEM(2);
+    q3RFEM = qRFEM(3);
+    q4RFEM = qRFEM(4);
+    
+    wxRFEM = wxRTIB*(4*(q1RFEM*q4RFEM+q2RFEM*q3RFEM)*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)+4*(q1RFEM*q3RFEM-q2RFEM*q4RFEM)*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)+(-1+2*q1RFEM^2+2*q2RFEM^2)*(-1+2*q1RTIB^2+2*q2RTIB^2)) + 2*wyRTIB*((q1RFEM*q4RFEM+q2RFEM*q3RFEM)*(-1+2*q1RTIB^2+2*q3RTIB^2)-2*(q1RTIB*q2RTIB+q3RTIB*q4RTIB)*(q1RFEM*q3RFEM-q2RFEM*q4RFEM)-(q1RTIB*q4RTIB-q2RTIB*q3RTIB)*(-1+2*q1RFEM^2+2*q2RFEM^2)) + 2*wzRTIB*((q1RTIB*q3RTIB+q2RTIB*q4RTIB)*(-1+2*q1RFEM^2+2*q2RFEM^2)-2*(q1RFEM*q4RFEM+q2RFEM*q3RFEM)*(q1RTIB*q2RTIB-q3RTIB*q4RTIB)-(q1RFEM*q3RFEM-q2RFEM*q4RFEM)*(-1+2*q1RTIB^2+2*q4RTIB^2));
+    
+    wzRFEM = wzRTIB*(4*(q1RFEM*q3RFEM+q2RFEM*q4RFEM)*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)+4*(q1RFEM*q2RFEM-q3RFEM*q4RFEM)*(q1RTIB*q2RTIB-q3RTIB*q4RTIB)+(-1+2*q1RFEM^2+2*q4RFEM^2)*(-1+2*q1RTIB^2+2*q4RTIB^2)) + 2*wxRTIB*((q1RFEM*q3RFEM+q2RFEM*q4RFEM)*(-1+2*q1RTIB^2+2*q2RTIB^2)-2*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)*(q1RFEM*q2RFEM-q3RFEM*q4RFEM)-(q1RTIB*q3RTIB-q2RTIB*q4RTIB)*(-1+2*q1RFEM^2+2*q4RFEM^2)) + 2*wyRTIB*((q1RTIB*q2RTIB+q3RTIB*q4RTIB)*(-1+2*q1RFEM^2+2*q4RFEM^2)-2*(q1RFEM*q3RFEM+q2RFEM*q4RFEM)*(q1RTIB*q4RTIB-q2RTIB*q3RTIB)-(q1RFEM*q2RFEM-q3RFEM*q4RFEM)*(-1+2*q1RTIB^2+2*q3RTIB^2));
+    
+    wyRFEM = 2*wxRFEM*((q1RTIB*q4RTIB+q2RTIB*q3RTIB)*(-1+2*q1RFEM^2+2*q3RFEM^2)-2*(q1RFEM*q2RFEM+q3RFEM*q4RFEM)*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)-(q1RFEM*q4RFEM-q2RFEM*q3RFEM)*(-1+2*q1RTIB^2+2*q2RTIB^2))/(4*(q1RFEM*q4RFEM+q2RFEM*q3RFEM)*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)+4*(q1RFEM*q3RFEM-q2RFEM*q4RFEM)*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)+(-1+2*q1RFEM^2+2*q2RFEM^2)*(-1+2*q1RTIB^2+2*q2RTIB^2));
+    
+    qRKN_dot = wyRTIB - wyRFEM;
+    
+    %----------- Tirg calc of qrk' results in singularity ----%
+    %         r_RA_RHP = -d_rfemur*cos(alpha_rk)*RTIB_CS(:,3) ...
+    %         +d_rfemur*sin(alpha_rk)*RTIB_CS(:,1) ...
+    %         -d_rtibia*RTIB_CS(:,3);
+    %         dr = norm(r_RA_RHP);
+    %         v_RHP_MP__N = PELV_CS*cross([wxPEL; wyPEL; wzPEL],[0; -d_pelvis/2; 0]);
+    %         dr_dot = dot((xhat(idx_vel_RA)-(xhat(idx_vel_MP) + v_RHP_MP__N)),r_RA_RHP/norm(r_RA_RHP));
+    %         Zr = (d_rtibia^2+d_rfemur^2-dr^2)/(2*d_rtibia*d_rfemur);
+    %         Zr_dot = (-dr*dr_dot)/(d_rtibia*d_rfemur);
+    %         w_RKN_scl = Zr_dot/(1-Zr^2)^(0.5);
+    
+    %qRKN = -qRKN;
     %w_KN_scl is a scalar value of the knee joint angular velocity
-%     w_RKN_scl = wyRTIB + 2*(q1RTIB*q4RTIB-q2RTIB*q3RTIB)*(wxRTIB*cos(qRKN)+...
-%         wzRTIB*sin(qRKN))/(2*sin(qRKN)*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)+...
-%         cos(qRKN)*(-1+2*q1RTIB^2+2*q2RTIB^2));
+    %     w_RKN_scl = wyRTIB + 2*(q1RTIB*q4RTIB-q2RTIB*q3RTIB)*(wxRTIB*cos(qRKN)+...
+    %         wzRTIB*sin(qRKN))/(2*sin(qRKN)*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)+...
+    %         cos(qRKN)*(-1+2*q1RTIB^2+2*q2RTIB^2));
     %pelvis(MP)-ankle L2 norm (distance): [est; inst. cent. calc; tru]
     %using tibia and N frames
-%     w_N_RTIB__RTIB = [wxRTIB; wyRTIB; wzRTIB];
-%     w_N_RTIB__N = RTIB_CS*w_N_RTIB__RTIB;
-%     v_RHP_N__N = x(idx_vel_MP) + PELV_CS*cross([wxPEL; wyPEL; wzPEL],[0;-d_pelvis/2;0]);
-%     ICRD_RA = cross(w_N_RTIB__N,v_RHP_N__N)/(dot(w_N_RTIB__N,w_N_RTIB__N));
-%     PAR(:,k) = [norm(x(idx_pos_RA)-x(idx_pos_MP)); ICRD_RA];
+    %     w_N_RTIB__RTIB = [wxRTIB; wyRTIB; wzRTIB];
+    %     w_N_RTIB__N = RTIB_CS*w_N_RTIB__RTIB;
+    %     v_RHP_N__N = x(idx_vel_MP) + PELV_CS*cross([wxPEL; wyPEL; wzPEL],[0;-d_pelvis/2;0]);
+    %     ICRD_RA = cross(w_N_RTIB__N,v_RHP_N__N)/(dot(w_N_RTIB__N,w_N_RTIB__N));
+    %     PAR(:,k) = [norm(x(idx_pos_RA)-x(idx_pos_MP)); ICRD_RA];
     % using tibia and pelvis frames
     w_N_RTIB__RTIB = [wxRTIB; wyRTIB; wzRTIB];
     w_N_RTIB__N = RTIB_CS*w_N_RTIB__RTIB;
@@ -467,7 +467,7 @@ RFEM_z__N = RFEM_z;
 LFEM_z__TIB = LTIB_CS\LFEM_z__N;
 RFEM_z__TIB = RTIB_CS\RFEM_z__N;
 
-%global alpha_lk alpha_rk 
+%global alpha_lk alpha_rk
 % alpha_lk = atan2(-LFEM_z__TIB(1), -LFEM_z__TIB(3)) + 0.5*pi;
 % alpha_rk = atan2(-RFEM_z__TIB(1), -RFEM_z__TIB(3)) + 0.5*pi;
 alpha_lk = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
@@ -483,44 +483,44 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
     +d_rfemur*sin(alpha_rk)*RTIB_CS(:,1) ...
     -d_rtibia*RTIB_CS(:,3)) ];
 
-    LFEM_y = LTIB_CS(:,2);
-    RFEM_y = RTIB_CS(:,2);
-    
-    LFEM_x = cross(LFEM_y,LFEM_z);
-    RFEM_x = cross(RFEM_y,RFEM_z);
-    
-    LFEM_CS = [LFEM_x, LFEM_y, LFEM_z];
-    RFEM_CS = [RFEM_x, RFEM_y, RFEM_z];
-    
-    qLFEM = rotm2quat(LFEM_CS)';
-    qRFEM = rotm2quat(RFEM_CS)';
+LFEM_y = LTIB_CS(:,2);
+RFEM_y = RTIB_CS(:,2);
+
+LFEM_x = cross(LFEM_y,LFEM_z);
+RFEM_x = cross(RFEM_y,RFEM_z);
+
+LFEM_CS = [LFEM_x, LFEM_y, LFEM_z];
+RFEM_CS = [RFEM_x, RFEM_y, RFEM_z];
+
+qLFEM = rotm2quat(LFEM_CS)';
+qRFEM = rotm2quat(RFEM_CS)';
 
 %% MG-generated Pos constraint
 %     q1PEL = xhat(10);
 %     q2PEL = xhat(11);
 %     q3PEL = xhat(12);
 %     q4PEL = xhat(13);
-%     
+%
 %     q1LTIB = xhat(26);
 %     q2LTIB = xhat(27);
 %     q3LTIB = xhat(28);
 %     q4LTIB = xhat(29);
-% 
+%
 %     q1RTIB = xhat(42);
 %     q2RTIB = xhat(43);
 %     q3RTIB = xhat(44);
 %     q4RTIB = xhat(45);
-% 
+%
 %     qLKN = alpha_lk;
 %     qRKN = alpha_rk;
-%     
+%
 %  p_LTIBo_PELo =[(-2*d_ltibia*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)-d_pelvis*(q1PEL*q4PEL-q2PEL*q3PEL)...
 % -d_lfemur*(2*cos(qLKN)*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)-sin(qLKN)*(-1+2*q1LTIB^2+2*q2LTIB^2)));...
 %  + (2*d_ltibia*(q1LTIB*q2LTIB-q3LTIB*q4LTIB)+0.5*d_pelvis*(-1+2*q1PEL^2+2*q3PEL^2)...
 %  +2*d_lfemur*(sin(qLKN)*(q1LTIB*q4LTIB+q2LTIB*q3LTIB)+cos(qLKN)*(q1LTIB*q2LTIB-q3LTIB*q4LTIB)));...
 %  + (d_pelvis*(q1PEL*q2PEL+q3PEL*q4PEL)-d_ltibia*(-1+2*q1LTIB^2+2*q4LTIB^2)...
 %  -d_lfemur*(2*sin(qLKN)*(q1LTIB*q3LTIB-q2LTIB*q4LTIB)+cos(qLKN)*(-1+2*q1LTIB^2+2*q4LTIB^2)))];
-% %  
+% %
 %   p_RTIBo_PELo = [(d_pelvis*(q1PEL*q4PEL-q2PEL*q3PEL)-2*d_rtibia*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)...
 %       -d_rfemur*(2*cos(qRKN)*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)-sin(qRKN)*(-1+2*q1RTIB^2+2*q2RTIB^2)));...
 %       + (2*d_rtibia*(q1RTIB*q2RTIB-q3RTIB*q4RTIB)+2*d_rfemur*(sin(qRKN)*(q1RTIB*q4RTIB+q2RTIB*q3RTIB)...
@@ -529,49 +529,49 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
 %       -d_rfemur*(2*sin(qRKN)*(q1RTIB*q3RTIB-q2RTIB*q4RTIB)+cos(qRKN)*(-1+2*q1RTIB^2+2*q4RTIB^2)))];
 %  d_k = [p_LTIBo_PELo;
 %         p_RTIBo_PELo];
- %% Vel-Level Knee-Joint Constraint
-    %% Variable assignment based on knee cosntructing constraints
-    %(left or right knee)
-    
-    l_pel = d_pelvis;
-    
-    wxPEL = xhat(14);
-    wyPEL = xhat(15);
-    wzPEL = xhat(16);
-    
-    q1PEL = xhat(10);
-    q2PEL = xhat(11);
-    q3PEL = xhat(12);
-    q4PEL = xhat(13);
-    
-    
-    dxv = [xhat(20) - xhat(4); %left ankle_pel rel vel in Nx
-        xhat(21) - xhat(5); % || in Ny
-        xhat(22) - xhat(6);%  || in Nz
-        xhat(36) - xhat(4);% right ankle _pel rel vel in Nx
-        xhat(37) - xhat(5);%    || Ny
-        xhat(38) - xhat(6)];%   || Nz
-    
-    %% left knee
-        
+%% Vel-Level Knee-Joint Constraint
+%% Variable assignment based on knee cosntructing constraints
+%(left or right knee)
+
+l_pel = d_pelvis;
+
+wxPEL = xhat(14);
+wyPEL = xhat(15);
+wzPEL = xhat(16);
+
+q1PEL = xhat(10);
+q2PEL = xhat(11);
+q3PEL = xhat(12);
+q4PEL = xhat(13);
+
+
+dxv = [xhat(20) - xhat(4); %left ankle_pel rel vel in Nx
+    xhat(21) - xhat(5); % || in Ny
+    xhat(22) - xhat(6);%  || in Nz
+    xhat(36) - xhat(4);% right ankle _pel rel vel in Nx
+    xhat(37) - xhat(5);%    || Ny
+    xhat(38) - xhat(6)];%   || Nz
+
+%% left knee
+
 %         l_tib = d_ltibia;
 %         l_fem = d_lfemur;
-        
-        qLKN = alpha_lk;
-        
-        wxLTIB = xhat(30);
-        wyLTIB = xhat(31);
-        wzLTIB = xhat(32);
-        
-        q1LTIB = xhat(26);
-        q2LTIB = xhat(27);
-        q3LTIB = xhat(28);
-        q4LTIB = xhat(29);
-       
-        q1LFEM = qLFEM(1);
-        q2LFEM = qLFEM(2);
-        q3LFEM = qLFEM(3);
-        q4LFEM = qLFEM(4);
+
+qLKN = alpha_lk;
+
+wxLTIB = xhat(30);
+wyLTIB = xhat(31);
+wzLTIB = xhat(32);
+
+q1LTIB = xhat(26);
+q2LTIB = xhat(27);
+q3LTIB = xhat(28);
+q4LTIB = xhat(29);
+
+q1LFEM = qLFEM(1);
+q2LFEM = qLFEM(2);
+q3LFEM = qLFEM(3);
+q4LFEM = qLFEM(4);
 
 %vector diff form
 grlib.est.genLAMPRelVel_v4
@@ -587,51 +587,51 @@ grlib.est.genLAMPRelVel_v4
 %         dl_dot = dot((xhat(idx_vel_LA)-(xhat(idx_vel_MP)+v_LHP_MP__N)),r_LA_LHP/norm(r_LA_LHP));
 %         Zl = (d_ltibia^2+d_lfemur^2-dl^2)/(2*d_ltibia*d_lfemur);
 %         Zl_dot = (-dl*dl_dot)/(d_ltibia*d_lfemur);
-        %w_LKN_scl = Zl_dot/(1-Zl^2)^(0.5);
-        
-        %              w_LKN_scl = wyLTIB + 2*(q1LTIB*q4LTIB-q2LTIB*q3LTIB)*(wxLTIB*cos(qLKN)+...
+%w_LKN_scl = Zl_dot/(1-Zl^2)^(0.5);
+
+%              w_LKN_scl = wyLTIB + 2*(q1LTIB*q4LTIB-q2LTIB*q3LTIB)*(wxLTIB*cos(qLKN)+...
 %         wzLTIB*sin(qLKN))/(2*sin(qLKN)*(q1LTIB*q3LTIB+q2LTIB*q4LTIB)+...
 %         cos(qLKN)*(-1+2*q1LTIB^2+2*q2LTIB^2));
 
-    %w_KN_scl = -w_KN_scl;
-    %relVel_ANK_PELo_N is the relative velocities of the ankle from the pelvis,
-    %described in frame N (eqivalent to gfr)
-    
-    %gen std vel. eq.
-    %grlib.est.genLAMPRelVel_v2
-    
-    %manually generate rel vel from mp (diff pos-level pin joint eq)
-    %grlib.est.genLAMPRelVel_v3
-    
-    %Golden Rule Differentiation
+%w_KN_scl = -w_KN_scl;
+%relVel_ANK_PELo_N is the relative velocities of the ankle from the pelvis,
+%described in frame N (eqivalent to gfr)
+
+%gen std vel. eq.
+%grlib.est.genLAMPRelVel_v2
+
+%manually generate rel vel from mp (diff pos-level pin joint eq)
+%grlib.est.genLAMPRelVel_v3
+
+%Golden Rule Differentiation
 %     relVel_LANK_PELo_N = PELV_CS*cross([wxPEL;wyPEL;wzPEL],[0; d_pelvis/2; 0])...
 %         -LTIB_CS*cross(([wxLTIB; wyLTIB; wzLTIB]+[0; w_LKN_scl; 0]),[0;0;d_lfemur])...
 %         -LTIB_CS*cross([wxLTIB; wyLTIB; wzLTIB],[0;0;d_ltibia]);
-%     
-    %gen manual velocity eq
-    %grlib.est.genLAMPRelVel
-    
-        d_k_v(1:3,1) = relVel_LANK_PELo_N;
+%
+%gen manual velocity eq
+%grlib.est.genLAMPRelVel
 
-     %% right knee
+d_k_v(1:3,1) = relVel_LANK_PELo_N;
+
+%% right knee
 %         l_tib = d_rtibia;
 %         l_fem = d_rfemur;
-        
-        qRKN = alpha_rk;
-        
-        wxRTIB = xhat(46);
-        wyRTIB = xhat(47);
-        wzRTIB = xhat(48);
-        
-        q1RTIB = xhat(42);
-        q2RTIB = xhat(43);
-        q3RTIB = xhat(44);
-        q4RTIB = xhat(45);
 
-        q1RFEM = qRFEM(1);
-        q2RFEM = qRFEM(2);
-        q3RFEM = qRFEM(3);
-        q4RFEM = qRFEM(4);
+qRKN = alpha_rk;
+
+wxRTIB = xhat(46);
+wyRTIB = xhat(47);
+wzRTIB = xhat(48);
+
+q1RTIB = xhat(42);
+q2RTIB = xhat(43);
+q3RTIB = xhat(44);
+q4RTIB = xhat(45);
+
+q1RFEM = qRFEM(1);
+q2RFEM = qRFEM(2);
+q3RFEM = qRFEM(3);
+q4RFEM = qRFEM(4);
 
 %vector diff form
 grlib.est.genRAMPRelVel_v4
@@ -647,31 +647,31 @@ grlib.est.genRAMPRelVel_v4
 %         Zr = (d_rtibia^2+d_rfemur^2-dr^2)/(2*d_rtibia*d_rfemur);
 %         Zr_dot = (-dr*dr_dot)/(d_rtibia*d_rfemur);
 %         w_RKN_scl = Zr_dot/(1-Zr^2)^(0.5);
-%     
-    %qRKN = -qRKN;
-    %w_KN_scl is a scalar value of the knee joint angular velocity
-    %w_RKN_scl = wyRTIB + 2*(q1RTIB*q4RTIB-q2RTIB*q3RTIB)*(wxRTIB*cos(qRKN)+...
+%
+%qRKN = -qRKN;
+%w_KN_scl is a scalar value of the knee joint angular velocity
+%w_RKN_scl = wyRTIB + 2*(q1RTIB*q4RTIB-q2RTIB*q3RTIB)*(wxRTIB*cos(qRKN)+...
 %         wzRTIB*sin(qRKN))/(2*sin(qRKN)*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)+...
 %         cos(qRKN)*(-1+2*q1RTIB^2+2*q2RTIB^2));
-    %w_RKN_scl = -w_RKN_scl;
-    %relVel_ANK_PELo_N is the relative velocities of the ankle from the pelvis,
-    %described in frame N (eqivalent to gfr)
-    
-    %gen std. vel. from MP
-    %grlib.est.genRAMPRelVel_v2
-    
-    %manual generate rel vel from MP
-    %grlib.est.genRAMPRelVel_v3
-    
-    %Golden Rule Differentiation
+%w_RKN_scl = -w_RKN_scl;
+%relVel_ANK_PELo_N is the relative velocities of the ankle from the pelvis,
+%described in frame N (eqivalent to gfr)
+
+%gen std. vel. from MP
+%grlib.est.genRAMPRelVel_v2
+
+%manual generate rel vel from MP
+%grlib.est.genRAMPRelVel_v3
+
+%Golden Rule Differentiation
 %     relVel_RANK_PELo_N = PELV_CS*cross([wxPEL;wyPEL;wzPEL],[0; -d_pelvis/2; 0])...
 %         -RTIB_CS*cross(([wxRTIB; wyRTIB; wzRTIB]+[0; w_RKN_scl; 0]),[0;0;d_rfemur])...
 %         -RTIB_CS*cross([wxRTIB; wyRTIB; wzRTIB],[0;0;d_rtibia]);
-%     
-    %gen right ankle rel vel from MP
-    %grlib.est.genRAMPRelVel
-        d_k_v(4:6,1) = relVel_RANK_PELo_N;
-    
+%
+%gen right ankle rel vel from MP
+%grlib.est.genRAMPRelVel
+d_k_v(4:6,1) = relVel_RANK_PELo_N;
+
 
 %% construct constraint for fmincon format
 % res = d_k - D*xhat;
@@ -691,7 +691,7 @@ qDotLA = calcqdot(xhat(idx_q_LA),xhat(idx_w_LA));
 qDotLARes = xhat(idx_q_LA)'*qDotLA;
 qDotRA = calcqdot(xhat(idx_q_RA),xhat(idx_w_RA));
 qDotRARes = xhat(idx_q_RA)'*qDotRA;
-%constrain augmented qFem, wFem 
+%constrain augmented qFem, wFem
 
 qLFEMRes = qLFEM'*qLFEM - 1;
 qRFEMRes = qRFEM'*qRFEM - 1;
@@ -702,18 +702,18 @@ qDotRFEM = calcqdot(qRFEM,[wxRFEM;wyRFEM;wzRFEM]);
 qDotRFEMRes = qDotRFEM'*qDotRFEM;
 
 %ceq = [ pRes;
- ceq = [ pRes;
-        kq*qMPRes;
-        kq*qLARes;
-        kq*qRARes;
-        kq*qDotMPRes;
-        kq*qDotLARes;
-        kq*qDotRARes];
+ceq = [ pRes;
+    kq*qMPRes;
+    kq*qLARes;
+    kq*qRARes;
+    kq*qDotMPRes;
+    kq*qDotLARes;
+    kq*qDotRARes];
 %         kq*qLFEMRes;
 %         kq*qDotLFEMRes;
 %         kq*qRFEMRes;
 %         kq*qDotRFEMRes];
-    
+
 
 maxFootVel = 10; %m/s
 maxKNAngVel = 10; %rad/s
@@ -721,7 +721,7 @@ maxKNAngVel = 10; %rad/s
 %     norm(xhat(idx_vel_RA))-maxFootVel];
 qSafetyFactor = deg2rad(3);
 %c = [];
-  c = [-(alpha_lk-deg2rad(2));
+c = [-(alpha_lk-deg2rad(2));
     (alpha_lk+deg2rad(20)) - pi;
     -(alpha_rk-deg2rad(2));
     (alpha_rk+deg2rad(20)) - pi;
@@ -743,7 +743,7 @@ qSafetyFactor = deg2rad(3);
 end
 
 function qdot = calcqdot(q,w)
-    e0 = q(1); e1 = q(2); e2 = q(3); e3 = q(4);
+e0 = q(1); e1 = q(2); e2 = q(3); e3 = q(4);
 epm = [-e1 -e2 -e3;...
     e0 -e3 e2;...
     e3 e0 -e1;...
