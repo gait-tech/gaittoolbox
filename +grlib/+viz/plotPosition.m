@@ -14,10 +14,12 @@ function plotPosition(bodys, parts)
     end
     
     n = length(parts)*3;
+    nBody = length(bodys);
     plotIndex = 1;
+    axisName = {'x', 'y', 'z'};
     
     for i=1:length(parts)
-        for j=1:length(bodys)
+        for j=1:nBody
             data = bodys{j}.(parts{i});
             t = (1:length(data(:,1)))';
             t = t / bodys{j}.fs;
@@ -33,20 +35,21 @@ function plotPosition(bodys, parts)
                  strcat(bodys{j}.xyzColor{3}, bodys{j}.lnSymbol));
         end
         
-        subplot(n,1,plotIndex);
-        title(strcat(parts{i}, ' x'));
-        legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
-        ylabel(bodys{1}.posUnit);
+        if nBody == 2
+            erVal = grlib.rmse(bodys{1}.(parts{i})-bodys{2}.(parts{i}));
+        end
         
-        subplot(n,1,plotIndex+1);
-        title(strcat(parts{i}, ' y'));
-        legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
-        ylabel(bodys{1}.posUnit);
-        
-        subplot(n,1,plotIndex+2);
-        title(strcat(parts{i}, ' z'));
-        legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
-        ylabel(bodys{1}.posUnit);
+        for j=1:3
+            subplot(n,1,plotIndex+j-1);
+            if nBody == 2
+                title(sprintf('%s %c (rmse=%.6f %c)', parts{i}, ...
+                              axisName{j}, erVal(j), bodys{1}.posUnit));
+            else
+                title(sprintf('%s %c', parts{i}, axisName{j}));
+            end
+            legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
+            ylabel(bodys{1}.posUnit);
+        end
         
         plotIndex = plotIndex + 3;
     end

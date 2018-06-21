@@ -41,10 +41,10 @@ if data == dataSim
     isConstr = true;
     
     tStart = tic;
-    N_MP = 200; %number rof timesteps to test on KF
+    N_MP = 400; %number rof timesteps to test on KF
     %TODO: return removed estimated values of knee and femur pos/or
     trng = sIdx0:sIdx0+N_MP-1;
-    [x_rec, xa_rec, qFEM, qlkVec, qrkVec] = grlib.est.cukf_v9(x0,P,Q,R,N_MP,nMeas,gfr_acc(trng,:),fs, qPelvisEst(trng,:),...
+    [x_rec, xa_rec, qFEM, qlkVec, qrkVec, w_KN, PAR] = grlib.est.cukf_v9(x0,P,Q,R,N_MP,nMeas,gfr_acc(trng,:),fs, qPelvisEst(trng,:),...
         qLankleEst(trng,:), qRankleEst(trng,:),dataS.Pelvis.gyr(trng,:), dataS.L_LowLeg.gyr(trng,:), dataS.R_LowLeg.gyr(trng,:),...
         d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia,...
         isConstr);
@@ -106,12 +106,28 @@ tsidx0_ = 1:N_MP;
     %resultsIdx = resultsIdx + 1;
     
 % end
-grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'LA')
-grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA')
-figure
-plot(rad2deg(qlkVec))
-figure
-plot(rad2deg(qrkVec))
+%plot rel pos of ankles from MP
+savePlots = true;
+folderName = strcat(pwd,'/Vel_Constr_Plots');
+plotRes = false;
+
+grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'LA',plotRes)
+if(savePlots) savefig(gcf, fullfile(folderName, 'Pos LA_MP')); end
+grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA',plotRes)
+if(savePlots) savefig(gcf, fullfile(folderName, 'Pos RA_MP')); end
+
+%plot rel vel of ankles from MP
+grlib.viz.plotRelVel(N_MP,fs,nStatepSense,actBody,estBody,x_rec,'Vel LA/MP','LA')
+if(savePlots) savefig(gcf, fullfile(folderName, 'Vel LA_MP')); end
+grlib.viz.plotRelVel(N_MP,fs,nStatepSense,actBody,estBody,x_rec,'Vel RA/MP','RA')
+if(savePlots) savefig(gcf, fullfile(folderName, 'Vel RA_MP')); end
+
+%plot knee joint angle and angular vel.
+grlib.viz.plotQW(fs,'Left Knee Joint',qlkVec,w_KN(1,:))
+if(savePlots) savefig(gcf, fullfile(folderName, 'Left Knee Joint')); end
+grlib.viz.plotQW(fs,'Right Knee Joint',qrkVec,w_KN(2,:))
+if(savePlots) savefig(gcf, fullfile(folderName, 'Right Knee Joint')); end
+
 elseif data == dataTCD
     load('cukf_v6_testfile_txpexp01.mat')
 %         %% Swap y and z coordinates of pos data for TCD 
@@ -136,8 +152,8 @@ elseif data == dataTCD
     nStates=nStatepSense*nSense;      %number of states per sensor = 9: xyz pos, vel, acc
     nMeas = nMeaspSense*nSense; % xyz acc_mp
     %sf = 250; %smaple frequency in Hz
-    q=0.1;    %std of process noise
-    r=0.4;    %std of measurement noise
+    q=0.8;    %std of process noise
+    r=0.8;    %std of measurement noise
     Q=q^2*eye(nStates); % covariance of process
     R=r^2*eye(nMeas);        % covariance of measurement
     sIdx0 = 1;
@@ -152,7 +168,7 @@ elseif data == dataTCD
     isConstr = true;
     
     tStart = tic;
-    N_MP = 1000; %number of timesteps to test on KF
+    N_MP = 100; %number of timesteps to test on KF
     %TODO: return removed estimated values of knee and femur pos/or
     trng = sIdx0:sIdx0+N_MP-1;
     [x_rec, xa_rec, qFEM] = grlib.est.cukf_v9(x0,P,Q,R,N_MP,nMeas,gfr_acc(trng,:),fs, qPelvisEst(trng,:),...

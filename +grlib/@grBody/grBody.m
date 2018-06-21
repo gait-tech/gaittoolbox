@@ -54,7 +54,18 @@ classdef grBody < matlab.mixin.Copyable
         oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'};
     end
     
+    methods (Static)
+        theta = calcJointAngles(prox, dist);
+    end
+    
     methods (Hidden)
+        % ======================================================================
+        %> @brief Return the minimum and maximum value of the corresponding coordinate
+        %>
+        %> @param idx 1 = x, 2 = y, 3 = z
+        %>
+        %> @return [low high]
+        % ======================================================================
         function out = lim(obj, idx)
             low = inf; high = -inf;
             
@@ -113,8 +124,25 @@ classdef grBody < matlab.mixin.Copyable
             
             ptsX = pts(:,1); ptsY = pts(:,2); ptsZ = pts(:,3);
         end
+
+        function theta = calcJointAnglesLHip(obj)
+            theta = grlib.grBody.calcJointAngles(obj.qRPV, obj.qLTH);
+        end
+        
+        function theta = calcJointAnglesRHip(obj)
+            theta = grlib.grBody.calcJointAngles(obj.qRPV, obj.qRTH);
+        end
+
+        function theta = calcJointAnglesLKnee(obj)
+            theta = grlib.grBody.calcJointAngles(obj.qLTH, obj.qLSK);
+        end
+        
+        function theta = calcJointAnglesRKnee(obj)
+            theta = grlib.grBody.calcJointAngles(obj.qRTH, obj.qRSK);
+        end
         
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);
+        out = toWorldFrame(obj, pos, ori);
     end
 end

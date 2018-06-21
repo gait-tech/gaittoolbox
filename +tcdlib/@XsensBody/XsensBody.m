@@ -48,5 +48,6 @@ classdef XsensBody < handle
     methods (Static)
         obj = loadSensorFile(fname)
         obj = loadCalib(fname)
+        obj = loadMTExport(name, options)
     end
 end

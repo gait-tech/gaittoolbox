@@ -1,13 +1,13 @@
 % Show the absolute and relative position
-load('C:\Users\z5151460\workspace\gaitrecon\experiments\tcd-s5-walking2-Dxxx+ZUPT+C001.mat')
+fs=100;
 updateFigureContents('Hips');
-clf; grlib.viz.plotStateComparison(estState2, actState, 1, 60);
+clf; grlib.viz.plotStateComparison(estState2, actState, 1, fs);
 
 updateFigureContents('LAnkle');
-clf; grlib.viz.plotStateComparison(estState2, actState, 11, 60);
+clf; grlib.viz.plotStateComparison(estState2, actState, 11, fs);
 
 updateFigureContents('RAnkle');
-clf; grlib.viz.plotStateComparison(estState2, actState, 21, 60);
+clf; grlib.viz.plotStateComparison(estState2, actState, 21, fs);
 
 estStateRel2 = grlib.est.changeStateRefFrame(estState2);
 actStateRel = grlib.est.changeStateRefFrame(actState);
@@ -17,7 +17,6 @@ clf; grlib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
 updateFigureContents('RAnkleRel');
 clf; grlib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
 
-load('C:\Users\z5151460\workspace\gaitrecon\experiments\tcd-s5-walking2-Dxxx+ZUPT+C002.mat')
 updateFigureContents('Hips2');
 clf; grlib.viz.plotStateComparison(estState2, actState, 1, 60);
 
@@ -75,24 +74,56 @@ actBodyRel = actBody.changeRefFrame('MIDPEL');
 estBodyRel = estBody.changeRefFrame('MIDPEL');
 grlib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'});
 
+updateFigureContents('Joint Angles (Hips)');
+grlib.viz.plotJointAngles({actBody, estBody}, {'LHip', 'RHip'})
+
+updateFigureContents('Joint Angles (Knee)');
+grlib.viz.plotJointAngles({actBody, estBody}, {'LKnee', 'RKnee'})
+
+% Constraint Info
+d_pelvis = norm(actBody.LFEP(1,:) - actBody.RFEP(1,:));
+d_lfemur = norm(actBody.LFEP(1,:) - actBody.LFEO(1,:));
+d_rfemur = norm(actBody.RFEP(1,:) - actBody.RFEO(1,:));
+d_ltibia = norm(actBody.LFEO(1,:) - actBody.LTIO(1,:));
+d_rtibia = norm(actBody.RFEO(1,:) - actBody.RTIO(1,:));
+
+updateFigureContents('Constraint Check');
+grlib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, ...
+    d_lfemur, d_rfemur, d_ltibia, d_rtibia);
+hold on;
+cstrStateL = sum(estState2.cstrStateU(:,1:3), 2) > 0;
+cstrStateLV = zeros(estBody.nSamples, 1);
+cstrStateLV(~cstrStateL) = nan;
+cstrStateR = sum(estState2.cstrStateU(:,4:6), 2) > 0;
+cstrStateRV = zeros(estBody.nSamples, 1);
+cstrStateRV(~cstrStateR) = nan;
+t = 1:estBody.nSamples;
+scatter(t, cstrStateLV, '<c'); scatter(t, cstrStateRV, '>c');
+legend('Hips', 'LFemur', 'RFemur', 'LTibia', 'RTibia', 'LCstr', 'RCstr');
+
 % Animation
+updateFigureContents('Animation');
+xlabel('x'); ylabel('y'); zlabel('z');
 actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
 i = 1;
 while i <= actBody.nSamples
+    [az, el] = view;
     clf; grid;
     xlim(actBodyLimits(1:2)); 
     ylim(actBodyLimits(3:4)); 
     zlim(actBodyLimits(5:6));  
     xlabel('x'); ylabel('y'); zlabel('z');
-    view(20, 30);
-    grlib.viz.plotLowerBody(actBody, i);
-    i = i+1;
+    view(az, el);
+    grlib.viz.plotLowerBody(actBody, i, true, false);
+    i = i+5;
     pause(1/1000);
 end
 
 % Animation
 updateFigureContents('Animation');
 xlabel('x'); ylabel('y'); zlabel('z');
+estBodyRel = estBody.changeRefFrame('MIDPEL');
+estBody2 = estBodyRel.toWorldFrame(estBody.MIDPEL, estBody.qRPV);
 estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
 i = 1; az = 0; el = 180;
 while i <= estBody.nSamples
@@ -102,22 +133,89 @@ while i <= estBody.nSamples
     ylim(estBodyLimits(3:4)); 
     zlim(estBodyLimits(5:6));  
     view(az, el);
-    grlib.viz.plotLowerBody(estBody, i);
-    i = i+1;
+    grlib.viz.plotLowerBody(estBody, i, true, false);
+    i = i+5;
+    pause(1/1000);
+end
+
+% Animation
+updateFigureContents('Animation');
+xlabel('x'); ylabel('y'); zlabel('z');
+estBodyRel = estBody.changeRefFrame('MIDPEL');
+estBody2 = estBodyRel.toWorldFrame(actBody.MIDPEL, actBody.qRPV);
+estBodyLimits = [estBody2.xlim() estBody2.ylim() estBody2.zlim()];
+i = 1; az = 0; el = 180;
+while i <= estBody.nSamples
+    [az, el] = view;
+    clf; grid;
+    xlim(estBodyLimits(1:2)); 
+    ylim(estBodyLimits(3:4)); 
+    zlim(estBodyLimits(5:6));  
+    view(az, el);
+    grlib.viz.plotLowerBody(estBody2, i, true, false);
+    i = i+5;
+    pause(1/1000);
+end
+
+% Animation
+updateFigureContents('Animation');
+xlabel('x'); ylabel('y'); zlabel('z');
+estBodyRel = estBody.changeRefFrame('MIDPEL');
+actBodyRel = actBody.changeRefFrame('MIDPEL');
+estBody2 = estBodyRel.toWorldFrame(actBody.MIDPEL, actBody.qRPV);
+actBody2 = actBodyRel.toWorldFrame(actBody.MIDPEL+[1 0 0], actBody.qRPV);
+estBodyLimits = [estBody2.xlim()+[-1 +1] estBody2.ylim()+[-1 +1] estBody2.zlim()];
+i = 1; az = 0; el = 180;
+while i <= estBody.nSamples
+    [az, el] = view;
+    clf; grid;
+    xlim(estBodyLimits(1:2)); 
+    ylim(estBodyLimits(3:4)); 
+    zlim(estBodyLimits(5:6));  
+    xlabel('x'); ylabel('y'); zlabel('z');
+    view(az, el);
+    grlib.viz.plotLowerBody(estBody2, i, true, false);
+    grlib.viz.plotLowerBody(actBody2, i, true, false);
+    i = i+20;
     pause(1/1000);
 end
 
 % Act and Est Body Shadowing
 updateFigureContents('Act and Est Shadowing');
 i = 1;
+actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
 az = 0; el = 0;
 while i <= actBody.nSamples
     [az, el] = view;
     clf; grid;
+    xlim(actBodyLimits(1:2)); 
+    ylim(actBodyLimits(3:4)); 
+    zlim(actBodyLimits(5:6));
     xlabel('x'); ylabel('y'); zlabel('z');
     view(az, el);
-    grlib.viz.plotLowerBody(estBody, i, true);
-    grlib.viz.plotLowerBody(actBody, i, true);
+    grlib.viz.plotLowerBody(estBody, i, true, false);
+    grlib.viz.plotLowerBody(actBody, i, true, false);
+    i = i+10;
+    pause(1/1000);
+end
+
+% Act and Est Rel Body Shadowing
+updateFigureContents('Act and Est Rel Shadowing');
+actBodyRel = actBody.changeRefFrame('MIDPEL');
+estBodyRel = estBody.changeRefFrame('MIDPEL');
+actBodyRelLimits = [actBodyRel.xlim() actBodyRel.ylim() actBodyRel.zlim()];
+i = 1;
+az = 0; el = 0;
+while i <= actBody.nSamples
+    [az, el] = view;
+    clf; grid;
+    xlim(actBodyRelLimits(1:2)); 
+    ylim(actBodyRelLimits(3:4)); 
+    zlim(actBodyRelLimits(5:6));  
+    xlabel('x'); ylabel('y'); zlabel('z');
+    view(az, el);
+    grlib.viz.plotLowerBody(estBodyRel, i);
+    grlib.viz.plotLowerBody(actBodyRel, i);
     i = i+10;
     pause(1/1000);
 end
@@ -140,27 +238,31 @@ end
 %     
 %         
 updateFigureContents('Animation');
-xlabel('x'); ylabel('y'); zlabel('z');
-actBodyLimitsRel = [actBodyRel.xlim() actBodyRel.ylim() actBodyRel.zlim()];
-for i=1:actBodyRel.nSamples
+actBodyRelLimits = [actBodyRel.xlim() actBodyRel.ylim() actBodyRel.zlim()];
+i = 1;
+while i <= actBody.nSamples
     clf; grid;
-    xlim(actBodyLimitsRel(1:2)); 
-    ylim(actBodyLimitsRel(3:4)); 
-    zlim(actBodyLimitsRel(5:6));  
-    view(40, 30);
-    grlib.viz.plotLowerBody(actBodyRel, i);
+    xlim(actBodyRelLimits(1:2)); 
+    ylim(actBodyRelLimits(3:4)); 
+    zlim(actBodyRelLimits(5:6));  
+    xlabel('x'); ylabel('y'); zlabel('z');
+    view(20, 30);
+    grlib.viz.plotLowerBody(actBodyRel, i, true, false);
+    i = i+5;
     pause(1/1000);
 end
 
 updateFigureContents('Animation');
 xlabel('x'); ylabel('y'); zlabel('z');
 estBodyLimitsRel = [estBodyRel.xlim() estBodyRel.ylim() estBodyRel.zlim()];
-for i=1:estBodyRel.nSamples
+i=10;
+while i <= estBodyRel.nSamples
     clf; grid;
     xlim(estBodyLimitsRel(1:2)); 
     ylim(estBodyLimitsRel(3:4)); 
     zlim(estBodyLimitsRel(5:6));  
     view(40, 30);
-    grlib.viz.plotLowerBody(estBodyRel, i);
+    grlib.viz.plotLowerBody(estBodyRel, i, true, false);
+    i = i+20;
     pause(1/1000);
 end

@@ -1,5 +1,5 @@
 % ======================================================================
-%> @brief Load .sensors file
+%> @brief Load .sensors file from Total Capture dataset
 %>
 %> Load .sensors file and returns struct with fields:
 %> Head, Sternum, Pelvis, L_UpArm, R_UpArm, L_LowArm, R_LowArm, L_UpLeg, 

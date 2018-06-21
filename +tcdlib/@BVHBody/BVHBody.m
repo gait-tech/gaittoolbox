@@ -35,12 +35,14 @@ classdef BVHBody < handle
         RightLeg
         %> similar to RTIO
         RightFoot
+        RightToe
         %> similar to LFEP
         LeftUpLeg
         %> similar to LFEO
         LeftLeg
         %> similar to LTIO
         LeftFoot
+        LeftToe
         
         %> hip orientation (n x 4)
         qHips
@@ -61,9 +63,11 @@ classdef BVHBody < handle
         qRightUpLeg
         qRightLeg
         qRightFoot
+        qRightToe
         qLeftUpLeg
         qLeftLeg
         qLeftFoot
+        qLeftToe
     end
     
     methods
@@ -88,6 +92,7 @@ classdef BVHBody < handle
     end
     
     methods (Static)
+        obj = loadXsensBVHFile(fname, unit)
         obj = loadBVHFile(fname, unit)
         obj = loadOriPosFile(fname_ori, fname_pos, unit)
     end

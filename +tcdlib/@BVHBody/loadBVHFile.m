@@ -21,6 +21,7 @@ function obj = loadBVHFile(fname, unit)
         
     n = max(size(bvh_data));
     
+    qTCD2BM = rotm2quat([0 -1 0; -1 0 0; 0 0 -1]);
     for i=1:n
         if isprop(obj, bvh_data(i).name)
             v1 = bvh_data(i).name;
@@ -32,6 +33,7 @@ function obj = loadBVHFile(fname, unit)
                 obj.(v1) = (bvh_data(i).Dxyz)';
             end
             obj.(v2) = rotm2quat(bvh_data(i).trans(1:3,1:3,:));
+            obj.(v2) = quatmultiply(obj.(v2), qTCD2BM);
         end
     end
     

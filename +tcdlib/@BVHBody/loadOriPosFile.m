@@ -36,13 +36,14 @@ function obj = loadOriPosFile(fname_ori, fname_pos, unit)
     colN = length(var_names);
     data = fscanf(fileID_ori, '%f', [colN*4 Inf])';
     
+    qTCD2BM = rotm2quat([0 -1 0; -1 0 0; 0 0 -1]);
     for i=1:colN
         if isprop(obj, var_names{i})
             v = strcat('q', var_names{i});
             q = data(:,(i-1)*4+1:i*4);
             % rotm = quat2rotm(q);
 %             rotm = q';
-            obj.(v) = q(:,[4,1,2,3])';
+            obj.(v) = quatmultiply(q(:,[4,1,2,3])', qTCD2BM);
         end
     end
     fclose(fileID_ori);

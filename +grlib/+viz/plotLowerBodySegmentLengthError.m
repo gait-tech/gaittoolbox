@@ -3,7 +3,11 @@
 %> @author Luke Sy
 %> 
 %> @param body Body instance to be plotted
-%> @param Hips , RFemur, LFemur, RTibia, LTibia
+%> @param hips left and right hip distance
+%> @param lfemur left femur length
+%> @param rfemer right femur length
+%> @param ltibia left tibia length
+%> @param rtibia right tibia length
 %>
 %> @retval p plot object
 % ======================================================================

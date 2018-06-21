@@ -277,6 +277,9 @@ sI = 1;
     %             cs.zupt, cs.uwb, cs.hjc, cs.fdist, cs.kneeangle, cs.accbias);
     
     %% UKF modifications
+    save('cukf_v6_testfile_txpexp01')
+    runUKF = false;
+    if runUKF
     nSense = 3;
     nStates=9*nSense;      %number of states per sensor = 9: xyz pos, vel, acc
     nMeas = 3*nSense; % xyz acc_mp
@@ -296,16 +299,21 @@ sI = 1;
     gfr_acc = [gfr_acc_MP, gfr_acc_LA, gfr_acc_RA];
     isConstr = true;
     
+    tStart = tic;
     %N_MP = 50;
     %TODO: return removed estimated values of knee and femur pos/or
-    [x_rec, xa_rec, qFEM] = grlib.est.cukf_v4(x0,P,Q,R,N_MP,nMeas,gfr_acc,fs, qPelvisEst,...
+    [x_rec, xa_rec, qFEM] = grlib.est.cukf_v5(x0,P,Q,R,N_MP,nMeas,gfr_acc,fs, qPelvisEst,...
         qLankleEst, qRankleEst, d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia,...
         isConstr);
     
+    %save used inintermediate nonlinproj dev.
+%     save('nonlinproj_startvar','x0','P','Q','R','N_MP','nMeas','gfr_acc','fs', 'qPelvisEst',...
+%         'qLankleEst', 'qRankleEst', 'd_pelvis', 'd_lfemur', 'd_rfemur', 'd_ltibia', 'd_rtibia');
+%     
     x_pos_v2 = [x_rec(1:3,:)' x_rec(10:12,:)' x_rec(19:21,:)'];
     xa_rec_v2 = [xa_rec(1:3,:)' xa_rec(4:6,:)' xa_rec(7:9,:)' xa_rec(10:12,:)'];
     qFEM = qFEM';
-    
+    %idx for pos_v2
     MP_pos_Idx = [1:3];
     LA_pos_Idx = [4:6];
     RA_pos_Idx = [7:9];
@@ -314,13 +322,10 @@ sI = 1;
     LFEO_pos_Idx = [4:6];
     RFEP_pos_Idx = [7:9];
     RFEO_pos_Idx = [10:12];
-%     figure
-%     subplot(3,1,1)
-%     plot(x_rec(19,:)-x_rec(1,:))
-%     subplot(3,1,2)
-%     plot(x_rec(20,:)-x_rec(2,:))
-%     subplot(3,1,3)
-%     plot(x_rec(21,:)-x_rec(3,:))
+    
+    %isolate acc for ploting later
+    x_acc_v2 = [x_rec(7:9,:)' x_rec(16:18,:)' x_rec(25:27,:)'];
+    
     %grlib.viz.UKF_Rel_LPVA_plot
     %% other stuff
     estBody = grlib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
@@ -344,8 +349,26 @@ sI = 1;
 % end
 grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'LA')
 grlib.viz.UKF_Rel_LPVA_plot(N_MP,fs,actBody,estBody,'RA')
+grlib.viz.UKF_plotAccel('LA',gfr_acc_LA_filt, x_acc_v2(:,LA_pos_Idx), N_MP, fs)
+grlib.viz.UKF_plotAccel('RA',gfr_acc_RA_filt, x_acc_v2(:,RA_pos_Idx), N_MP, fs)
 grlib.struct2csvstr(results, true)
 %gelib.viz.plotPositionDiff(estBody, actBody, cell{'MIDPEL'; 'LTIO'; 'RTIO'})
+
+    estBody.frame = 'vicon';
+    estBodyRel = estBody.changeRefFrame('MIDPEL');
+    xlabel('x'); ylabel('y'); zlabel('z');
+    estBodyLimitsRel = [estBodyRel.xlim() estBodyRel.ylim() estBodyRel.zlim()];
+    for i=idx
+        clf; grid;
+        xlim(estBodyLimitsRel(1:2)); 
+        ylim(estBodyLimitsRel(3:4)); 
+        zlim(estBodyLimitsRel(5:6));  
+        view(40, 30);
+        grlib.viz.plotLowerBody(estBodyRel, i);
+        pause(1/1000);
+    end
+
+    end
 %% previous KF iterations
 %     [ x_pri_v2, x_pos_v2, t_dat_v2 ] = kf_3_kmus_v2(fs, ...
 %         sigma_acc, sigma_acc, sigma_acc, P, ...
@@ -399,7 +422,7 @@ grlib.struct2csvstr(results, true)
 %         grlib.viz.plotLowerBody(estBody, i);
 %         pause(1/1000);
 %     end
-%
+
 %     updateFigureContents('Animation');
 %     xlabel('x'); ylabel('y'); zlabel('z');
 %     actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
