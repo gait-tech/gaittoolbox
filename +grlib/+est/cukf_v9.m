@@ -8,7 +8,7 @@
 % z now containts [accel, quat, ang. vel]' x3 in order MP, LA, RA
 % therefore, z has length = 3x10 = 30
 
-function [ x_rec, xa_rec, qFEM, qlkVec, qrkVec, w_KN ] = cukf_v9(x,P,Q,R,N_MP,nMeas,acc,fs,...
+function [ x_rec, xa_rec, qFEM, qlkVec, qrkVec, w_KN, PAR ] = cukf_v9(x,P,Q,R,N_MP,nMeas,acc,fs,...
     q_MP, q_LA, q_RA, w_MP_gfr__s, w_LA_gfr__s, w_RA_gfr__s, d_pelvis, d_lfemur, d_rfemur,...
     d_ltibia, d_rtibia,isConstr)
 %% Unscented Kalman filter for state estimation of human lower limbs (a
@@ -144,8 +144,11 @@ LFEM_z__TIB = LTIB_CS\LFEM_z__N;
 RFEM_z__TIB = RTIB_CS\RFEM_z__N;
 
 %global qklVec arkVec 
-alpha_lk = atan2(-LFEM_z__TIB(1), -LFEM_z__TIB(3)) + 0.5*pi;
-alpha_rk = atan2(-RFEM_z__TIB(1), -RFEM_z__TIB(3)) + 0.5*pi;
+% alpha_lk = atan2(-LFEM_z__TIB(1), -LFEM_z__TIB(3)) + 0.5*pi;
+% alpha_rk = atan2(-RFEM_z__TIB(1), -RFEM_z__TIB(3)) + 0.5*pi;
+alpha_lk = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
+alpha_rk = atan2(-RFEM_z__TIB(3), -RFEM_z__TIB(1)) + 0.5*pi;
+
 qlkVec(k) = alpha_lk;
 qrkVec(k) = alpha_rk;
     LFEM_y = LTIB_CS(:,2);
@@ -253,8 +256,22 @@ qRKN_dot = wyRTIB - wyRFEM;
 %     w_RKN_scl = wyRTIB + 2*(q1RTIB*q4RTIB-q2RTIB*q3RTIB)*(wxRTIB*cos(qRKN)+...
 %         wzRTIB*sin(qRKN))/(2*sin(qRKN)*(q1RTIB*q3RTIB+q2RTIB*q4RTIB)+...
 %         cos(qRKN)*(-1+2*q1RTIB^2+2*q2RTIB^2));
-    
-    
+    %pelvis(MP)-ankle L2 norm (distance): [est; inst. cent. calc; tru]
+    %using tibia and N frames
+%     w_N_RTIB__RTIB = [wxRTIB; wyRTIB; wzRTIB];
+%     w_N_RTIB__N = RTIB_CS*w_N_RTIB__RTIB;
+%     v_RHP_N__N = x(idx_vel_MP) + PELV_CS*cross([wxPEL; wyPEL; wzPEL],[0;-d_pelvis/2;0]);
+%     ICRD_RA = cross(w_N_RTIB__N,v_RHP_N__N)/(dot(w_N_RTIB__N,w_N_RTIB__N));
+%     PAR(:,k) = [norm(x(idx_pos_RA)-x(idx_pos_MP)); ICRD_RA];
+    % using tibia and pelvis frames
+    w_N_RTIB__RTIB = [wxRTIB; wyRTIB; wzRTIB];
+    w_N_RTIB__N = RTIB_CS*w_N_RTIB__RTIB;
+    w_N_PEL__N = PELV_CS*[wxPEL;wyPEL;wzPEL];
+    w_PEL_RTIB__N = -w_N_PEL__N + w_N_RTIB__N;
+    v_RHP_N__N = x(idx_vel_MP) + PELV_CS*cross([wxPEL; wyPEL; wzPEL],[0;-d_pelvis/2;0]);
+    v_RA_RHP__N = x(idx_vel_RA) - v_RHP_N__N;
+    ICRD_RA = cross(w_PEL_RTIB__N,v_RA_RHP__N)/(dot(w_PEL_RTIB__N,w_PEL_RTIB__N));
+    PAR(:,k) = [norm(x(idx_pos_RA)-x(idx_pos_MP)); ICRD_RA];
     x_rec(:,k) = x;
     xa_rec(:,k) = [LFEP; LKNE; RFEP; RKNE];
     qFEM(:,k) = [qLFEM; qRFEM];
@@ -371,8 +388,8 @@ function y = L2Dist(x,x0,S)
 qW = 1;%norm(x0); %weighting for q deviation to account for diffin units between pos and q.
 % posW = 100;
 % velW = 0.00001;
-posW = 1;
-velW = 1e-3;
+posW = 10;
+velW = 1;
 %need to adapt x to rel pos of LA and RA to prevent large data recording
 %problems
 %posIdx = [];
@@ -385,7 +402,7 @@ res(posIdx) = posW*res(posIdx);
 res(velIdx) = velW*res(velIdx);
 %res = S\res; %add res*inv(S) to scale cost by certainty
 %n = 1000000; %have also tried 2,4,6,8,14,16,100,1000 around >= 14 greatly increases speed of finding solution, not much difference etween 100 and 1000
-n = 10000;
+n = 1000;
 
 %y = sqrt((res'*res));
 
@@ -451,8 +468,10 @@ LFEM_z__TIB = LTIB_CS\LFEM_z__N;
 RFEM_z__TIB = RTIB_CS\RFEM_z__N;
 
 %global alpha_lk alpha_rk 
-alpha_lk = atan2(-LFEM_z__TIB(1), -LFEM_z__TIB(3)) + 0.5*pi;
-alpha_rk = atan2(-RFEM_z__TIB(1), -RFEM_z__TIB(3)) + 0.5*pi;
+% alpha_lk = atan2(-LFEM_z__TIB(1), -LFEM_z__TIB(3)) + 0.5*pi;
+% alpha_rk = atan2(-RFEM_z__TIB(1), -RFEM_z__TIB(3)) + 0.5*pi;
+alpha_lk = atan2(-LFEM_z__TIB(3), -LFEM_z__TIB(1)) + 0.5*pi;
+alpha_rk = atan2(-RFEM_z__TIB(3), -RFEM_z__TIB(1)) + 0.5*pi;
 
 % setup the constraint equations
 d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
@@ -556,7 +575,7 @@ d_k = [ (d_pelvis/2*PELV_CS(:,2) ...
 
 %vector diff form
 grlib.est.genLAMPRelVel_v4
-
+%relVel_LANK_PELo_N = -relVel_LANK_PELo_N;
 %---Trig differentiation, results in singularity---%
 %         r_LA_MP = xhat(idx_pos_LA) - xhat(idx_pos_MP);
 %         r_LA_LHP = -d_lfemur*cos(alpha_lk)*LTIB_CS(:,3) ...
@@ -616,7 +635,7 @@ grlib.est.genLAMPRelVel_v4
 
 %vector diff form
 grlib.est.genRAMPRelVel_v4
-
+%relVel_RANK_PELo_N = -relVel_RANK_PELo_N;
 %-------------Trig diff results insinguarity-----%
 %     r_RA_RHP = -d_rfemur*cos(alpha_rk)*RTIB_CS(:,3) ...
 %         +d_rfemur*sin(alpha_rk)*RTIB_CS(:,1) ...
@@ -657,11 +676,11 @@ grlib.est.genRAMPRelVel_v4
 %% construct constraint for fmincon format
 % res = d_k - D*xhat;
 % ceq = res'*res;
-kv = 1e-1;
+kv = 1;
 pRes = (d_k - D*xhat);
 vRes = (d_k_v - dxv);
 
-kq = 100;
+kq = 1;
 qMPRes = (xhat(idx_q_MP)'*xhat(idx_q_MP))-1;
 qLARes = (xhat(idx_q_LA)'*xhat(idx_q_LA))-1;
 qRARes = (xhat(idx_q_RA)'*xhat(idx_q_RA))-1;
@@ -672,16 +691,28 @@ qDotLA = calcqdot(xhat(idx_q_LA),xhat(idx_w_LA));
 qDotLARes = xhat(idx_q_LA)'*qDotLA;
 qDotRA = calcqdot(xhat(idx_q_RA),xhat(idx_w_RA));
 qDotRARes = xhat(idx_q_RA)'*qDotRA;
-%TODO add qdot constr.
+%constrain augmented qFem, wFem 
 
-ceq = [ pRes;
-    kv*vRes];
-%         kq*qMPRes;
-%         kq*qLARes;
-%         kq*qRARes;
-%         kq*qDotMPRes;
-%         kq*qDotLARes;
-%         kq*qDotRARes];
+qLFEMRes = qLFEM'*qLFEM - 1;
+qRFEMRes = qRFEM'*qRFEM - 1;
+
+qDotLFEM = calcqdot(qLFEM,[wxLFEM;wyLFEM;wzLFEM]);
+qDotLFEMRes = qDotLFEM'*qDotLFEM;
+qDotRFEM = calcqdot(qRFEM,[wxRFEM;wyRFEM;wzRFEM]);
+qDotRFEMRes = qDotRFEM'*qDotRFEM;
+
+%ceq = [ pRes;
+ ceq = [ pRes;
+        kq*qMPRes;
+        kq*qLARes;
+        kq*qRARes;
+        kq*qDotMPRes;
+        kq*qDotLARes;
+        kq*qDotRARes];
+%         kq*qLFEMRes;
+%         kq*qDotLFEMRes;
+%         kq*qRFEMRes;
+%         kq*qDotRFEMRes];
     
 
 maxFootVel = 10; %m/s
@@ -689,10 +720,11 @@ maxKNAngVel = 10; %rad/s
 % c = [norm(xhat(idx_vel_LA))-maxFootVel;
 %     norm(xhat(idx_vel_RA))-maxFootVel];
 qSafetyFactor = deg2rad(3);
-  c = [-(alpha_lk+qSafetyFactor);
-    (alpha_lk+qSafetyFactor) - pi;
-    -(alpha_rk+qSafetyFactor);
-    (alpha_rk+qSafetyFactor) - pi;
+%c = [];
+  c = [-(alpha_lk-deg2rad(2));
+    (alpha_lk+deg2rad(20)) - pi;
+    -(alpha_rk-deg2rad(2));
+    (alpha_rk+deg2rad(20)) - pi;
     abs(qLKN_dot) - maxKNAngVel;
     abs(qRKN_dot) - maxKNAngVel;
     norm(relVel_LANK_PELo_N) - maxFootVel;
