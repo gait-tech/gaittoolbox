@@ -153,10 +153,14 @@ elseif data == dataTCD
     isConstr = true;
     
     tStart = tic;
-    N_MP = 1000; %number rof timesteps to test on KF
+    N_MP = 1000; %number of timesteps to test on KF
     %TODO: return removed estimated values of knee and femur pos/or
     trng = sIdx0:sIdx0+N_MP;
+<<<<<<< HEAD
     [x_rec, xa_rec, qFEM] = pelib.est.cukf_v7(x0,P,Q,R,N_MP,nMeas,gfr_acc(trng,:),fs, qPelvisEst(trng,:),...
+=======
+    [x_rec, xa_rec, qFEM] = grlib.est.cukf_v9(x0,P,Q,R,N_MP,nMeas,gfr_acc(trng,:),fs, qPelvisEst(trng,:),...
+>>>>>>> de2a5081d253bfa4183527fbd240b99ec44a04a2
         qLankleEst(trng,:), qRankleEst(trng,:),dataS.Pelvis.gyr(trng,:), dataS.L_LowLeg.gyr(trng,:), dataS.R_LowLeg.gyr(trng,:),...
         d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia,...
         isConstr);

@@ -28,7 +28,7 @@ function plotPositionDiff(body1, body2, parts)
             xErr = (actl(:,1)-pred(:,1));
             yErr = (actl(:,2)-pred(:,2));
             zErr = (actl(:,3)-pred(:,3));
-            tErr = vecnorm([xErr yErr zErr], 2, 2);
+            tErr = vecnormalize([xErr yErr zErr]);
 
             plot(t,xErr, strcat(body2{j}.xyzColor{1}, body2{j}.lnSymbol), ...
                  t,yErr, strcat(body2{j}.xyzColor{2}, body2{j}.lnSymbol), ...
