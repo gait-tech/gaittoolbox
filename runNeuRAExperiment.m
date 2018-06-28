@@ -36,7 +36,7 @@ function results = runNeuRAExperiment(dataV, dataS, dataX, name, setups, savedir
     %% Inputs and Input Check
     validateattributes(dataV, {'mocapdb.ViconBody'}, {});
     validateattributes(dataS, {'mocapdb.XsensBody'}, {});
-    validateattributes(dataX, {'mocapdb.BVHBody'}, {});
+%     validateattributes(dataX, {'mocapdb.BVHBody'}, {});
     
     if nargin <= 4
         savedir = '';
@@ -74,10 +74,14 @@ function results = runNeuRAExperiment(dataV, dataS, dataX, name, setups, savedir
     for i=1:length(key)
         dataS.(key{i}) = dataS.(key{i})(1:nSamples,:);
         dataV.(val1{i}) = dataV.(val1{i})(1:nSamples,:)/1000;
-        dataX.(val2{i}) = dataX.(val2{i})(1:nSamples,:)/1000;
+        if dataX
+            dataX.(val2{i}) = dataX.(val2{i})(1:nSamples,:)/1000;
+        end
     end
     dataV.posUnit = 'm';
-    dataX.posUnit = 'm';
+    if dataX
+        dataX.posUnit = 'm';
+    end
     
     sIdx = 1; eIdx = length(dataV.PELV(:,1)) - 1;
     idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
@@ -105,9 +109,11 @@ function results = runNeuRAExperiment(dataV, dataS, dataX, name, setups, savedir
     qOri.v.RTIB = dataV.qRSK(sIdx+1:eIdx+1, :);
     
     % orientation of body from xsens
-    qOri.x.PELV = dataX.qHips(sIdx:eIdx, :);
-    qOri.x.LTIB = dataX.qLeftLeg(sIdx:eIdx, :);
-    qOri.x.RTIB = dataX.qRightLeg(sIdx:eIdx, :);
+    if dataX
+        qOri.x.PELV = dataX.qHips(sIdx:eIdx, :);
+        qOri.x.LTIB = dataX.qLeftLeg(sIdx:eIdx, :);
+        qOri.x.RTIB = dataX.qRightLeg(sIdx:eIdx, :);
+    end
     
     %% Position, Velocity, Acceleration
     gfrAcc = {};
@@ -167,16 +173,18 @@ function results = runNeuRAExperiment(dataV, dataS, dataX, name, setups, savedir
     gfrAcc.sf.RA = filter(lpf_b, lpf_a, gfrAcc.s.RA);
     
     % gfrAcc from xsens
-    MIDPEL_Xsens = [mean([dataX.LeftUpLeg(:,1) dataX.RightUpLeg(:,1)], 2),...
-                  mean([dataX.LeftUpLeg(:,2) dataX.RightUpLeg(:,2)], 2),...
-                  mean([dataX.LeftUpLeg(:,3) dataX.RightUpLeg(:,3)], 2)];
-    gfrAcc.x = {};
-    gfrAcc.x.MP = [0 0 0; diff(MIDPEL_Xsens, 2, 1)*fs*fs];
-    gfrAcc.x.MP = gfrAcc.x.MP(sIdx:eIdx,:);
-    gfrAcc.x.LA = [0 0 0; diff(dataX.LeftFoot, 2, 1)*fs*fs];
-    gfrAcc.x.LA = gfrAcc.x.LA(sIdx:eIdx,:);
-    gfrAcc.x.RA = [0 0 0; diff(dataX.RightFoot, 2, 1)*fs*fs];
-    gfrAcc.x.RA = gfrAcc.x.RA(sIdx:eIdx,:);
+    if dataX
+        MIDPEL_Xsens = [mean([dataX.LeftUpLeg(:,1) dataX.RightUpLeg(:,1)], 2),...
+                      mean([dataX.LeftUpLeg(:,2) dataX.RightUpLeg(:,2)], 2),...
+                      mean([dataX.LeftUpLeg(:,3) dataX.RightUpLeg(:,3)], 2)];
+        gfrAcc.x = {};
+        gfrAcc.x.MP = [0 0 0; diff(MIDPEL_Xsens, 2, 1)*fs*fs];
+        gfrAcc.x.MP = gfrAcc.x.MP(sIdx:eIdx,:);
+        gfrAcc.x.LA = [0 0 0; diff(dataX.LeftFoot, 2, 1)*fs*fs];
+        gfrAcc.x.LA = gfrAcc.x.LA(sIdx:eIdx,:);
+        gfrAcc.x.RA = [0 0 0; diff(dataX.RightFoot, 2, 1)*fs*fs];
+        gfrAcc.x.RA = gfrAcc.x.RA(sIdx:eIdx,:);
+    end
     
     %% UWB measurements
     %  Simulate uwb measurement by generating pairwise combinations, using the
