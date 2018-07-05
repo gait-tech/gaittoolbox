@@ -24,9 +24,7 @@
 %> - P: initial P matrix
 %>
 %> @param fnameV loaded mocapdb.ViconBody 
-%>              (e.g. totalcapture/vicon/s1/acting1_BlenderZXY_YmZ.bvh)
 %> @param fnameS loaded mocapdb.XsensBody
-%>              (e.g. totalcapture/gyroMag/s1/Acting1_Xsens_AuxFields.sensors)
 %> @param name name of the experiment
 %> @param setups list of experiment parameters (struct) to be run. see
 %> details above

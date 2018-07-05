@@ -8,13 +8,12 @@
 %> Each field has a table with dimensions N x 13. The column of each row 
 %> are quaternions[4], accelerometer [3], gyroscope [3], magnetometer [3]
 %> 
-%> For the TCD dataset, the accelerometer, gyroscope, magnetometer are in 
-%> the sensor frame. quaternions tell the orientation relationship between 
-%> sensor and world frame.
+%> Accelerometer, gyroscope, magnetometer are in the sensor frame. 
+%> Quaternions tell the orientation relationship between sensor and world frame.
 %>
 %> @param fname .sensors filename
 %>
-%> @retval data struct with the fields (dim N x 13) described. 
+%> @retval obj XsensBody
 % ======================================================================
 function obj = loadSensorFile(fname)
     fileID = fopen(fname, 'r');

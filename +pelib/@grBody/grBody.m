@@ -18,6 +18,8 @@ classdef grBody < matlab.mixin.Copyable
         posUnit = 'mm';
         oriUnit = 'deg';
         xyzColor = {'r', 'g', 'b'};
+        axisScale = 0.25;
+        rplColor = {'r', 'g', 'b'};
         lnSymbol = '-';
         ptSymbol = '.';
         

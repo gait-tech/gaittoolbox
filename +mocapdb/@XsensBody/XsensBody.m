@@ -11,6 +11,8 @@ classdef XsensBody < handle
         frame
         %> number of samples
         nSamples
+        %> sampling frequency
+        fs
         
         Head
         Sternum
@@ -45,11 +47,13 @@ classdef XsensBody < handle
     end
     
     methods (Hidden, Static)
+        obj = load_mvnx(fname)
     end
     
     methods (Static)
         obj = loadSensorFile(fname)
         obj = loadCalib(fname)
         obj = loadMTExport(name, options)
+        obj = loadMVNX(fname, options)
     end
 end
