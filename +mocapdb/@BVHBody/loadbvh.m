@@ -221,6 +221,11 @@ for nn = find([skeleton.Nchannels] == 0)
   
   parent = skeleton(nn).parent;
   
+  % added by Luke Sy 05 July 2018
+  if length(skeleton(parent).trans) == 0
+      continue
+  end
+  
   for ff = 1:Nframes
     transM = skeleton(parent).trans(:,:,ff) * [eye(3), skeleton(nn).offset; 0 0 0 1];
     skeleton(nn).Dxyz(:,ff) = transM([1 2 3],4);

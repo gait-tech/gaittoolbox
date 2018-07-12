@@ -55,17 +55,17 @@ for i = 1:dataN
     else
         data = struct('name', name, ...
             'fnameV', sprintf('%s/vicon/%s-%s.mat', dir, n.subj, n.act), ...
-            'fnameS', sprintf('%s/imu/%s-%s.mvnx', dir, n.subj, n.act), ...
-            'fnameX', sprintf('%s/xsens/%s-%s.bvh', dir, n.subj, n.act) );
+            'fnameX', sprintf('%s/xsens/%s-%s.bvh', dir, n.subj, n.act), ...
+            'fnameS', sprintf('%s/imu/%s-%s.mvnx', dir, n.subj, n.act));
         
         data.dataV = mocapdb.ViconBody.loadViconMat(data.fnameV);
-        data.dataS = mocapdb.XsensBody.loadMTExport(data.fnameS, options);
         data.dataX = mocapdb.BVHBody.loadXsensBVHFile(data.fnameX, "mm");
+        data.dataS = mocapdb.XsensBody.loadMVNX(data.fnameS, options);
         save(dataPath, 'data');
     end
     
     display(sprintf("Data %3d/%3d: %s", i, dataN, data.name));
-    r = runNeuRAExperiment(data.dataV, data.dataS, data.dataX, ...
+    r = runNeuRAExperiment(data.dataV, data.dataX, data.dataS, ...
                            data.name, setups, expDir);
     results = [results; struct2table(r)];
 end

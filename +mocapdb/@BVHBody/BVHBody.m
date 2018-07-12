@@ -12,6 +12,8 @@ classdef BVHBody < handle
         posUnit = 'mm'
         %> number of samples
         nSamples
+        %> sampling frequency
+        fs
         
         %> similar to MIDPEL
         Hips

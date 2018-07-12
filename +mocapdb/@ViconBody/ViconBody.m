@@ -43,6 +43,11 @@ classdef ViconBody < handle
         qLFT
     end
     
+    properties (Hidden)
+        posList = {'PELV', 'LFEP', 'LFEO', 'LTIO', 'LTOE', ...
+            'RFEP', 'RFEO', 'RTIO', 'RTOE'};
+        oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'};
+    end
     methods
         % ======================================================================
         %> @brief Class constructor

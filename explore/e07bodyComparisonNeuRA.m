@@ -1,73 +1,73 @@
 % Show the absolute and relative position
-fs=100;
-updateFigureContents('Hips');
-clf; pelib.viz.plotStateComparison(estState2, actState, 1, fs);
-
-updateFigureContents('LAnkle');
-clf; pelib.viz.plotStateComparison(estState2, actState, 11, fs);
-
-updateFigureContents('RAnkle');
-clf; pelib.viz.plotStateComparison(estState2, actState, 21, fs);
-
-estStateRel2 = pelib.est.changeStateRefFrame(estState2);
-actStateRel = pelib.est.changeStateRefFrame(actState);
-updateFigureContents('LAnkleRel');
-clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
-
-updateFigureContents('RAnkleRel');
-clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
-
-updateFigureContents('Hips2');
-clf; pelib.viz.plotStateComparison(estState2, actState, 1, 60);
-
-updateFigureContents('LAnkle2');
-clf; pelib.viz.plotStateComparison(estState2, actState, 11, 60);
-
-updateFigureContents('RAnkle2');
-clf; pelib.viz.plotStateComparison(estState2, actState, 21, 60);
-
-estStateRel2 = pelib.est.changeStateRefFrame(estState2);
-actStateRel = pelib.est.changeStateRefFrame(actState);
-updateFigureContents('LAnkleRel2');
-clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
-
-updateFigureContents('RAnkleRel2');
-clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
-
-% P exploration
-load('C:\Users\z5151460\workspace\gaitrecon\experiments\tcd-s1-acting1-Dxxx+ZUPT+C001.mat')
-[nSamples, nState] = size(estState);
-
-P_pri1 = nan(nSamples, nState);
-P_pos1 = nan(nSamples, nState);
-P_con1 = nan(nSamples, nState);
-
-for i=1:nSamples
-    P_pri1(i,:) = diag(estState2.predP(:,:,i));
-    P_pos1(i,:) = diag(estState2.zuptP(:,:,i));
-    P_con1(i,:) = diag(estState2.cstrP(:,:,i));
-end
-
-load('C:\Users\z5151460\workspace\gaitrecon\experiments\tcd-s1-acting1-Dxxx+ZUPT+C002.mat')
-[nSamples, nState] = size(estState);
-
-P_pri2 = nan(nSamples, nState);
-P_pos2 = nan(nSamples, nState);
-P_con2 = nan(nSamples, nState);
-
-for i=1:nSamples
-    P_pri2(i,:) = diag(estState2.predP(:,:,i));
-    P_pos2(i,:) = diag(estState2.zuptP(:,:,i));
-    P_con2(i,:) = diag(estState2.cstrP(:,:,i));
-end
+fs=60;
+% updateFigureContents('Hips');
+% clf; pelib.viz.plotStateComparison(estState2, actState, 1, fs);
+% 
+% updateFigureContents('LAnkle');
+% clf; pelib.viz.plotStateComparison(estState2, actState, 11, fs);
+% 
+% updateFigureContents('RAnkle');
+% clf; pelib.viz.plotStateComparison(estState2, actState, 21, fs);
+% 
+% estStateRel2 = pelib.est.changeStateRefFrame(estState2);
+% actStateRel = pelib.est.changeStateRefFrame(actState);
+% updateFigureContents('LAnkleRel');
+% clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
+% 
+% updateFigureContents('RAnkleRel');
+% clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
+% 
+% updateFigureContents('Hips2');
+% clf; pelib.viz.plotStateComparison(estState2, actState, 1, 60);
+% 
+% updateFigureContents('LAnkle2');
+% clf; pelib.viz.plotStateComparison(estState2, actState, 11, 60);
+% 
+% updateFigureContents('RAnkle2');
+% clf; pelib.viz.plotStateComparison(estState2, actState, 21, 60);
+% 
+% estStateRel2 = pelib.est.changeStateRefFrame(estState2);
+% actStateRel = pelib.est.changeStateRefFrame(actState);
+% updateFigureContents('LAnkleRel2');
+% clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 11, 60);
+% 
+% updateFigureContents('RAnkleRel2');
+% clf; pelib.viz.plotStateComparison(estStateRel2, actStateRel, 21, 60);
+% 
+% % P exploration
+% load('C:\Users\z5151460\workspace\gaitrecon\experiments\tcd-s1-acting1-Dxxx+ZUPT+C001.mat')
+% [nSamples, nState] = size(estState);
+% 
+% P_pri1 = nan(nSamples, nState);
+% P_pos1 = nan(nSamples, nState);
+% P_con1 = nan(nSamples, nState);
+% 
+% for i=1:nSamples
+%     P_pri1(i,:) = diag(estState2.predP(:,:,i));
+%     P_pos1(i,:) = diag(estState2.zuptP(:,:,i));
+%     P_con1(i,:) = diag(estState2.cstrP(:,:,i));
+% end
+% 
+% load('C:\Users\z5151460\workspace\gaitrecon\experiments\tcd-s1-acting1-Dxxx+ZUPT+C002.mat')
+% [nSamples, nState] = size(estState);
+% 
+% P_pri2 = nan(nSamples, nState);
+% P_pos2 = nan(nSamples, nState);
+% P_con2 = nan(nSamples, nState);
+% 
+% for i=1:nSamples
+%     P_pri2(i,:) = diag(estState2.predP(:,:,i));
+%     P_pos2(i,:) = diag(estState2.zuptP(:,:,i));
+%     P_con2(i,:) = diag(estState2.cstrP(:,:,i));
+% end
 
 % Static Plots
 pelib.viz.plotPosition({actBody}, {'LTIO', 'RTIO'});
 
-updateFigureContents('Position1');
-actBodyRel = actBody.changeRefFrame('MIDPEL');
-estBodyRel = estBody.changeRefFrame('MIDPEL');
-pelib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'});
+updateFigureContents('Position');
+viconBodyRel = viconBody.changeRefFrame('MIDPEL');
+xsensBodyRel = xsensBody.changeRefFrame('MIDPEL');
+pelib.viz.plotPosition({viconBodyRel}, {'LTIO', 'RTIO'});
 
 updateFigureContents('Position2');
 actBodyRel = actBody.changeRefFrame('MIDPEL');
@@ -139,20 +139,20 @@ while i <= estBody.nSamples
 end
 
 % Animation
-updateFigureContents('Animation');
-xlabel('x'); ylabel('y'); zlabel('z');
-estBodyRel = estBody.changeRefFrame('MIDPEL');
-estBody2 = estBodyRel.toWorldFrame(actBody.MIDPEL, actBody.qRPV);
-estBodyLimits = [estBody2.xlim() estBody2.ylim() estBody2.zlim()];
-i = 1; az = 0; el = 180;
-while i <= estBody.nSamples
+az = 0; el = 180;
+updateFigureContents('Animation'); 
+tmpBody2 = xsensBody;
+tmpBodyLimits = [tmpBody2.xlim() tmpBody2.ylim() tmpBody2.zlim()];
+i = 1; 
+while i <= tmpBody2.nSamples
     [az, el] = view;
     clf; grid;
-    xlim(estBodyLimits(1:2)); 
-    ylim(estBodyLimits(3:4)); 
-    zlim(estBodyLimits(5:6));  
+    xlabel('x'); ylabel('y'); zlabel('z');
+    xlim(tmpBodyLimits(1:2)); 
+    ylim(tmpBodyLimits(3:4)); 
+    zlim(tmpBodyLimits(5:6));  
     view(az, el);
-    pelib.viz.plotLowerBody(estBody2, i, true, false);
+    pelib.viz.plotLowerBody(tmpBody2, i, true, false);
     i = i+5;
     pause(1/1000);
 end

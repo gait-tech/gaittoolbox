@@ -14,15 +14,14 @@ function out = toWorldFrame(obj, qR)
     out.fs = obj.fs;
     out.nSamples = obj.nSamples;
         
-    posList = {'PELV', 'LFEP', 'LFEO', 'LTIO', 'LTOE', ...
-        'RFEP', 'RFEO', 'RTIO', 'RTOE'};
+    posList = obj.posList;
            
     qR2 = quatconj(qR);
     for i=1:length(posList)
         out.(posList{i}) = quatrotate(qR2, obj.(posList{i}));
     end
     
-    oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'};
+    oriList = obj.oriList;
 	for i=1:length(oriList)
         out.(oriList{i}) = quatmultiply(qR, obj.(oriList{i}));
     end

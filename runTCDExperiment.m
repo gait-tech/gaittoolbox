@@ -257,7 +257,7 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
         movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc.RA .^2, 2)), VAR_WIN);
         bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
         
-        try
+%         try
             if cs.est == 'ekfv3'
                 x0 = [x0_pos_MP x0_vel_MP zeros(1,4) ...
                       x0_pos_LA x0_vel_LA zeros(1,4) ...
@@ -313,15 +313,15 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
             end
     %         results(resultsIdx) = estBody.diffRMSE(actBody);
             results0 = estBodyRel.diffRMSE(actBodyRel);
-        catch
-            results0 = actBody.diffRMSE(nan);
-        end
+%         catch
+%             results0 = actBody.diffRMSE(nan);
+%         end
         
         results0.name = name;
         results0.label = cs.label;
         results0.runtime = cputime-t0;
         results(resultsIdx) = results0;
-        display(sprintf("Index %3d/%3d: Running time: %.4f", resultsIdx, setupN, cputime-t0));
+        display(sprintf("Index %3d/%3d: %s Running time: %.4f", resultsIdx, cs.label, setupN, cputime-t0));
         resultsIdx = resultsIdx + 1;
     end
 end
