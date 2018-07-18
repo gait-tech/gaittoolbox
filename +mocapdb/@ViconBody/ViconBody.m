@@ -63,6 +63,7 @@ classdef ViconBody < handle
         end
         
         out = togrBody(obj, idx, args)
+        startIdx = getStartIndex(obj)
     end
     
     methods (Static)

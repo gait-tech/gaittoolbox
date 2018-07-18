@@ -1,5 +1,5 @@
 % Show the absolute and relative position
-fs=60;
+fs=100;
 % updateFigureContents('Hips');
 % clf; pelib.viz.plotStateComparison(estState2, actState, 1, fs);
 % 
@@ -64,21 +64,20 @@ fs=60;
 % Static Plots
 pelib.viz.plotPosition({actBody}, {'LTIO', 'RTIO'});
 
-updateFigureContents('Position');
 viconBodyRel = viconBody.changeRefFrame('MIDPEL');
 xsensBodyRel = xsensBody.changeRefFrame('MIDPEL');
-pelib.viz.plotPosition({viconBodyRel}, {'LTIO', 'RTIO'});
-
-updateFigureContents('Position2');
-actBodyRel = actBody.changeRefFrame('MIDPEL');
 estBodyRel = estBody.changeRefFrame('MIDPEL');
-pelib.viz.plotPosition({estBodyRel, actBodyRel}, {'LTIO', 'RTIO'});
+
+updateFigureContents('Position');
+pelib.viz.plotPosition({viconBodyRel, estBodyRel}, {'LTIO', 'RTIO'});
+pelib.viz.plotPosition({viconBodyRel, xsensBodyRel}, {'LTIO', 'RTIO'});
 
 updateFigureContents('Joint Angles (Hips)');
-pelib.viz.plotJointAngles({actBody, estBody}, {'LHip', 'RHip'})
+pelib.viz.plotJointAngles({viconBodyRel, xsensBodyRel}, {'LHip', 'RHip'})
 
 updateFigureContents('Joint Angles (Knee)');
-pelib.viz.plotJointAngles({actBody, estBody}, {'LKnee', 'RKnee'})
+pelib.viz.plotJointAngles({viconBodyRel, estBodyRel}, {'LKnee', 'RKnee'})
+pelib.viz.plotJointAngles({viconBodyRel, xsensBodyRel}, {'LKnee', 'RKnee'})
 
 % Constraint Info
 d_pelvis = norm(actBody.LFEP(1,:) - actBody.RFEP(1,:));
@@ -142,6 +141,7 @@ end
 az = 0; el = 180;
 updateFigureContents('Animation'); 
 tmpBody2 = xsensBody;
+tmpBody2 = viconBody;
 tmpBodyLimits = [tmpBody2.xlim() tmpBody2.ylim() tmpBody2.zlim()];
 i = 1; 
 while i <= tmpBody2.nSamples

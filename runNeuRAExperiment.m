@@ -90,21 +90,22 @@ function results = runNeuRAExperiment(dataV, dataX, dataS, name, setups, savedir
         dataX.posUnit = 'm';
     end
     
-    sIdx = 1; eIdx = length(dataV.PELV(:,1)) - 1;
+    sIdx = dataV.getStartIndex()+1; 
+    eIdx = length(dataV.PELV(:,1)) - 1;
     idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
     
     viconBody = dataV.togrBody(idx+1, {'name', 'act', 'oriUnit', 'deg', ...
-                         'lnSymbol', '-', 'ptSymbol', '*', ...
+                         'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
                          'xyzColor', {'m', 'y', 'c'}}); 
     viconBodyRel = viconBody.changeRefFrame('MIDPEL');
-    viconCalibWB = dataS.calcCalibSB(viconBody);
+    viconCalibWB = dataS.calcCalibSB(viconBody, sIdx);
     
     if dataX.nSamples > 0
         xsensBody = dataX.togrBody(idx+1, {'name', 'xsens', 'oriUnit', 'deg', ...
-                             'lnSymbol', '-', 'ptSymbol', '*', ...
+                             'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
                              'xyzColor', {'m', 'y', 'c'}}); 
         xsensBodyRel = xsensBody.changeRefFrame('MIDPEL');
-        xsensCalibWB = dataS.calcCalibSB(xsensBody);
+        xsensCalibWB = dataS.calcCalibSB(xsensBody, sIdx);
     end
     
     
@@ -165,10 +166,13 @@ function results = runNeuRAExperiment(dataV, dataX, dataS, name, setups, savedir
         gfrAcc.(vLabel) = {};
         gfrAcc.(vLabel).MP = [0 0 0; diff(MIDPEL_vicon, 2, 1)*fs*fs] ...
                              + randn(eIdx,3).*vsigma(i);
+        gfrAcc.(vLabel).MP = gfrAcc.(vLabel).MP(sIdx:eIdx,:);
         gfrAcc.(vLabel).LA = [0 0 0; diff(dataV.LTIO, 2, 1)*fs*fs] ...
                              + randn(eIdx,3).*vsigma(i);
+        gfrAcc.(vLabel).LA = gfrAcc.(vLabel).LA(sIdx:eIdx,:);
         gfrAcc.(vLabel).RA = [0 0 0; diff(dataV.RTIO, 2, 1)*fs*fs] ...
                              + randn(eIdx,3).*vsigma(i);
+        gfrAcc.(vLabel).RA = gfrAcc.(vLabel).RA(sIdx:eIdx,:);
     end
     
     % gfrAcc from sparse
@@ -229,12 +233,6 @@ function results = runNeuRAExperiment(dataV, dataX, dataS, name, setups, savedir
         + normrnd(0, 0.02, [nSamples, 1]);
     uwb_mea.left_tibia_right_tibia = vecnorm((dataV.RTIO-dataV.LTIO), 2, 2) ...
         + normrnd(0, 0.02, [nSamples, 1]);
-
-    d_pelvis = norm(dataV.RFEP(sIdx,:) - dataV.LFEP(sIdx,:));
-    d_rfemur = norm(dataV.RFEP(sIdx,:) - dataV.RFEO(sIdx,:));
-    d_lfemur = norm(dataV.LFEP(sIdx,:) - dataV.LFEO(sIdx,:));
-    d_rtibia = norm(dataV.RFEO(sIdx,:) - dataV.RTIO(sIdx,:));
-    d_ltibia = norm(dataV.LFEO(sIdx,:) - dataV.LTIO(sIdx,:));
     
     %% Save processing
     if ~strcmp(savedir, '')
@@ -264,8 +262,18 @@ function results = runNeuRAExperiment(dataV, dataX, dataS, name, setups, savedir
         csx0 = x0.(cs.initSrc);
         if cs.initSrc == 'v'
             csActBodyRel = viconBodyRel;
+            d_pelvis = norm(dataV.RFEP(sIdx,:) - dataV.LFEP(sIdx,:));
+            d_rfemur = norm(dataV.RFEP(sIdx,:) - dataV.RFEO(sIdx,:));
+            d_lfemur = norm(dataV.LFEP(sIdx,:) - dataV.LFEO(sIdx,:));
+            d_rtibia = norm(dataV.RFEO(sIdx,:) - dataV.RTIO(sIdx,:));
+            d_ltibia = norm(dataV.LFEO(sIdx,:) - dataV.LTIO(sIdx,:));
         else
             csActBodyRel = xsensBodyRel;
+            d_pelvis = norm(dataX.RightUpLeg(sIdx,:) - dataX.LeftUpLeg(sIdx,:));
+            d_rfemur = norm(dataX.RightUpLeg(sIdx,:) - dataX.RightLeg(sIdx,:));
+            d_lfemur = norm(dataX.LeftUpLeg(sIdx,:) - dataX.LeftLeg(sIdx,:));
+            d_rtibia = norm(dataX.RightLeg(sIdx,:) - dataX.RightFoot(sIdx,:));
+            d_ltibia = norm(dataX.LeftLeg(sIdx,:) - dataX.LeftFoot(sIdx,:));
         end
         
         % step detection

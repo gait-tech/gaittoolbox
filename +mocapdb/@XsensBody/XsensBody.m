@@ -43,7 +43,7 @@ classdef XsensBody < handle
             end
         end
         
-        out = calcCalibSB(obj, refBody)
+        out = calcCalibSB(obj, refBody, sIdx)
     end
     
     methods (Hidden, Static)

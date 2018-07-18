@@ -321,7 +321,7 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
         results0.label = cs.label;
         results0.runtime = cputime-t0;
         results(resultsIdx) = results0;
-        display(sprintf("Index %3d/%3d: %s Running time: %.4f", resultsIdx, cs.label, setupN, cputime-t0));
+        display(sprintf("Index %3d/%3d: %s Running time: %.4f", resultsIdx, setupN, cs.label, cputime-t0));
         resultsIdx = resultsIdx + 1;
     end
 end
