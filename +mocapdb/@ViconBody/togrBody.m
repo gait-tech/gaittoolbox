@@ -9,10 +9,10 @@
 function out = togrBody(obj, idx, args)
     out = pelib.grBody(args{:});
     
-    key1 = {'RFEP', 'RFEO', 'RTIO', 'LFEP', 'LFEO', 'LTIO'};
+    key1 = {'RFEP', 'RFEO', 'RTIO', 'RTOE', 'LFEP', 'LFEO', 'LTIO', 'LTOE'};
     key2 = {'qRPV', 'qRTH', 'qRSK', 'qLTH', 'qLSK'};
            
-    val1 = {'RFEP', 'RFEO', 'RTIO', 'LFEP', 'LFEO', 'LTIO'};
+    val1 = {'RFEP', 'RFEO', 'RTIO', 'RTOE', 'LFEP', 'LFEO', 'LTIO', 'LTOE'};
     val2 = {'qRPV', 'qRTH', 'qRSK', 'qLTH', 'qLSK'};
            
     for i=1:length(key1)

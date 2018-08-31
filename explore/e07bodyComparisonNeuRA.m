@@ -61,98 +61,71 @@ fs=100;
 %     P_con2(i,:) = diag(estState2.cstrP(:,:,i));
 % end
 
-% Static Plots
-pelib.viz.plotPosition({actBody}, {'LTIO', 'RTIO'});
-
+%% Static Plots
+% preprocessing
 viconBodyRel = viconBody.changeRefFrame('MIDPEL');
 xsensBodyRel = xsensBody.changeRefFrame('MIDPEL');
 estBodyRel = estBody.changeRefFrame('MIDPEL');
 
 updateFigureContents('Position');
-pelib.viz.plotPosition({viconBodyRel, estBodyRel}, {'LTIO', 'RTIO'});
 pelib.viz.plotPosition({viconBodyRel, xsensBodyRel}, {'LTIO', 'RTIO'});
+
+updateFigureContents('Position');
+pelib.viz.plotPosition({viconBodyRel, estBodyRel}, {'LTIO', 'RTIO'});
 
 updateFigureContents('Joint Angles (Hips)');
 pelib.viz.plotJointAngles({viconBodyRel, xsensBodyRel}, {'LHip', 'RHip'})
 
+updateFigureContents('Joint Angles (Hips)');
+pelib.viz.plotJointAngles({viconBodyRel, estBodyRel}, {'LHip', 'RHip'})
+
 updateFigureContents('Joint Angles (Knee)');
 pelib.viz.plotJointAngles({viconBodyRel, estBodyRel}, {'LKnee', 'RKnee'})
+
+updateFigureContents('Joint Angles (Knee)');
 pelib.viz.plotJointAngles({viconBodyRel, xsensBodyRel}, {'LKnee', 'RKnee'})
 
 % Constraint Info
-d_pelvis = norm(actBody.LFEP(1,:) - actBody.RFEP(1,:));
-d_lfemur = norm(actBody.LFEP(1,:) - actBody.LFEO(1,:));
-d_rfemur = norm(actBody.RFEP(1,:) - actBody.RFEO(1,:));
-d_ltibia = norm(actBody.LFEO(1,:) - actBody.LTIO(1,:));
-d_rtibia = norm(actBody.RFEO(1,:) - actBody.RTIO(1,:));
+% d_pelvis = norm(actBody.LFEP(1,:) - actBody.RFEP(1,:));
+% d_lfemur = norm(actBody.LFEP(1,:) - actBody.LFEO(1,:));
+% d_rfemur = norm(actBody.RFEP(1,:) - actBody.RFEO(1,:));
+% d_ltibia = norm(actBody.LFEO(1,:) - actBody.LTIO(1,:));
+% d_rtibia = norm(actBody.RFEO(1,:) - actBody.RTIO(1,:));
+% 
+% updateFigureContents('Constraint Check');
+% pelib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, ...
+%     d_lfemur, d_rfemur, d_ltibia, d_rtibia);
+% hold on;
+% cstrStateL = sum(estState2.cstrStateU(:,1:3), 2) > 0;
+% cstrStateLV = zeros(estBody.nSamples, 1);
+% cstrStateLV(~cstrStateL) = nan;
+% cstrStateR = sum(estState2.cstrStateU(:,4:6), 2) > 0;
+% cstrStateRV = zeros(estBody.nSamples, 1);
+% cstrStateRV(~cstrStateR) = nan;
+% t = 1:estBody.nSamples;
+% scatter(t, cstrStateLV, '<c'); scatter(t, cstrStateRV, '>c');
+% legend('Hips', 'LFemur', 'RFemur', 'LTibia', 'RTibia', 'LCstr', 'RCstr');
 
-updateFigureContents('Constraint Check');
-pelib.viz.plotLowerBodySegmentLengthError(estBody, d_pelvis, ...
-    d_lfemur, d_rfemur, d_ltibia, d_rtibia);
-hold on;
-cstrStateL = sum(estState2.cstrStateU(:,1:3), 2) > 0;
-cstrStateLV = zeros(estBody.nSamples, 1);
-cstrStateLV(~cstrStateL) = nan;
-cstrStateR = sum(estState2.cstrStateU(:,4:6), 2) > 0;
-cstrStateRV = zeros(estBody.nSamples, 1);
-cstrStateRV(~cstrStateR) = nan;
-t = 1:estBody.nSamples;
-scatter(t, cstrStateLV, '<c'); scatter(t, cstrStateRV, '>c');
-legend('Hips', 'LFemur', 'RFemur', 'LTibia', 'RTibia', 'LCstr', 'RCstr');
-
-% Animation
-updateFigureContents('Animation');
-xlabel('x'); ylabel('y'); zlabel('z');
-actBodyLimits = [actBody.xlim() actBody.ylim() actBody.zlim()];
-i = 1;
-while i <= actBody.nSamples
-    [az, el] = view;
-    clf; grid;
-    xlim(actBodyLimits(1:2)); 
-    ylim(actBodyLimits(3:4)); 
-    zlim(actBodyLimits(5:6));  
-    xlabel('x'); ylabel('y'); zlabel('z');
-    view(az, el);
-    pelib.viz.plotLowerBody(actBody, i, true, false);
-    i = i+5;
-    pause(1/1000);
-end
-
-% Animation
-updateFigureContents('Animation');
-xlabel('x'); ylabel('y'); zlabel('z');
-estBodyRel = estBody.changeRefFrame('MIDPEL');
-estBody2 = estBodyRel.toWorldFrame(estBody.MIDPEL, estBody.qRPV);
-estBodyLimits = [estBody.xlim() estBody.ylim() estBody.zlim()];
-i = 1; az = 0; el = 180;
-while i <= estBody.nSamples
-    [az, el] = view;
-    clf; grid;
-    xlim(estBodyLimits(1:2)); 
-    ylim(estBodyLimits(3:4)); 
-    zlim(estBodyLimits(5:6));  
-    view(az, el);
-    pelib.viz.plotLowerBody(estBody, i, true, false);
-    i = i+5;
-    pause(1/1000);
-end
-
-% Animation
+%% Dynamic plots (animation)
 az = 0; el = 180;
 updateFigureContents('Animation'); 
-tmpBody2 = xsensBody;
-tmpBody2 = viconBody;
-tmpBodyLimits = [tmpBody2.xlim() tmpBody2.ylim() tmpBody2.zlim()];
+tmpBody1 = xsensBody;
+tmpBody1 = viconBodyRel;
+tmpBody2 = estBodyRel;
+tmpBody1Limits = [tmpBody1.xlim() tmpBody1.ylim() tmpBody1.zlim()];
 i = 1; 
-while i <= tmpBody2.nSamples
+while i <= tmpBody1.nSamples
     [az, el] = view;
     clf; grid;
     xlabel('x'); ylabel('y'); zlabel('z');
-    xlim(tmpBodyLimits(1:2)); 
-    ylim(tmpBodyLimits(3:4)); 
-    zlim(tmpBodyLimits(5:6));  
+    xlim(tmpBody1Limits(1:2)); 
+    ylim(tmpBody1Limits(3:4)); 
+    zlim(tmpBody1Limits(5:6));  
     view(az, el);
-    pelib.viz.plotLowerBody(tmpBody2, i, true, false);
+    pelib.viz.plotLowerBody(tmpBody1, i, true, false);
+    if ~(tmpBody2==false)
+        pelib.viz.plotLowerBody(tmpBody2, i, true, false);
+    end
     i = i+5;
     pause(1/1000);
 end

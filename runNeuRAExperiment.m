@@ -228,20 +228,20 @@ function results = runNeuRAExperiment(dataV, dataX, dataS, name, setups, savedir
     uwb_mea = struct;
     
     uwb_mea.left_tibia_mid_pelvis = vecnorm((MIDPEL_vicon-dataV.LTIO), 2, 2) ...
-        + normrnd(0, 0.02, [nSamples, 1]);
+        + normrnd(0, 0.1, [nSamples, 1]);
     uwb_mea.mid_pelvis_right_tibia = vecnorm((MIDPEL_vicon-dataV.RTIO), 2, 2) ...
-        + normrnd(0, 0.02, [nSamples, 1]);
+        + normrnd(0, 0.1, [nSamples, 1]);
     uwb_mea.left_tibia_right_tibia = vecnorm((dataV.RTIO-dataV.LTIO), 2, 2) ...
-        + normrnd(0, 0.02, [nSamples, 1]);
+        + normrnd(0, 0.1, [nSamples, 1]);
     
     %% Save processing
     if ~strcmp(savedir, '')
         if dataX.nSamples > 0
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
-                 'xsensBody', 'viconBody')
+                 'xsensBody', 'viconBody', 'gfrAcc', 'qOri', 'x0')
         else
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
-                 'viconBody')
+                 'viconBody', 'gfrAcc', 'qOri', 'x0')
         end
     end
             

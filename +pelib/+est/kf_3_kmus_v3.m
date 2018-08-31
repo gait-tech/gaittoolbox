@@ -290,6 +290,11 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     Rdiag = repelem([(fOpt.sigmaROriMP)^2 (fOpt.sigmaROriLA)^2 (fOpt.sigmaROriRA)^2], 4);
     R = diag(Rdiag);
     
+    R_uwb = zeros(3,3);
+    R_uwb(1,1) = fOpt.sigmaUwbMPLA.^2;
+    R_uwb(2,2) = fOpt.sigmaUwbMPRA.^2;
+    R_uwb(3,3) = fOpt.sigmaUwbLARA.^2;
+    
     % check that all accelerometer measurements are equal dimensions
     [nSamples, ~] = size(gfrAccMP);
     validateattributes(gfrAccMP, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 3});
@@ -540,19 +545,19 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     % the variables in the state estimate vector, xhat, to the measurement
     % domain. In this case we are using
         idx = [idxMOriMP idxMOriLA idxMOriRA];
-        if fOpt.applyMeas >= 1
+        if mod(fOpt.applyMeas, 100) >= 1
             if bIsStatMP(n) idx(end+1:end+3) = idxMVelMP; end
             if bIsStatLA(n) idx(end+1:end+3) = idxMVelLA; end
             if bIsStatRA(n) idx(end+1:end+3) = idxMVelRA; end
         end
-        if fOpt.applyMeas == 2
+        if mod(fOpt.applyMeas, 100) == 2
             if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+length(idxMPosLA)) = idxMPosLA; 
             end
             if bIsStatRA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+length(idxMPosRA)) = idxMPosRA; 
             end
-        elseif fOpt.applyMeas == 3
+        elseif mod(fOpt.applyMeas, 100) == 3
             if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ 
                 idx(end+1:end+length(idxMPosLA)) = idxMPosLA;
                 y_k(idxMPosLA(1:2), n) = x_min(idxPosLA(1:2));
@@ -561,14 +566,14 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 idx(end+1:end+length(idxMPosRA)) = idxMPosRA;
                 y_k(idxMPosRA(1:2), n) = x_min(idxPosRA(1:2));
             end
-        elseif fOpt.applyMeas == 4
+        elseif mod(fOpt.applyMeas, 100) == 4
             if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+1) = idxMPosLA(3);
             end
             if bIsStatRA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+1) = idxMPosRA(3); 
             end
-        elseif fOpt.applyMeas == 21
+        elseif mod(fOpt.applyMeas, 100) == 21
             if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+1) = idxMPosLA;
             end
@@ -593,7 +598,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         x_min1 = x_min + K * res;
         P_min1 = (I_N - K * H(idx, :)) * P_min;
         
-        if fOpt.applyMeas == 4
+        if mod(fOpt.applyMeas, 100) == 4
             idx = [idxMPosLA(1:2) idxMPosRA(1:2)];
             y_k(idx) = [x_min(idxPosLA(1:2)) x_min(idxPosRA(1:2))];
             K = P_min * H(idx, :)' /(H(idx, :) * P_min * H(idx,:)' + R(idx, idx));
@@ -604,6 +609,52 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         if fOpt.applyMeas
             debug_dat.zuptState(n,:) = x_min1;
             debug_dat.zuptP(:,:,n) = P_min1;
+        end
+        
+        if fOpt.applyMeas >= 100
+            diff_MP_LA = x_min1(idxPosMP)'-x_min1(idxPosLA)';
+            diff_MP_RA = x_min1(idxPosMP)'-x_min1(idxPosRA)';
+            diff_LA_RA = x_min1(idxPosLA)'-x_min1(idxPosRA)';
+            % the observation model
+            h_uwb_est = [vecnormalize( diff_MP_LA );
+                         vecnormalize( diff_MP_RA );
+                         vecnormalize( diff_LA_RA );];
+            % calculate the measurement residual, i.e., the difference between the
+            % predicted measurements from the observation model, h(xhat), and the
+            % measurements obtained directly from the UWB sensors.
+            y_innovation = uwb_MP_LA_RA(n,:)' - h_uwb_est;
+
+            H = zeros(3, N_STATES);
+            % Jacobian of observation model with respect to elements of the state
+            % estimate xhat, the order of these matrix elements MUST be preserved
+            H(1,1) = diff_MP_LA(1)/h_uwb_est(1);
+            H(1,2) = diff_MP_LA(2)/h_uwb_est(1);
+            H(1,3) = diff_MP_LA(3)/h_uwb_est(1);
+            H(1,7) = -diff_MP_LA(1)/h_uwb_est(1);
+            H(1,8) = -diff_MP_LA(2)/h_uwb_est(1);
+            H(1,9) = -diff_MP_LA(3)/h_uwb_est(1);    
+
+            H(2,1)  =  diff_MP_RA(1)/h_uwb_est(2);
+            H(2,2)  =  diff_MP_RA(2)/h_uwb_est(2);
+            H(2,3)  =  diff_MP_RA(3)/h_uwb_est(2);
+            H(2,13) = -diff_MP_RA(1)/h_uwb_est(2);
+            H(2,14) = -diff_MP_RA(2)/h_uwb_est(2);
+            H(2,15) = -diff_MP_RA(3)/h_uwb_est(2);
+
+            H(3,7)  =  diff_LA_RA(1)/h_uwb_est(3);
+            H(3,8)  =  diff_LA_RA(2)/h_uwb_est(3);
+            H(3,9)  =  diff_LA_RA(3)/h_uwb_est(3);
+            H(3,13) = -diff_LA_RA(1)/h_uwb_est(3);
+            H(3,14) = -diff_LA_RA(2)/h_uwb_est(3);
+            H(3,15) = -diff_LA_RA(3)/h_uwb_est(3);    
+            % Calculate the covariance in the measurement residual
+            S    = ((H * P_min1) * H') + R_uwb; % scalar
+            % Calculate the kalman gain
+            K    = P_min1 * H' * S^(-1);
+            % Update state estimate
+            x_min1 = x_min1 + K * y_innovation;
+            % Update Covariance in the state estimate
+            P_min1    = (I_N - K * H) * P_min1;
         end
         
     %% ---- Kalman Filter Update Step using UWB measurements ---- 

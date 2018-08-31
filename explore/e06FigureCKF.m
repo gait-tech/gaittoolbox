@@ -10,12 +10,12 @@ body.lnSymbol = '-';
 body.ptSymbol = 'o';
         
 % body position
-body.MIDPEL = [0 0 1];
-body.LFEP = [0 0.15 1];
-body.LFEO = [0.05 0.15 0.5;];
+body.MIDPEL = [0 0 0.6];
+body.LFEP = [0 0.15 0.6];
+body.LFEO = [0.05 0.15 0.3];
 body.LTIO = [0 0.15 0];
-body.RFEP = [0 -0.15 1];
-body.RFEO = [0.05 -0.15 0.5];
+body.RFEP = [0 -0.15 0.6];
+body.RFEO = [0.05 -0.15 0.6];
 body.RTIO = [0 -0.15 0];
 
 % body orientation
@@ -38,7 +38,7 @@ for i=1:3
             nAxis(i,1), nAxis(i,2), nAxis(i,3), ...
             0.15, 'Color', nColor(i), 'LineWidth', 2, 'MaxHeadSize', 1);
 end
-pelib.viz.plotLowerBody(body, 1, true, false); view(132, 17);
-xlim([-0.75 0.75]); ylim([-0.75 0.75]); zlim([-0.2 1.3]);
+pelib.viz.plotLowerBody(body, 1, 2, false); view(132, 17);
+xlim([-0.1 0.7]); ylim([-0.4 0.4]); zlim([-0.1 0.7]); axis square;
 
-print(gcf, 'body-skeleton-orig', '-dpng', '-r300');
+print(gcf, 'body-skeleton-orig', '-dtiff', '-r300');
