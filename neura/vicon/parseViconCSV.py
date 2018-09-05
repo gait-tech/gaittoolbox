@@ -50,6 +50,11 @@ def parseViconCSV(fname, output='viconcsv.mat'):
             
         sio.savemat(output, retval)
 
-for i in os.listdir('.'):
-    if i[-4:] == '.csv':
+file_list = os.listdir('.')
+csvs = filter(lambda x: x[-4:] == '.csv', file_list)
+mats = filter(lambda x: x[-4:] == '.mat', file_list)
+
+for i in csvs:
+    if i[:-4]+'.mat' not in mats:
+        print(i[:-4])
         parseViconCSV(i, output='{}.mat'.format(i[:-4]))

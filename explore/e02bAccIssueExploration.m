@@ -13,9 +13,9 @@ optionANK = struct('Pelvis', '00B40B91', ...
     'L_UpLeg', '00B40C45', 'R_UpLeg', '00B40C3C', ...
     'L_LowLeg', '00B40C44', 'R_LowLeg', '00B40C47', ...
     'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
-fnameV = 'neura/vicon/S03-Trial-000.mat';
+fnameV = 'neura/vicon/S02-Trial-Fivemin-1.mat';
 fnameX = 'neura/xsens/S01-Trial-006.bvh';
-fnameS = 'neura/imu/S03-Trial-000';
+fnameS = 'neura/imu/S02-Trial-Fivemin-1';
 
 % Rw2v = mocapdb.loadPendulumCompassMat('neura\calib\Pendulum02.mat', 'neura\calib\XsensCompass02.mat');
 viconANK = mocapdb.ViconBody.loadViconMat(fnameV);
@@ -50,20 +50,20 @@ gfrAccvANKRA = [0 0 0; diff(viconANK.RTIO, 2, 1)*fs*fs];
 gfrAccvANKRA = gfrAccvANKRA(sIdx:eIdx,:);              
 
 % xsensANK
-val1 = {'Hips', 'RightUpLeg', 'RightLeg', 'RightFoot', 'RightToe', ...
-        'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToe'};
-for i=1:length(val1)
-    xsensANK.(val1{i}) = xsensANK.(val1{i})./1000;
-end
-MIDPEL_xsens = [mean([xsensANK.LeftUpLeg(:,1) xsensANK.RightUpLeg(:,1)], 2),...
-                mean([xsensANK.LeftUpLeg(:,2) xsensANK.RightUpLeg(:,2)], 2),...
-                mean([xsensANK.LeftUpLeg(:,3) xsensANK.RightUpLeg(:,3)], 2)];
-gfrAccxANKMP = [0 0 0; diff(MIDPEL_xsens, 2, 1)*fs*fs];
-gfrAccxANKMP = gfrAccxANKMP(sIdx:eIdx,:);
-gfrAccxANKLA = [0 0 0; diff(xsensANK.LeftFoot, 2, 1)*fs*fs];
-gfrAccxANKLA = gfrAccxANKLA(sIdx:eIdx,:);
-gfrAccxANKRA = [0 0 0; diff(xsensANK.RightFoot, 2, 1)*fs*fs];
-gfrAccxANKRA = gfrAccxANKRA(sIdx:eIdx,:); 
+% val1 = {'Hips', 'RightUpLeg', 'RightLeg', 'RightFoot', 'RightToe', ...
+%         'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToe'};
+% for i=1:length(val1)
+%     xsensANK.(val1{i}) = xsensANK.(val1{i})./1000;
+% end
+% MIDPEL_xsens = [mean([xsensANK.LeftUpLeg(:,1) xsensANK.RightUpLeg(:,1)], 2),...
+%                 mean([xsensANK.LeftUpLeg(:,2) xsensANK.RightUpLeg(:,2)], 2),...
+%                 mean([xsensANK.LeftUpLeg(:,3) xsensANK.RightUpLeg(:,3)], 2)];
+% gfrAccxANKMP = [0 0 0; diff(MIDPEL_xsens, 2, 1)*fs*fs];
+% gfrAccxANKMP = gfrAccxANKMP(sIdx:eIdx,:);
+% gfrAccxANKLA = [0 0 0; diff(xsensANK.LeftFoot, 2, 1)*fs*fs];
+% gfrAccxANKLA = gfrAccxANKLA(sIdx:eIdx,:);
+% gfrAccxANKRA = [0 0 0; diff(xsensANK.RightFoot, 2, 1)*fs*fs];
+% gfrAccxANKRA = gfrAccxANKRA(sIdx:eIdx,:); 
         
 % sensTIB
 gfrAccsTIBMP = quatrotate(quatconj(sensTIB.Pelvis.ori), ...
@@ -82,7 +82,7 @@ gfrAccsTIBRA = gfrAccsTIBRA(sIdx:eIdx,:);
 % xsensANK.L_LowLeg.ori = quatmultiply(xsensANK.L_LowLeg.ori, qTCD2BM);
 % xsensANK.R_LowLeg.ori = quatmultiply(xsensANK.R_LowLeg.ori, qTCD2BM);
 
-% theta = 180;
+% theta = 270;
 % R = [cosd(theta) sind(theta) 0;
 %      -sind(theta) cosd(theta) 0;
 %      0 0 1];

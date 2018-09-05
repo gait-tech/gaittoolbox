@@ -64,8 +64,8 @@ fs=100;
 %% Static Plots
 % preprocessing
 viconBodyRel = viconBody.changeRefFrame('MIDPEL');
-xsensBodyRel = xsensBody.changeRefFrame('MIDPEL');
 estBodyRel = estBody.changeRefFrame('MIDPEL');
+xsensBodyRel = xsensBody.changeRefFrame('MIDPEL');
 
 updateFigureContents('Position');
 pelib.viz.plotPosition({viconBodyRel, xsensBodyRel}, {'LTIO', 'RTIO'});
@@ -109,7 +109,7 @@ pelib.viz.plotJointAngles({viconBodyRel, xsensBodyRel}, {'LKnee', 'RKnee'})
 %% Dynamic plots (animation)
 az = 0; el = 180;
 updateFigureContents('Animation'); 
-tmpBody1 = xsensBody;
+% tmpBody1 = xsensBody;
 tmpBody1 = viconBodyRel;
 tmpBody2 = estBodyRel;
 tmpBody1Limits = [tmpBody1.xlim() tmpBody1.ylim() tmpBody1.zlim()];

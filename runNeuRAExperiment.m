@@ -98,14 +98,14 @@ function results = runNeuRAExperiment(dataV, dataX, dataS, name, setups, savedir
                          'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
                          'xyzColor', {'m', 'y', 'c'}}); 
     viconBodyRel = viconBody.changeRefFrame('MIDPEL');
-    viconCalibWB = dataS.calcCalibSB(viconBody, sIdx);
+    viconCalibWB = dataS.calcCalibSB(viconBody, 1);
     
     if dataX.nSamples > 0
         xsensBody = dataX.togrBody(idx+1, {'name', 'xsens', 'oriUnit', 'deg', ...
                              'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
                              'xyzColor', {'m', 'y', 'c'}}); 
         xsensBodyRel = xsensBody.changeRefFrame('MIDPEL');
-        xsensCalibWB = dataS.calcCalibSB(xsensBody, sIdx);
+        xsensCalibWB = dataS.calcCalibSB(xsensBody, 1);
     end
     
     
@@ -333,20 +333,21 @@ function results = runNeuRAExperiment(dataV, dataX, dataS, name, setups, savedir
 %                           gfrAcc.v.RA(sIdx:eIdx,:)];
             end
             
+            runtime = cputime-t0;
             estBodyRel = estBody.changeRefFrame('MIDPEL');
             if ~strcmp(savedir, '')
                 save(sprintf("%s/%s-%s.mat", savedir, name, cs.label), ...
-                     'estBody', 'estState', 'estState2')
+                     'estBody', 'estState', 'estState2', runtime)
             end
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
             results0 = estBodyRel.diffRMSE(csActBodyRel);
 %         catch
-%             results0 = csActBody.diffRMSE(nan);
+%             results0 = csActBodyRel.diffRMSE(nan);
 %         end
         
         results0.name = name;
         results0.label = cs.label;
-        results0.runtime = cputime-t0;
+        results0.runtime = runtime;
         results(resultsIdx) = results0;
         display(sprintf("Index %3d/%3d: Running time: %.4f", resultsIdx, setupN, cputime-t0));
         resultsIdx = resultsIdx + 1;

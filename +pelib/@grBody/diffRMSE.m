@@ -36,18 +36,24 @@ function out = diffRMSE(obj1, obj2, ref, seq)
         out.oriMeanRMSE = 0.0;
 
         val = [];
+        valStd = [];
         for i=1:length(posFields)
             d = rawDiff.(posFields{i});
             val(end+1,:) = sqrt(nanmean(d.^2, 1));
+            valStd(end+1,:) = nanstd(d, 1);
             out.(posFields{i}) = val(end,:);
+            out.(sprintf('%sStd', posFields{i})) = valStd(end,:);
         end
         out.posMeanRMSE = mean(val(:));
 
         val = [];
+        valStd = [];
         for i=1:length(oriFields)
             d = rawDiff.(oriFields{i});
             val(end+1,:) = sqrt(nanmean(d.^2, 1));
+            valStd(end+1,:) = nanstd(d, 1);
             out.(oriFields{i}) = val(end,:);
+            out.(sprintf('%sStd', oriFields{i})) = valStd(end,:);
         end
         out.oriMeanRMSE = mean(val(:));
     end
