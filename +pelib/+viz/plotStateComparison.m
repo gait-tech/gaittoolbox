@@ -31,8 +31,8 @@ function plotStateComparison(estStateData, actStateData, stateIdx, fs)
         scatter((2:3:n)/fsAdj, zuptStateL(:,1), '<g');
         scatter((2:3:n)/fsAdj, zuptStateR(:,1), '>g');
         cstrState = estStateData.cstrState(:,i);
-        cstrStateU = sum(estStateData.cstrStateU, 2) > 0;
-        cstrState(~cstrStateU) = nan;
+%         cstrStateU = sum(estStateData.cstrStateU, 2) > 0;
+%         cstrState(~cstrStateU) = nan;
         scatter((3:3:n)/fsAdj, cstrState, '.b');
         
         actStateData2 = repelem(actStateData(:,i), 3);

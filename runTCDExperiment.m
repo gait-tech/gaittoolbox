@@ -235,7 +235,12 @@ function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
                          'lnSymbol', '-', 'ptSymbol', '*', ...
                          'xyzColor', {'m', 'y', 'c'}}); 
     actBodyRel = actBody.changeRefFrame('MIDPEL');
-            
+    
+    if ~strcmp(savedir, '')
+        save(sprintf("%s/%s-debug.mat", savedir, name), ...
+                     'gfrAcc', 'qOri', 'idx');
+    end
+    
     resultsIdx = 1; clear results;
     
     for sI=1:setupN

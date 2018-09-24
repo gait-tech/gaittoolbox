@@ -147,6 +147,14 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + adj knee + knee ineq + no P update
 %           154: smoothly constraint kf (W=I, use maxIter)
 %                + adj knee + knee ineq + no P update
+%           171: smoothly constraint kf (W=P^-1, early stop)
+%                + adj knee + knee ineq + no P update + lowest point = floor
+%           172: smoothly constraint kf (W=I, early stop)
+%                + adj knee + knee ineq + no P update + lowest point = floor
+%           173: smoothly constraint kf (W=P^-1, use maxIter)
+%                + adj knee + knee ineq + no P update + lowest point = floor
+%           174: smoothly constraint kf (W=I, use maxIter)
+%                + adj knee + knee ineq + no P update + lowest point = floor
 %           201: estimate projection (W=P^-1) assuming perfect orientation
 %                + knee angle inequality constraint
 %           202: estimate projection (W=I) assuming perfect orientation
@@ -994,7 +1002,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 x_tilde = x_tilde + dx;
             end
             P_tilde = P_plus;
-        elseif fOpt.applyCstr >= 151 && fOpt.applyCstr <= 154
+        elseif (fOpt.applyCstr >= 151 && fOpt.applyCstr <= 154) || ...
+               (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 174)
             sckfAlpha = fOpt.sckfAlpha;
             sckfThreshold = fOpt.sckfThreshold;
             x_tilde = x_plus;
@@ -1077,16 +1086,16 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 Si(isnan(Si)) = sckfThreshold+1;
                 if sum(Si < sckfThreshold) == 0, break, end
 
-                switch (fOpt.applyCstr)
-                    case 151
+                switch mod(fOpt.applyCstr, 10)
+                    case 1
                         Kk = P_tilde*D'*(D*P_tilde*D'+Ri)^(-1);
                         P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
-                    case 152
+                    case 2
                         Kk = D'*(D*D'+Ri)^(-1);
                         P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
-                    case 153
+                    case 3
                         Kk = P_tilde*D'*(D*P_tilde*D'+Ri)^(-1);
-                    case 154
+                    case 4
                         Kk = D'*(D*D'+Ri)^(-1);
                     otherwise
                         Kk = 0;
@@ -1316,7 +1325,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             P_tilde = P_plus;
         end
 
-        if fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77
+        if (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77) || ...
+           (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 174)
             % 001 constraints + MP/LA/RA zpos = floor zpos         
             idx = [idxPosMP(3), idxPosLA(3), idxPosRA(3)];
             [lpy lpi] = min(x_tilde(idx));

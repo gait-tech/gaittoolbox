@@ -3,7 +3,7 @@
 %> @brief Body class for Vicon csv export
 % ======================================================================
 
-classdef ViconBody < handle
+classdef ViconBody < matlab.mixin.Copyable
     properties
         %> body is loaded from this source file name
         srcFileName
@@ -62,8 +62,10 @@ classdef ViconBody < handle
             end
         end
         
-        out = togrBody(obj, idx, args)
-        startIdx = getStartIndex(obj)
+        out = togrBody(obj, idx, args);
+        startIdx = getStartIndex(obj);
+        out = getSubset(obj, idx);
+        out = changePosUnit(obj, newUnit, update);
     end
     
     methods (Static)

@@ -3,7 +3,7 @@
 %> @brief Xsens Body class for the TCD dataset
 % ======================================================================
 
-classdef XsensBody < handle
+classdef XsensBody < matlab.mixin.Copyable
     properties
         %> body is loaded from this source file name
         srcFileName
@@ -29,6 +29,12 @@ classdef XsensBody < handle
         R_Foot
     end
     
+    properties (Constant)
+        segList = {'Head', 'Sternum', 'Pelvis', 'L_UpArm', 'R_UpArm', ...
+            'L_LowArm', 'R_LowArm', 'L_UpLeg', 'R_UpLeg', ...
+            'L_LowLeg', 'R_LowLeg', 'L_Foot', 'R_Foot'};
+    end
+    
     methods
         % ======================================================================
         %> @brief Class constructor
@@ -44,6 +50,8 @@ classdef XsensBody < handle
         end
         
         out = calcCalibSB(obj, refBody, sIdx)
+        out = exportRawMeasurementAsStruct(obj, seg, segAlias)
+        out = getSubset(obj, idx)
     end
     
     methods (Hidden, Static)

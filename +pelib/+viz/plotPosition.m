@@ -17,20 +17,21 @@ function plotPosition(bodys, parts)
     nBody = length(bodys);
     plotIndex = 1;
     axisName = {'x', 'y', 'z'};
-    
+    sp = [];
+    spIdx = 1;
     for i=1:length(parts)
         for j=1:nBody
             data = bodys{j}.(parts{i});
             t = (1:length(data(:,1)))';
             t = t / bodys{j}.fs;
             
-            subplot(n,1,plotIndex); hold on;
+            sp(spIdx) = subplot(n,1,plotIndex); hold on; spIdx = spIdx+1;
             plot(t, data(:,1), ...
                  strcat(bodys{j}.xyzColor{1}, bodys{j}.lnSymbol));
-            subplot(n,1,plotIndex+1); hold on;
+            sp(spIdx) = subplot(n,1,plotIndex+1); hold on; spIdx = spIdx+1;
             plot(t, data(:,2), ...
                  strcat(bodys{j}.xyzColor{2}, bodys{j}.lnSymbol));
-            subplot(n,1,plotIndex+2); hold on;
+            sp(spIdx) = subplot(n,1,plotIndex+2); hold on; spIdx = spIdx+1;
             plot(t, data(:,3), ...
                  strcat(bodys{j}.xyzColor{3}, bodys{j}.lnSymbol));
         end
@@ -53,5 +54,6 @@ function plotPosition(bodys, parts)
         
         plotIndex = plotIndex + 3;
     end
+    linkaxes(sp, 'x');
     xlabel('Time');
 end

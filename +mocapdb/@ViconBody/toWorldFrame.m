@@ -1,5 +1,7 @@
 % ======================================================================
 %> @brief Transform BVHBody from vicon frame (default) to world frame
+%> @author Luke Sy (UNSW GSBME)
+%> @date 24 Sept 2018
 %>
 %> @param obj this BVHBody
 %> @param qR transformation quaternion (1 x 4) from vicon frame to world frame
@@ -7,12 +9,8 @@
 %> @retval out BVHBody in world frame.
 % ======================================================================
 function out = toWorldFrame(obj, qR)
-    out = mocapdb.ViconBody();
-    out.srcFileName = obj.srcFileName;
+    out = obj.copy();
     out.frame = 'world';
-    out.posUnit = obj.posUnit;
-    out.fs = obj.fs;
-    out.nSamples = obj.nSamples;
         
     posList = obj.posList;
            

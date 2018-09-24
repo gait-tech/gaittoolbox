@@ -15,6 +15,7 @@ function plotOrientation(bodys, parts)
     
     n = length(parts)*3;
     plotIndex = 1;
+    axs = []; axIdx = 1;
     
     for i=1:length(parts)
         for j=1:length(bodys)
@@ -25,28 +26,28 @@ function plotOrientation(bodys, parts)
             
             t = (1:length(data(:,1)))';
 
-            subplot(n,1,plotIndex); hold on;
+            axs(axIdx) = subplot(n,1,plotIndex); hold on; axIdx = axIdx + 1;
             plot(t, data(:,1), ...
                  strcat(bodys{j}.xyzColor{1}, bodys{j}.lnSymbol));
-            subplot(n,1,plotIndex+1); hold on;
+            axs(axIdx) = subplot(n,1,plotIndex+1); hold on; axIdx = axIdx + 1;
             plot(t, data(:,2), ...
                  strcat(bodys{j}.xyzColor{2}, bodys{j}.lnSymbol));
-            subplot(n,1,plotIndex+2); hold on;
+            axs(axIdx) = subplot(n,1,plotIndex+2); hold on; axIdx = axIdx + 1;
             plot(t, data(:,3), ...
                  strcat(bodys{j}.xyzColor{3}, bodys{j}.lnSymbol));
         end
         
-        subplot(n,1,plotIndex);
+        axs(axIdx) = subplot(n,1,plotIndex); axIdx = axIdx + 1;
         title(strcat(parts{i}, ' Z'));
         legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
         ylabel(bodys{1}.oriUnit);
         
-        subplot(n,1,plotIndex+1);
+        axs(axIdx) = subplot(n,1,plotIndex+1); axIdx = axIdx + 1;
         title(strcat(parts{i}, ' Y'));
         legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
         ylabel(bodys{1}.oriUnit);
         
-        subplot(n,1,plotIndex+2);
+        axs(axIdx) = subplot(n,1,plotIndex+2); axIdx = axIdx + 1;
         title(strcat(parts{i}, ' X'));
         legend(cellfun(@(x) x.name, bodys, 'UniformOutput', false));
         ylabel(bodys{1}.oriUnit);
@@ -54,4 +55,5 @@ function plotOrientation(bodys, parts)
         plotIndex = plotIndex + 3;
     end
     xlabel('Time');
+    linkaxes(axs, 'x');
 end

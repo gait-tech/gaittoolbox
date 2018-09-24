@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MokkaModelVisualConfiguration name="grBody" version="1.0">
+    <MarkersList>
+        <Marker label="MIDPEL" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LFEP" radius="8" colorR="1" colorG="1" colorB="1" visible="0" trajectory="0"/>
+        <Marker label="LFEO" radius="8" colorR="1" colorG="1" colorB="1" visible="0" trajectory="0"/>
+        <Marker label="LTIO" radius="8" colorR="1" colorG="1" colorB="1" visible="0" trajectory="0"/>
+        <Marker label="RFEP" radius="8" colorR="1" colorG="1" colorB="1" visible="0" trajectory="0"/>
+        <Marker label="RFEO" radius="8" colorR="1" colorG="1" colorB="1" visible="0" trajectory="0"/>
+        <Marker label="RTIO" radius="8" colorR="1" colorG="1" colorB="1" visible="0" trajectory="0"/>
+        <Marker label="MIDPELRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LFEPRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LFEORef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LTIORef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RFEPRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RFEORef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RTIORef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+    </MarkersList>
+    <SegmentsList>
+        <Segment label="Pelvis" colorR="0" colorG="1" colorB="0" visible="1" surface="0" description="">
+            <Point label="MIDPEL"/>
+            <Point label="LFEP"/>
+            <Point label="RFEP"/>
+            <Link pt1="LFEP" pt2="MIDPEL"/>
+            <Link pt1="LFEP" pt2="RFEP"/>
+            <Link pt1="MIDPEL" pt2="RFEP"/>
+        </Segment>
+        <Segment label="LTHI" colorR="0" colorG="0" colorB="1" visible="1" surface="0" description="">
+            <Point label="LFEP"/>
+            <Point label="LFEO"/>
+            <Link pt1="LFEO" pt2="LFEP"/>
+        </Segment>
+        <Segment label="LSHK" colorR="0" colorG="0" colorB="1" visible="1" surface="0" description="">
+            <Point label="LFEO"/>
+            <Point label="LTIO"/>
+            <Link pt1="LFEO" pt2="LTIO"/>
+        </Segment>
+        <Segment label="RTHI" colorR="1" colorG="0" colorB="0" visible="1" surface="0" description="">
+            <Point label="RFEP"/>
+            <Point label="RFEO"/>
+            <Link pt1="RFEO" pt2="RFEP"/>
+        </Segment>
+        <Segment label="RSHK" colorR="1" colorG="0" colorB="0" visible="1" surface="0" description="">
+            <Point label="RFEO"/>
+            <Point label="RTIO"/>
+            <Link pt1="RFEO" pt2="RTIO"/>
+        </Segment>
+    </SegmentsList>
+</MokkaModelVisualConfiguration>

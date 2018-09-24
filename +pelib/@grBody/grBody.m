@@ -143,9 +143,30 @@ classdef grBody < matlab.mixin.Copyable
             theta = pelib.grBody.calcJointAngles(obj.qRTH, obj.qRSK);
         end
         
+        function d = getPelvisLength(obj, idx)
+            if nargin <= 1, idx = 1; end
+            d = norm(obj.LFEP(idx, :) - obj.RFEP(idx, :));
+        end
+        
+        function d = getLShankLength(obj, idx)
+            if nargin <= 1, idx = 1; end
+            d = norm(obj.LFEO(idx, :) - obj.LTIO(idx, :));
+        end
+        
+        function d = getRShankLength(obj, idx)
+            if nargin <= 1, idx = 1; end
+            d = norm(obj.RFEO(idx, :) - obj.RTIO(idx, :));
+        end
+        
+        out = calcJointVel(obj, pts);
+        out = calcJointAcc(obj, pts);
+        
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);
         out = toWorldFrame(obj, pos, ori);
-        out = exportc3d(obj, fname);
+        out = changePosUnit(obj, newUnit, update);
+        out = getSubset(obj, idx);
+        out = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
+                        extraMarkers, oriMode);
     end
 end
