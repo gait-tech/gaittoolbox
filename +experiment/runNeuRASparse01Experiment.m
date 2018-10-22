@@ -158,6 +158,83 @@ function results = runNeuRAExperiment(dataS, ...
     end
     
     if ~isempty(dataV) & ~isempty(calibW2V)
+        nSamples = min(dataV.nSamples, dataS.nSamples);
+        V__dataV = dataV.getSubset(1:nSamples);
+        V__dataV.changePosUnit('m', true);
+        W__dataS = dataS.getSubset(1:nSamples);
+        V__dataS = W__dataS.toViconFrame(calibW2V);
+        
+        sIdx = max(V__dataV.getStartIndex()+1, 100);
+        eIdx = length(V__dataV.PELV(:,1)) - 1;
+        idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
+        allIdx.v__v = idx;
+        
+        viconCalibWB = V__dataS.calcCalibSB(V__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));       
+        %% orientation
+        % orientation of body from sparse sensor
+        qPelvisEst0 = quatmultiply(V__dataS.Pelvis.ori, quatconj(viconCalibWB.Pelvis.ori));
+        qLankleEst0 = quatmultiply(V__dataS.L_LowLeg.ori, quatconj(viconCalibWB.L_LowLeg.ori));
+        qRankleEst0 = quatmultiply(V__dataS.R_LowLeg.ori, quatconj(viconCalibWB.R_LowLeg.ori));
+        qOri.v__sv.PELV = qPelvisEst0(sIdx:eIdx, :);
+        qOri.v__sv.LTIB = qLankleEst0(sIdx:eIdx, :);
+        qOri.v__sv.RTIB = qRankleEst0(sIdx:eIdx, :);
+        
+        % orientation of body from vicon
+        qOri.v__v.PELV = V__dataV.qRPV(sIdx+1:eIdx+1, :);
+        qOri.v__v.LTIB = V__dataV.qLSK(sIdx+1:eIdx+1, :);
+        qOri.v__v.RTIB = V__dataV.qRSK(sIdx+1:eIdx+1, :);
+        
+        
+        %% position, velocity, acceleration
+        V__viconBody = V__dataV.togrBody(1:nSamples, {'name', 'act', 'oriUnit', 'deg', ...
+                         'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
+                         'xyzColor', {'m', 'y', 'c'}});  
+        vel = V__viconBody.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
+        acc = V__viconBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
+
+        x0.v__v = [V__viconBody.MIDPEL(sIdx,:) vel.MIDPEL(sIdx,:) zeros(1,4) ...
+                   V__viconBody.LTIO(sIdx,:) vel.LTIO(sIdx,:) zeros(1,4) ...
+                   V__viconBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]';     
+
+        vsigma = unique([cellfun(@(x) x.accDataNoise, setups), 0]);
+        for i = 1:length(vsigma)
+            vLabel = getVLabel('v__v', vsigma(i));
+            gfrAcc.(vLabel) = {};
+            gfrAcc.(vLabel).MP = acc.MIDPEL + randn(eIdx,3).*vsigma(i);
+            gfrAcc.(vLabel).MP = gfrAcc.(vLabel).MP(sIdx:eIdx,:);
+            gfrAcc.(vLabel).LA = acc.LTIO + randn(eIdx,3).*vsigma(i);
+            gfrAcc.(vLabel).LA = gfrAcc.(vLabel).LA(sIdx:eIdx,:);
+            gfrAcc.(vLabel).RA = acc.RTIO + randn(eIdx,3).*vsigma(i);
+            gfrAcc.(vLabel).RA = gfrAcc.(vLabel).RA(sIdx:eIdx,:);
+        end
+
+        % gfrAcc from sparse
+        gfrAcc.v__s = {};
+        gfrAcc.v__s.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
+                                W__dataS.Pelvis.acc) - [0 0 9.81];
+        gfrAcc.v__s.MP = gfrAcc.v__s.MP(sIdx:eIdx,:);
+        gfrAcc.v__s.MP = quatrotate(quatconj(calibW2V.Pelvis.ori), gfrAcc.v__s.MP);
+        gfrAcc.v__s.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
+                                W__dataS.L_LowLeg.acc) - [0 0 9.81];
+        gfrAcc.v__s.LA = gfrAcc.v__s.LA(sIdx:eIdx,:);
+        gfrAcc.v__s.LA = quatrotate(quatconj(calibW2V.L_LowLeg.ori), gfrAcc.v__s.LA);
+        gfrAcc.v__s.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
+                                W__dataS.R_LowLeg.acc) - [0 0 9.81];
+        gfrAcc.v__s.RA = gfrAcc.v__s.RA(sIdx:eIdx,:);
+        gfrAcc.v__s.RA = quatrotate(quatconj(calibW2V.R_LowLeg.ori), gfrAcc.v__s.RA);
+        
+        % gfrAcc from filtered sparse
+        fc = 10;
+        [lpf_b, lpf_a] = butter(6, fc/(fs/2));
+        gfrAcc.v__sf.MP = filter(lpf_b, lpf_a, gfrAcc.v__s.MP);
+        gfrAcc.v__sf.LA = filter(lpf_b, lpf_a, gfrAcc.v__s.LA);
+        gfrAcc.v__sf.RA = filter(lpf_b, lpf_a, gfrAcc.v__s.RA);
+        
+        % debug purposes
+        V__viconBody = V__dataV.togrBody(idx+1, {'name', 'act', 'oriUnit', 'deg', ...
+                         'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
+                         'xyzColor', {'m', 'y', 'c'}});
+        
         % gfrAcc from sparse
 %         gfrAcc.w__s = {};
 %         gfrAcc.w__s.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
@@ -252,7 +329,7 @@ function results = runNeuRAExperiment(dataS, ...
                  'xsensBody', 'viconBody', 'gfrAcc', 'qOri', 'x0', 'idx')
         else
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
-                 'W__viconBody', 'gfrAcc', 'qOri', 'x0', 'idx')
+                 'W__viconBody', 'V__viconBody', 'gfrAcc', 'qOri', 'x0', 'idx')
         end
     end
             
@@ -279,6 +356,13 @@ function results = runNeuRAExperiment(dataS, ...
             d_lfemur = norm(W__dataV.LFEP(sIdx,:) - W__dataV.LFEO(sIdx,:));
             d_rtibia = norm(W__dataV.RFEO(sIdx,:) - W__dataV.RTIO(sIdx,:));
             d_ltibia = norm(W__dataV.LFEO(sIdx,:) - W__dataV.LTIO(sIdx,:));
+        elseif cs.initSrc == 'v__v'
+            csActBodyRel = PV__viconBody;
+            d_pelvis = norm(V__dataV.RFEP(sIdx,:) - V__dataV.LFEP(sIdx,:));
+            d_rfemur = norm(V__dataV.RFEP(sIdx,:) - V__dataV.RFEO(sIdx,:));
+            d_lfemur = norm(V__dataV.LFEP(sIdx,:) - V__dataV.LFEO(sIdx,:));
+            d_rtibia = norm(V__dataV.RFEO(sIdx,:) - V__dataV.RTIO(sIdx,:));
+            d_ltibia = norm(V__dataV.LFEO(sIdx,:) - V__dataV.LTIO(sIdx,:));
         else
             csActBodyRel = xsensBodyRel;
             d_pelvis = norm(dataX.RightUpLeg(sIdx,:) - dataX.LeftUpLeg(sIdx,:));
@@ -343,7 +427,7 @@ function results = runNeuRAExperiment(dataS, ...
             estBodyRel = estBody.changeRefFrame('MIDPEL');
             if ~strcmp(savedir, '')
                 save(sprintf("%s/%s-%s.mat", savedir, name, cs.label), ...
-                     'estBody', 'estState', 'estState2', 'runtime')
+                     'estBody', 'estState', 'estState2', 'runtime', 'cs')
             end
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
             results0 = estBodyRel.diffRMSE(csActBodyRel);

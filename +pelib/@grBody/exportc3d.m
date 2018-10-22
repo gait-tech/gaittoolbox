@@ -44,6 +44,7 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     btkSetFirstFrame(acq, 1);
     btkSetPointsUnit(acq, 'marker', obj.posUnit);
     btkSetPointsUnit(acq, 'angle', 'deg');
+    btkSetPointsUnit(acq, 'scalar', 'n/a (see description)');
     
     % append meta data
     btkAppendMetaData(acq, 'MANUFACTURER', 'COMPANY', ...
@@ -96,19 +97,36 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
         addAngles(refBody, acq, 'Ref');
     end
     
-    % add analog signals
+    % add sensor signals
     analogLabels = fieldnames(sensors);
     for i = 1:length(analogLabels)
         analogName = analogLabels{i};
-        btkAppendAnalog(acq, analogName, sensors.(analogName)(1:n));
-        
-        if analogName(end-3:end-1) == 'Acc'
-            btkSetAnalogUnit(acq, analogName, 'm/s^2');
-        elseif analogName(end-3:end-1) == 'Gyr'
-            btkSetAnalogUnit(acq, analogName, 'rad/s');
-        elseif analogName(end-3:end-1) == 'Mag'
-            btkSetAnalogUnit(acq, analogName, 'unitless');
+        if size(sensors.(analogName), 2) == 1
+            btkAppendAnalog(acq, analogName, sensors.(analogName)(1:n));
+            
+            if contains(analogName(end-3:end), 'Acc')
+                btkSetAnalogUnit(acq, analogName, 'm/s^2');
+            elseif contains(analogName(end-3:end), 'Gyr')
+                btkSetAnalogUnit(acq, analogName, 'rad/s');
+            elseif contains(analogName(end-3:end), 'Mag')
+                btkSetAnalogUnit(acq, analogName, 'unitless');
+            end
+        elseif size(sensors.(analogName), 2) == 3
+            if contains(analogName(end-3:end), 'Acc')
+                desc = 'm/s^2';
+            elseif contains(analogName(end-3:end), 'Gyr')
+                desc = 'rad/s';
+            elseif contains(analogName(end-3:end), 'Mag')
+                desc = 'unitless';
+            else
+                desc = '';
+            end
+            btkAppendPoint(acq, 'scalar', analogName, sensors.(analogName), ...
+                    zeroRes, desc);
+        else
+            warning('Cannot append raw measurement %s', analogName); 
         end
+
     end
     
     % add step detection
@@ -145,7 +163,7 @@ function addAngles(obj, acq, suffix)
     seq = 'YXZ';
     zeroRes = zeros(obj.nSamples, 1);
     
-    [r2 r1 r3] = quat2angle(obj.qRPV, seq); eul = [r1 r2 r3]*180/pi;
+    [r2 r1 r3] = quat2angle(obj.qRPV, seq); eul = rad2deg([r1 r2 r3]);
     btkAppendPoint(acq, 'angle', sprintf('PelvisAngles%s', suffix), eul, ...
                     zeroRes, 'Pelvis angles X, Y, Z');
     btkAppendPoint(acq, 'angle', sprintf('LHipAngles%s', suffix), ...
@@ -161,16 +179,16 @@ function addAngles(obj, acq, suffix)
                    obj.calcJointAnglesRKnee()*180/pi, ...
                    zeroRes, 'Right knee angles X, Y, Z');
 
-    [r2 r1 r3] = quat2angle(obj.qLTH, seq); eul = [r1 r2 r3]*180/pi;
+    [r2 r1 r3] = quat2angle(obj.qLTH, seq); eul = rad2deg([r1 r2 r3]);
     btkAppendPoint(acq, 'angle', sprintf('LThighAngles%s', suffix), eul, ...
                    zeroRes, 'Left thigh angles X, Y, Z (seq: YXZ)');
-    [r2 r1 r3] = quat2angle(obj.qRTH, seq); eul = [r1 r2 r3]*180/pi;
+    [r2 r1 r3] = quat2angle(obj.qRTH, seq); eul = rad2deg([r1 r2 r3]);
     btkAppendPoint(acq, 'angle', sprintf('RThighAngles%s', suffix), eul, ...
                    zeroRes, 'Right thigh angles X, Y, Z (seq: YXZ)');
-    [r2 r1 r3] = quat2angle(obj.qLSK, seq); eul = [r1 r2 r3]*180/pi;
+    [r2 r1 r3] = quat2angle(obj.qLSK, seq); eul = rad2deg([r1 r2 r3]);
     btkAppendPoint(acq, 'angle', sprintf('LShankAngles%s', suffix), eul, ...
                    zeroRes, 'Left shank angles X, Y, Z (seq: YXZ)');
-    [r2 r1 r3] = quat2angle(obj.qRSK, seq); eul = [r1 r2 r3]*180/pi;
+    [r2 r1 r3] = quat2angle(obj.qRSK, seq); eul = rad2deg([r1 r2 r3]);
     btkAppendPoint(acq, 'angle', sprintf('RShankAngles%s', suffix), eul, ...
                    zeroRes, 'Right shank angles X, Y, Z (seq: YXZ)');
 end

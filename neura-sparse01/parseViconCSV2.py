@@ -35,7 +35,7 @@ def parseViconCSV(fname, output='viconcsv.mat'):
                         newcolumnname.append(n2[0])                
                 
                 for i, x in enumerate(df.loc[0,:]):
-                    if x[-2:] == "''":
+                    if x in ["X''", "Y''", "Z''"]:
                         newcolumnname[i+1] += "A"
                     elif x in ["X'", "Y'", "Z'"]:
                         newcolumnname[i+1] += "V"

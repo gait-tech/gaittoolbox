@@ -26,15 +26,13 @@ function out = exportRawMeasurementAsStruct(obj, seg, segAlias)
     lmap = 'XYZ';
     for i=1:length(seg)
         t = obj.(seg{i});
-        for j=1:3
-            out.(sprintf('%sAcc%c', segAlias{i}, lmap(j))) = t.acc(:,j);
-        end
-        for j=1:3
-            out.(sprintf('%sGyr%c', segAlias{i}, lmap(j))) = t.gyr(:,j);
-        end
-        for j=1:3
-            out.(sprintf('%sMag%c', segAlias{i}, lmap(j))) = t.mag(:,j);
-        end
+        out.(sprintf('%sAcc', segAlias{i})) = t.acc;
+        out.(sprintf('%sGyr', segAlias{i})) = t.gyr;
+        out.(sprintf('%sMag', segAlias{i})) = t.mag;
+        out.(sprintf('%sAccWorldFrame', segAlias{i})) = quatrotate(quatconj(t.ori), t.acc);
+        out.(sprintf('%sGyrWorldFrame', segAlias{i})) = quatrotate(quatconj(t.ori), t.gyr);
+        out.(sprintf('%sMagWorldFrame', segAlias{i})) = quatrotate(quatconj(t.ori), t.mag);
+        
         for j=1:4
             out.(sprintf('%sq%d', segAlias{i}, j)) = t.ori(:,j);
         end

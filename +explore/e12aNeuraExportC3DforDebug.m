@@ -1,22 +1,38 @@
 % motion list
 list = {
-    struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C201'), ...
-    struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C202'), ...
-    struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C172'), ...
-    struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C202'), ...
-    struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C202'), ...
-    struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C202'), ...
+%     struct('file', 'S01-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C201'), ...
+    struct('file', 'S08-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C201'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C203'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C203'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Av__sOw__sIw__v+M02+C201'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Av__vOv__vIv__v+M02+C201'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C201'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C202'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C172'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C202'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C202'), ...
+%     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Aw__sOw__sIw__v+M02+C202'), ...
 %     struct('file', 'S01-Trial-Walk-1', 'algo', 'Nssv+M02+C201'), ...
 %     struct('file', 'S02-Trial-Walk-1', 'algo', 'Nssv+M02+C201'), ...
 %     struct('file', 'S03-Trial-Walk-1', 'algo', 'Nssv+M02+C201'), ...
 };
 
-for i=1:length(list)
-    dataSfname = sprintf('neura-sparse01/imu/%s', list{i}.file);
-    load(sprintf('neura-sparse01/explore/neura-%s-debug.mat', list{i}.file));
-    load(sprintf('neura-sparse01/explore/neura-%s-%s.mat', list{i}.file, list{i}.algo));
+for lIdx=1:length(list)
+    dataSfname = sprintf('neura-sparse01/imu/%s', list{lIdx}.file);
+    load(sprintf('neura-sparse01/explore/neura-%s-debug.mat', list{lIdx}.file));
+    load(sprintf('neura-sparse01/explore/neura-%s-%s.mat', list{lIdx}.file, list{lIdx}.algo));
     
-    targetname = sprintf('explore_output/neura-%s-%s', list{i}.file, list{i}.algo);
+    targetname = sprintf('explore_output/neura-%s-%s', list{lIdx}.file, list{lIdx}.algo);
+    
+    if cs.accData == 'w__s'
+        eLabel = 'w__s';
+        aLabel = 'w__v';
+        vb = W__viconBody;
+    else
+        eLabel = 'v__s';
+        aLabel = 'v__v';
+        vb = V__viconBody;
+    end
     
     eMarkers = struct();
 
@@ -41,7 +57,7 @@ for i=1:length(list)
     % eMarkers.RTIOMeas = estBodyMeasRel.RTIO;
 
     estBodyRel = estBody.changeRefFrame('MIDPEL');
-    viconBodyRel = W__viconBody.changeRefFrame('MIDPEL');
+    viconBodyRel = vb.changeRefFrame('MIDPEL');
 
     d = norm(estBody.MIDPEL(1,:) - estBody.LFEP(1,:))*0.5;
 
@@ -52,34 +68,40 @@ for i=1:length(list)
     dataS = mocapdb.XsensBody.loadMTExport(dataSfname, options);
     dataS = dataS.getSubset(idx);
 
-    % sensors = struct();
+%     sensors = struct();
     sensors = dataS.exportRawMeasurementAsStruct({'Pelvis', 'L_LowLeg', 'R_LowLeg'}, ...
                     {'PELV', 'LANK', 'RANK'});
-    sensors.PELVFreeAccX = gfrAcc.w__s.MP(:,1);
-    sensors.PELVFreeAccY = gfrAcc.w__s.MP(:,2);
-    sensors.PELVFreeAccZ = gfrAcc.w__s.MP(:,3);
-    sensors.LANKFreeAccX = gfrAcc.w__s.LA(:,1);
-    sensors.LANKFreeAccY = gfrAcc.w__s.LA(:,2);
-    sensors.LANKFreeAccZ = gfrAcc.w__s.LA(:,3);
-    sensors.RANKFreeAccX = gfrAcc.w__s.RA(:,1);
-    sensors.RANKFreeAccY = gfrAcc.w__s.RA(:,2);
-    sensors.RANKFreeAccZ = gfrAcc.w__s.RA(:,3);
-
-    sensors.PELVFreeAccRefX = gfrAcc.w__v.MP(:,1);
-    sensors.PELVFreeAccRefY = gfrAcc.w__v.MP(:,2);
-    sensors.PELVFreeAccRefZ = gfrAcc.w__v.MP(:,3);
-    sensors.LANKFreeAccRefX = gfrAcc.w__v.LA(:,1);
-    sensors.LANKFreeAccRefY = gfrAcc.w__v.LA(:,2);
-    sensors.LANKFreeAccRefZ = gfrAcc.w__v.LA(:,3);
-    sensors.RANKFreeAccRefX = gfrAcc.w__v.RA(:,1);
-    sensors.RANKFreeAccRefY = gfrAcc.w__v.RA(:,2);
-    sensors.RANKFreeAccRefZ = gfrAcc.w__v.RA(:,3);
-
+%     sensors.PELVFreeAccX = gfrAcc.(eLabel).MP(:,1);
+%     sensors.PELVFreeAccY = gfrAcc.(eLabel).MP(:,2);
+%     sensors.PELVFreeAccZ = gfrAcc.(eLabel).MP(:,3);
+%     sensors.LANKFreeAccX = gfrAcc.(eLabel).LA(:,1);
+%     sensors.LANKFreeAccY = gfrAcc.(eLabel).LA(:,2);
+%     sensors.LANKFreeAccZ = gfrAcc.(eLabel).LA(:,3);
+%     sensors.RANKFreeAccX = gfrAcc.(eLabel).RA(:,1);
+%     sensors.RANKFreeAccY = gfrAcc.(eLabel).RA(:,2);
+%     sensors.RANKFreeAccZ = gfrAcc.(eLabel).RA(:,3);
+% 
+%     sensors.PELVFreeAccRefX = gfrAcc.(aLabel).MP(:,1);
+%     sensors.PELVFreeAccRefY = gfrAcc.(aLabel).MP(:,2);
+%     sensors.PELVFreeAccRefZ = gfrAcc.(aLabel).MP(:,3);
+%     sensors.LANKFreeAccRefX = gfrAcc.(aLabel).LA(:,1);
+%     sensors.LANKFreeAccRefY = gfrAcc.(aLabel).LA(:,2);
+%     sensors.LANKFreeAccRefZ = gfrAcc.(aLabel).LA(:,3);
+%     sensors.RANKFreeAccRefX = gfrAcc.(aLabel).RA(:,1);
+%     sensors.RANKFreeAccRefY = gfrAcc.(aLabel).RA(:,2);
+%     sensors.RANKFreeAccRefZ = gfrAcc.(aLabel).RA(:,3);
+    sensors.PELVFreeAcc = gfrAcc.(eLabel).MP;
+    sensors.LANKFreeAcc = gfrAcc.(eLabel).LA;
+    sensors.RANKFreeAcc = gfrAcc.(eLabel).RA;
+    sensors.PELVFreeAccRef = gfrAcc.(aLabel).MP;
+    sensors.LANKFreeAccRef = gfrAcc.(aLabel).LA;
+    sensors.RANKFreeAccRef = gfrAcc.(aLabel).RA;
+    
     % step detection
     fs = estBody.fs;
     VAR_WIN  = floor(fs*0.25); % NUM_SAMPLES
     ACC_VAR_THRESH = 1;
-    csGfrAcc = gfrAcc.w__s;
+    csGfrAcc = gfrAcc.(eLabel);
 
     movVarAcc_pelvis = movingvar(sqrt( sum(csGfrAcc.MP .^2, 2)), VAR_WIN);
     bIsStatMP = movVarAcc_pelvis < 0;
@@ -89,9 +111,14 @@ for i=1:length(list)
     bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
 
     estBody.exportc3d(sprintf('%s.c3d', targetname), sensors, ...
-                      W__viconBody, bIsStatLA, bIsStatRA, eMarkers);
+                      vb, bIsStatLA, bIsStatRA, eMarkers);
     estBody.exportc3d(sprintf('%s03.c3d', targetname), sensors, ...
-                      W__viconBody, bIsStatLA, bIsStatRA, eMarkers, 3);
+                      vb, bIsStatLA, bIsStatRA, eMarkers, 3);
+    
+    % side by side
+    estBodyS2S = estBodyRel.toWorldFrame(vb.MIDPEL, vb.qRPV);
+    viconBodyS2S = viconBodyRel.toWorldFrame(vb.MIDPEL+[0.5 0 0], vb.qRPV);
+    estBodyS2S.exportc3d(sprintf('%s-SidebySide.c3d', targetname), sensors, viconBodyS2S, bIsStatLA, bIsStatRA, eMarkers);
     
     tmp = addAxis(quatmultiply(quatconj(estBody.qRPV), dataS.Pelvis.ori), ...
                   estBodyRel.MIDPEL, 'qRPVSens');
@@ -114,8 +141,8 @@ for i=1:length(list)
     estBodyRel.exportc3d(sprintf('%s-Rel.c3d', targetname), sensors, viconBodyRel, bIsStatLA, bIsStatRA, eMarkers);
     estBodyRel.exportc3d(sprintf('%s-Rel02.c3d', targetname), sensors, viconBodyRel, bIsStatLA, bIsStatRA, eMarkers, 2);
 
-    estBodyViconPelv = estBodyRel.toWorldFrame(W__viconBody.MIDPEL, W__viconBody.qRPV);
-    estBodyViconPelv.exportc3d(sprintf('%s-Vicon.c3d', targetname), sensors, W__viconBody, bIsStatLA, bIsStatRA, eMarkers);
+    estBodyViconPelv = estBodyRel.toWorldFrame(vb.MIDPEL, vb.qRPV);
+    estBodyViconPelv.exportc3d(sprintf('%s-Vicon.c3d', targetname), sensors, vb, bIsStatLA, bIsStatRA, eMarkers);
 
     estBodyDebug = estBody.copy();
     n2 = estBody.nSamples*3;
@@ -193,7 +220,7 @@ for i=1:length(list)
                            viconBodyDebug, bIsStatLADebug, bIsStatRADebug);
     estBodyDebugRel.exportc3d(sprintf('%s-RelDebug.c3d', targetname), sensorsDebug, ...
                               viconBodyDebugRel, bIsStatLADebug, bIsStatRADebug);
-    % viconBody.exportc3d(sprintf('%svicon.c3d', targetname));
+    vb.exportc3d(sprintf('%s-Vicon.c3d', targetname));
 end
 
 function out = addAxis(q, p, qname)

@@ -5,9 +5,8 @@ dir = 'neura-sparse01';
 expDir = sprintf('%s/explore', dir);
 
 dataList = { ...
-%     struct('subj', 'S01', 'act', 'Trial-Walk-1')
-    struct('subj', 'S02', 'act', 'Trial-Walk-1')
-    struct('subj', 'S03', 'act', 'Trial-Walk-1')
+%     struct('subj', 'S01', 'act', 'Trial-Walk-1'), ...
+    struct('subj', 'S08', 'act', 'Trial-Walk-1'), ...
 };
 % subject = {'S01', 'S02', 'S03', 'S04'};
 % target = {'Static-1', 'Walk-1', 'Walk-2', 'TUG-1', 'TUG-2', 'Jog-1', 'Jog-2', ...
@@ -41,6 +40,10 @@ setups = {
 %            'applyMeas', 21, 'applyCstr', 0, 'P', 0.5), ...
 };
 
+setups{end+1} = struct('est', 'ekfv3', 'frame', 'world', ...
+           'accData', 'v__v', 'oriData', 'v__v', 'accDataNoise', 0, ...
+           'initSrc', 'v__v', 'applyMeas', 02, 'applyCstr', 201, ...
+           'P', 0.5);
 % for mI = [0]
 %     for cI = [0 1:8 21:23 51:54 71:77 121:122 124:125 131:132 134:135 ...
 %               141:144 151:154 201:208 221:223 271:278]
@@ -50,26 +53,26 @@ setups = {
 %     end
 % end
 
-for iI = {'w__v'} % ['v' 'x']
+% for iI = {'w__v', 'v__v'} % ['v' 'x']
     for mI = [2]
 %         for cI = [0 1:8 21:23 51:54 71:78 121:122 124:125 131:132 134:135 ...
 %               141:144 151:154 201:208 221:223 271:278]
 %         for cI = [0 201:208 221:223 132 135 151:154 ]
-%         for cI = [202 203 135 152]
-        for cI = [201 202 203 152 172]
+        for cI = [201]
+%         for cI = [201 202 203 152 172]
 %         for cI = [0 1:8 21:23 122 125 141:144 ...
 %                     201:208 221:223 132 135 151:154 ]
-            for aI = {'w__s'}
-                for oI = {'w__s'}
-                    setups{end+1} = struct('est', 'ekfv3', 'frame', 'world', ...
-                       'accData', aI, 'oriData', oI, 'accDataNoise', 0, ...
-                       'initSrc', iI, 'applyMeas', mI, 'applyCstr', cI, ...
+%             setups{end+1} = struct('est', 'ekfv3', 'frame', 'world', ...
+%                        'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
+%                        'initSrc', 'w__v', 'applyMeas', mI, 'applyCstr', cI, ...
+%                        'P', 0.5);
+            setups{end+1} = struct('est', 'ekfv3', 'frame', 'world', ...
+                       'accData', 'v__s', 'oriData', 'v__s', 'accDataNoise', 0, ...
+                       'initSrc', 'v__v', 'applyMeas', mI, 'applyCstr', cI, ...
                        'P', 0.5);
-                end
-            end
         end
     end
-end
+% end
 
 for i = 1:length(setups)
     setups{i}.label = getLabel(setups{i});
@@ -83,13 +86,14 @@ for i = 1:dataN
     
     name = sprintf('%s-%s-%s', 'neura', n.subj, n.act);
     dataPath = sprintf('%s/mat/%s.mat', dir, name);
-    if exist(dataPath, 'file')
-        load(dataPath, 'data');
-    else
+%     if exist(dataPath, 'file')
+%         load(dataPath, 'data');
+%     else
         data = struct('name', name, ...
             'fnameV', sprintf('%s/vicon/%s-%s.mat', dir, n.subj, n.act), ...
             'fnameX', sprintf('%s/xsens/%s-%s.bvh', dir, n.subj, n.act), ...
-            'fnameS', sprintf('%s/imu/%s-%s', dir, n.subj, n.act));
+            'fnameS', sprintf('%s/imu/%s-%s', dir, n.subj, n.act), ...
+            'calibFnameSensorW2V', sprintf('%s/calib/%s-Calib-SensorW2V.txt', dir, n.subj));
         
         data.dataV = mocapdb.ViconBody.loadViconMat(data.fnameV);
         if exist(data.fnameX, 'file')
@@ -103,9 +107,17 @@ for i = 1:dataN
         data.calibV2W = rotm2quat(mocapdb.loadPendulumCompassMat( ...
              sprintf('%s/calib/%s-Calib-V2W-Pendulum.mat', dir, n.subj), ...
              sprintf('%s/calib/%s-Calib-V2W-Compass.mat', dir, n.subj))' );
-        data.calibW2V = mocapdb.XsensBody('nSamples', 0);
+%         if exist(data.calibFnameSensorW2V, 'file')
+%             data.calibW2V = mocapdb.XsensBody.loadCalibCSV(data.calibFnameSensorW2V);
+%         else
+            data.calibW2V = mocapdb.XsensBody.loadCalibSensorW2V( ...
+                 sprintf('%s/calib/%s-Calib-SensorW2V.mat', dir, n.subj), ...
+                 sprintf('%s/calib/%s-Calib-SensorW2V', dir, n.subj), ...
+                 options, 100);
+            data.calibW2V.saveCalibCSV(data.calibFnameSensorW2V);
+%         end
         save(dataPath, 'data');
-    end
+%     end
     
     display(sprintf("Data %3d/%3d: %s", i, dataN, data.name));
     r = experiment.runNeuRASparse01Experiment(data.dataS, ...

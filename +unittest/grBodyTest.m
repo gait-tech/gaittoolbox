@@ -61,3 +61,14 @@ gfr_acc_RA = [0 0 0; diff(dataV.RTIO, 2, 1)*fs*fs];
 assert(all(all((gfr_acc_MP-acc.MIDPEL) == 0)));
 assert(all(all((gfr_acc_LA-acc.LTIO) == 0)));
 assert(all(all((gfr_acc_RA-acc.RTIO) == 0)));
+
+%% Test joint angles
+dataV = mocapdb.ViconBody.loadViconMat('+unittest/grBodyData/S03-Trial-002.mat');
+dataV = dataV.togrBody(1:dataV.nSamples, {});
+
+load('+unittest/grBodyData/S03-Trial-002.mat');
+THRESHOLD = 1;
+assert(all(all((rad2deg(dataV.calcJointAnglesLHip()) - LHipAngles(:,[2 1 3])) < THRESHOLD)));
+assert(all(all((rad2deg(dataV.calcJointAnglesRHip()) - RHipAngles(:,[2 1 3])) < THRESHOLD)));
+assert(all(all((rad2deg(dataV.calcJointAnglesLKnee()) - LKneeAngles(:,[2 1 3])) < THRESHOLD)));
+assert(all(all((rad2deg(dataV.calcJointAnglesRKnee()) - RKneeAngles(:,[2 1 3])) < THRESHOLD)));

@@ -49,9 +49,12 @@ classdef XsensBody < matlab.mixin.Copyable
             end
         end
         
-        out = calcCalibSB(obj, refBody, sIdx)
-        out = exportRawMeasurementAsStruct(obj, seg, segAlias)
-        out = getSubset(obj, idx)
+        out = calcCalibSB(obj, refBody, sIdx);
+        out = calcCalibAnkleSensorW2PelvisWFromAcc(obj, idx);
+        out = exportRawMeasurementAsStruct(obj, seg, segAlias);
+        out = getSubset(obj, idx);
+        out = toViconFrame(obj, qR);
+        saveCalibCSV(obj, fname);
     end
     
     methods (Hidden, Static)
@@ -63,5 +66,7 @@ classdef XsensBody < matlab.mixin.Copyable
         obj = loadCalib(fname)
         obj = loadMTExport(name, options)
         obj = loadMVNX(fname, options)
+        obj = loadCalibSensorW2V(viconFName, xsensFName, options, idx)
+        obj = loadCalibCSV(obj, fname)
     end
 end
