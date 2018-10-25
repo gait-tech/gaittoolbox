@@ -383,7 +383,7 @@ function results = runNeuRAExperiment(dataS, ...
         movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc.RA .^2, 2)), VAR_WIN);
         bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
         
-%         try
+        try
             if cs.est == 'ekfv3'
                 
                 v3Options = struct('fs', fs, 'applyMeas', cs.applyMeas, ...
@@ -431,9 +431,10 @@ function results = runNeuRAExperiment(dataS, ...
             end
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
             results0 = estBodyRel.diffRMSE(csActBodyRel);
-%         catch
-%             results0 = csActBodyRel.diffRMSE(nan);
-%         end
+        catch
+            runtime = cputime-t0;
+            results0 = csActBodyRel.diffRMSE(nan);
+        end
         
         results0.name = name;
         results0.label = cs.label;

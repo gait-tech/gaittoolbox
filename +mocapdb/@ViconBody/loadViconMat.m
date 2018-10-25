@@ -20,6 +20,8 @@ function obj = loadViconMat(fname)
     
     PELV_y = (LASI-RASI) ./ vecnorm(LASI-RASI, 2, 2);
     PELV_c = (RPSI-RASI);
+    PELV_cIdx = any(isnan(PELV_c), 2);
+    PELV_c(PELV_cIdx, :) = LPSI(PELV_cIdx, :) - RASI(PELV_cIdx, :);
     PELV_z = cross(PELV_y, PELV_c, 2);
     PELV_z = PELV_z ./ vecnorm(PELV_z, 2, 2);
     PELV_x = cross(PELV_y, PELV_z, 2);

@@ -22,11 +22,13 @@ function out = diffRMSE(obj1, obj2, ref, seq)
     if ~isobject(obj2) && isnan(obj2)
         for i=1:length(posFields)
             out.(posFields{i}) = [nan nan nan];
+            out.(sprintf('%sStd', posFields{i})) = [nan nan nan];
         end
         out.posMeanRMSE = nan;
         
         for i=1:length(oriFields)
             out.(oriFields{i}) = [nan nan nan];
+            out.(sprintf('%sStd', oriFields{i})) = [nan nan nan];
         end
         out.oriMeanRMSE = nan;
     else
