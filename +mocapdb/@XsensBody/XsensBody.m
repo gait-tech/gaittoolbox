@@ -12,7 +12,7 @@ classdef XsensBody < matlab.mixin.Copyable
         %> number of samples
         nSamples
         %> sampling frequency
-        fs
+        fs = 100;
         
         Head
         Sternum
@@ -51,9 +51,12 @@ classdef XsensBody < matlab.mixin.Copyable
         
         out = calcCalibSB(obj, refBody, sIdx);
         out = calcCalibAnkleSensorW2PelvisWFromAcc(obj, idx);
+        out = calcCalibAnkleSensorW2PelvisWFromROM(obj, calibS2B, DEGRANGE);
+        out = calcCalibAnkleSensorW2PelvisWFromGyroSkewness(obj, DEGRANGE);
         out = exportRawMeasurementAsStruct(obj, seg, segAlias);
         out = getSubset(obj, idx);
         out = toViconFrame(obj, qR);
+        initializetoIdentity(obj);
         saveCalibCSV(obj, fname);
     end
     

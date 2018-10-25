@@ -6,7 +6,7 @@ expDir = sprintf('%s/explore', dir);
 
 dataList = { ...
 %     struct('subj', 'S01', 'act', 'Trial-Walk-1'), ...
-    struct('subj', 'S08', 'act', 'Trial-Walk-1'), ...
+    struct('subj', 'S05', 'act', 'Trial-Walk-1'), ...
 };
 % subject = {'S01', 'S02', 'S03', 'S04'};
 % target = {'Static-1', 'Walk-1', 'Walk-2', 'TUG-1', 'TUG-2', 'Jog-1', 'Jog-2', ...
@@ -110,11 +110,22 @@ for i = 1:dataN
 %         if exist(data.calibFnameSensorW2V, 'file')
 %             data.calibW2V = mocapdb.XsensBody.loadCalibCSV(data.calibFnameSensorW2V);
 %         else
-            data.calibW2V = mocapdb.XsensBody.loadCalibSensorW2V( ...
-                 sprintf('%s/calib/%s-Calib-SensorW2V.mat', dir, n.subj), ...
-                 sprintf('%s/calib/%s-Calib-SensorW2V', dir, n.subj), ...
-                 options, 100);
-            data.calibW2V.saveCalibCSV(data.calibFnameSensorW2V);
+              % using trackingmount calibration
+%             data.calibW2V = mocapdb.XsensBody.loadCalibSensorW2V( ...
+%                  sprintf('%s/calib/%s-Calib-SensorW2V.mat', dir, n.subj), ...
+%                  sprintf('%s/calib/%s-Calib-SensorW2V', dir, n.subj), ...
+%                  options, 100);
+              % using ROM calibration
+            dataS = mocapdb.XsensBody.loadMTExport(sprintf('%s/imu/%s-Trial-Walk-1', dir, n.subj), options);
+            dataS.fs = 100;           
+            V__dataV = data.dataV.copy();
+            V__dataV.changePosUnit('m', true);
+            
+            sIdx = max(V__dataV.getStartIndex()+1, 100);
+            
+            viconCalibSB = dataS.calcCalibSB(V__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));
+            data.calibW2V = dataS.calcCalibAnkleSensorW2PelvisWFromROM(viconCalibSB);
+%             data.calibW2V.saveCalibCSV(data.calibFnameSensorW2V);
 %         end
         save(dataPath, 'data');
 %     end
