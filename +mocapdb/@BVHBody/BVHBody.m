@@ -3,7 +3,7 @@
 %> @brief Body class for the TCD dataset
 % ======================================================================
 
-classdef BVHBody < handle
+classdef BVHBody < matlab.mixin.Copyable
     properties
         %> body is loaded from this source file name
         srcFileName
@@ -72,6 +72,21 @@ classdef BVHBody < handle
         qLeftToe
     end
     
+    properties (Hidden)
+        posList = {'Hips', 'Spine', 'Spine1', 'Spine2', 'Spine3', ...
+            'Neck', 'Head', ...
+            'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', ...
+            'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', ...
+            'RightUpLeg', 'RightLeg', 'RightFoot', 'RightToe', ...
+            'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToe' };
+        oriList = {'qHips', 'qSpine', 'qSpine1', 'qSpine2', 'qSpine3', ...
+            'qNeck', 'qHead', ...
+            'qRightShoulder', 'qRightArm', 'qRightForeArm', 'qRightHand', ...
+            'qLeftShoulder', 'qLeftArm', 'qLeftForeArm', 'qLeftHand', ...
+            'qRightUpLeg', 'qRightLeg', 'qRightFoot', 'qRightToe', ...
+            'qLeftUpLeg', 'qLeftLeg', 'qLeftFoot', 'qLeftToe' };
+    end
+    
     methods
         % ======================================================================
         %> @brief Class constructor
@@ -101,5 +116,7 @@ classdef BVHBody < handle
     
     methods
         obj = toWorldFrame(obj, qR)
+        out = getSubset(obj, idx)
+        out = changePosUnit(obj, newUnit, update)
     end
 end

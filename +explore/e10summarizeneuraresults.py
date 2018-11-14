@@ -5,8 +5,8 @@ import plotly.plotly as py
 import plotly.graph_objs as go
 import plotly
 
-result_mat_path = '../neura/explore/results2.csv'
-summary_output_path = '../neura/explore/summary.csv'
+result_mat_path = '../neura-sparse01/explore/results20181026.csv'
+summary_output_path = '../neura-sparse01/explore/summary.csv'
 
 def get_action_type(s):
     return s.split('-')[-2]
@@ -29,7 +29,7 @@ df['kneeROriYMean'] = np.mean(df[['qRKNE_2']], axis=1)
 df['kneeROriYStd'] = np.mean(df[['qRKNEStd_2']], axis=1)
 
 df_result = df.groupby(['type', 'label']).mean()
-# df_result.to_csv(summary_output_path)
+df_result.to_csv(summary_output_path)
 print(df_result.head())
 
 traces_name = {'nonlin-fmincon': 'Nssv+M02+C135', 'nonlin-SCKF': 'Nssv+M02+C152', 

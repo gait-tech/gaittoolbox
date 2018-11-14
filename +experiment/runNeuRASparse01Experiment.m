@@ -92,12 +92,12 @@ function results = runNeuRAExperiment(dataS, ...
         idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
         allIdx.w__v = idx;
         
-        viconCalibWB = W__dataS.calcCalibSB(W__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));       
+        viconCalibSB = W__dataS.calcCalibSB(W__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));       
         %% orientation
         % orientation of body from sparse sensor
-        qPelvisEst0 = quatmultiply(W__dataS.Pelvis.ori, quatconj(viconCalibWB.Pelvis.ori));
-        qLankleEst0 = quatmultiply(W__dataS.L_LowLeg.ori, quatconj(viconCalibWB.L_LowLeg.ori));
-        qRankleEst0 = quatmultiply(W__dataS.R_LowLeg.ori, quatconj(viconCalibWB.R_LowLeg.ori));
+        qPelvisEst0 = quatmultiply(W__dataS.Pelvis.ori, quatconj(viconCalibSB.Pelvis.ori));
+        qLankleEst0 = quatmultiply(W__dataS.L_LowLeg.ori, quatconj(viconCalibSB.L_LowLeg.ori));
+        qRankleEst0 = quatmultiply(W__dataS.R_LowLeg.ori, quatconj(viconCalibSB.R_LowLeg.ori));
         qOri.w__sv.PELV = qPelvisEst0(sIdx:eIdx, :);
         qOri.w__sv.LTIB = qLankleEst0(sIdx:eIdx, :);
         qOri.w__sv.RTIB = qRankleEst0(sIdx:eIdx, :);
@@ -169,12 +169,12 @@ function results = runNeuRAExperiment(dataS, ...
         idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
         allIdx.v__v = idx;
         
-        viconCalibWB = V__dataS.calcCalibSB(V__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));       
+        viconCalibSB = V__dataS.calcCalibSB(V__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));       
         %% orientation
         % orientation of body from sparse sensor
-        qPelvisEst0 = quatmultiply(V__dataS.Pelvis.ori, quatconj(viconCalibWB.Pelvis.ori));
-        qLankleEst0 = quatmultiply(V__dataS.L_LowLeg.ori, quatconj(viconCalibWB.L_LowLeg.ori));
-        qRankleEst0 = quatmultiply(V__dataS.R_LowLeg.ori, quatconj(viconCalibWB.R_LowLeg.ori));
+        qPelvisEst0 = quatmultiply(V__dataS.Pelvis.ori, quatconj(viconCalibSB.Pelvis.ori));
+        qLankleEst0 = quatmultiply(V__dataS.L_LowLeg.ori, quatconj(viconCalibSB.L_LowLeg.ori));
+        qRankleEst0 = quatmultiply(V__dataS.R_LowLeg.ori, quatconj(viconCalibSB.R_LowLeg.ori));
         qOri.v__sv.PELV = qPelvisEst0(sIdx:eIdx, :);
         qOri.v__sv.LTIB = qLankleEst0(sIdx:eIdx, :);
         qOri.v__sv.RTIB = qRankleEst0(sIdx:eIdx, :);
@@ -252,62 +252,70 @@ function results = runNeuRAExperiment(dataS, ...
     end
     
     if ~isempty(dataX)
+        nSamples = min(dataX.nSamples, dataS.nSamples);
         qXsensV2W = rotm2quat([0 0 1; 1 0 0; 0 1 0]);
+        
         dataX = dataX.toWorldFrame(qXsensV2W);
-        val2 = {'Hips', 'LeftUpLeg', 'RightUpLeg',...
-                'LeftLeg', 'RightLeg', 'LeftFoot', 'RightFoot'};
-        for i=1:length(key)
-            W__dataS.(key{i}) = W__dataS.(key{i})(1:nSamples,:);
-            W__dataV.(val1{i}) = W__dataV.(val1{i})(1:nSamples,:)/1000;
-            if dataX.nSamples > 0
-                dataX.(val2{i}) = dataX.(val2{i})(1:nSamples,:)/1000;
-            end
-        end
-        dataX.posUnit = 'm';
+        W__dataX = dataX.getSubset(1:nSamples);
+        W__dataX.changePosUnit('m', true);
+        W__dataS = dataS.getSubset(1:nSamples);
 
-        xsensBody = dataX.togrBody(idx+1, {'name', 'xsens', 'oriUnit', 'deg', ...
-                             'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
-                             'xyzColor', {'m', 'y', 'c'}}); 
-        xsensBodyRel = xsensBody.changeRefFrame('MIDPEL');
-        xsensCalibWB = W__dataS.calcCalibSB(xsensBody, sIdx(1));
-    
-        %% Calculate Orientation
-        qPelvisEst0 = quatmultiply(W__dataS.Pelvis.ori, quatconj(xsensCalibWB.Pelvis.ori));
-        qLankleEst0 = quatmultiply(W__dataS.L_LowLeg.ori, quatconj(xsensCalibWB.L_LowLeg.ori));
-        qRankleEst0 = quatmultiply(W__dataS.R_LowLeg.ori, quatconj(xsensCalibWB.R_LowLeg.ori));
-        qOri.sx.PELV = qPelvisEst0(sIdx:eIdx, :);
-        qOri.sx.LTIB = qLankleEst0(sIdx:eIdx, :);
-        qOri.sx.RTIB = qRankleEst0(sIdx:eIdx, :);
+        sIdx = 100;
+        eIdx = length(W__dataX.Hips(:,1)) - 1;
+        idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
+        allIdx.w__x = idx;
+        xsensCalibSB = W__dataS.calcCalibSB(W__dataX.togrBody(sIdx+1:sIdx+1, {}), sIdx(1)); 
+                
+        % orientation of body from sparse sensor
+        qPelvisEst0 = quatmultiply(W__dataS.Pelvis.ori, quatconj(xsensCalibSB.Pelvis.ori));
+        qLankleEst0 = quatmultiply(W__dataS.L_LowLeg.ori, quatconj(xsensCalibSB.L_LowLeg.ori));
+        qRankleEst0 = quatmultiply(W__dataS.R_LowLeg.ori, quatconj(xsensCalibSB.R_LowLeg.ori));
+        qOri.w__sx.PELV = qPelvisEst0(sIdx:eIdx, :);
+        qOri.w__sx.LTIB = qLankleEst0(sIdx:eIdx, :);
+        qOri.w__sx.RTIB = qRankleEst0(sIdx:eIdx, :);
         
         % orientation of body from xsens
-        qOri.x.PELV = dataX.qHips(sIdx:eIdx, :);
-        qOri.x.LTIB = dataX.qLeftLeg(sIdx:eIdx, :);
-        qOri.x.RTIB = dataX.qRightLeg(sIdx:eIdx, :);
-
-        %% Position, Velocity, Acceleration
+        qOri.w__x.PELV = W__dataX.qHips(sIdx:eIdx, :);
+        qOri.w__x.LTIB = W__dataX.qLeftLeg(sIdx:eIdx, :);
+        qOri.w__x.RTIB = W__dataX.qRightLeg(sIdx:eIdx, :);
+       
+        % Position, Velocity, Acceleration
         % gfrAcc from xsens
-    
-        MIDPEL_xsens = [mean([dataX.LeftUpLeg(:,1) dataX.RightUpLeg(:,1)], 2),...
-                      mean([dataX.LeftUpLeg(:,2) dataX.RightUpLeg(:,2)], 2),...
-                      mean([dataX.LeftUpLeg(:,3) dataX.RightUpLeg(:,3)], 2)];
-        gfr_vel_MP_xsens = diff(MIDPEL_xsens, 1, 1)*fs;
-        gfr_vel_MP_xsens = [gfr_vel_MP_xsens(1,:); gfr_vel_MP_xsens];
-        gfr_vel_LA_xsens = diff(dataX.LeftFoot, 1, 1)*fs;
-        gfr_vel_LA_xsens = [gfr_vel_LA_xsens(1,:); gfr_vel_LA_xsens];
-        gfr_vel_RA_xsens = diff(dataX.RightFoot, 1, 1)*fs;
-        gfr_vel_RA_xsens = [gfr_vel_RA_xsens(1,:); gfr_vel_RA_xsens];
-    
-        gfrAcc.x = {};
-        gfrAcc.x.MP = [0 0 0; diff(MIDPEL_xsens, 2, 1)*fs*fs];
-        gfrAcc.x.MP = gfrAcc.x.MP(sIdx:eIdx,:);
-        gfrAcc.x.LA = [0 0 0; diff(dataX.LeftFoot, 2, 1)*fs*fs];
-        gfrAcc.x.LA = gfrAcc.x.LA(sIdx:eIdx,:);
-        gfrAcc.x.RA = [0 0 0; diff(dataX.RightFoot, 2, 1)*fs*fs];
-        gfrAcc.x.RA = gfrAcc.x.RA(sIdx:eIdx,:);
+        W__xsensBody = W__dataX.togrBody(1:nSamples, {'name', 'xsens', 'oriUnit', 'deg', ...
+                             'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
+                             'xyzColor', {'m', 'y', 'c'}}); 
+        vel = W__xsensBody.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
+        acc = W__xsensBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
+
+        x0.w__x = [W__xsensBody.MIDPEL(sIdx,:) vel.MIDPEL(sIdx,:) zeros(1,4) ...
+                   W__xsensBody.LTIO(sIdx,:) vel.LTIO(sIdx,:) zeros(1,4) ...
+                   W__xsensBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]';  
         
-        x0.x = [MIDPEL_vicon(sIdx,:) gfr_vel_MP_xsens(sIdx,:) zeros(1,4) ...
-              dataX.LeftFoot(sIdx,:) gfr_vel_LA_xsens(sIdx,:) zeros(1,4) ...
-              dataX.RightFoot(sIdx,:) gfr_vel_RA_xsens(sIdx,:) zeros(1,4)]';      
+        gfrAcc.w__x = {};
+        gfrAcc.w__x.MP = acc.MIDPEL;
+        gfrAcc.w__x.MP = gfrAcc.w__x.MP(sIdx:eIdx,:);
+        gfrAcc.w__x.LA = acc.LTIO;
+        gfrAcc.w__x.LA = gfrAcc.w__x.LA(sIdx:eIdx,:);
+        gfrAcc.w__x.RA = acc.RTIO;
+        gfrAcc.w__x.RA = gfrAcc.w__x.RA(sIdx:eIdx,:);
+        
+        % gfrAcc from sparse
+        gfrAcc.w__sx = {};
+        gfrAcc.w__sx.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
+                                W__dataS.Pelvis.acc) - [0 0 9.81];
+        gfrAcc.w__sx.MP = gfrAcc.w__sx.MP(sIdx:eIdx,:);
+        gfrAcc.w__sx.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
+                                W__dataS.L_LowLeg.acc) - [0 0 9.81];
+        gfrAcc.w__sx.LA = gfrAcc.w__sx.LA(sIdx:eIdx,:);
+        gfrAcc.w__sx.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
+                                W__dataS.R_LowLeg.acc) - [0 0 9.81];
+        gfrAcc.w__sx.RA = gfrAcc.w__sx.RA(sIdx:eIdx,:);
+        
+        % debug purposes
+        W__xsensBody = W__dataX.togrBody(idx+1, {'name', 'act', 'oriUnit', 'deg', ...
+                         'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
+                         'xyzColor', {'m', 'y', 'c'}});
+        PV__xsensBody = W__xsensBody.changeRefFrame('MIDPEL');
     end
     
     %% UWB measurements
@@ -326,7 +334,7 @@ function results = runNeuRAExperiment(dataS, ...
     if ~strcmp(savedir, '')
         if ~isempty(dataX)
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
-                 'xsensBody', 'viconBody', 'gfrAcc', 'qOri', 'x0', 'idx')
+                 'W__viconBody', 'V__viconBody', 'W__xsensBody', 'gfrAcc', 'qOri', 'x0', 'idx')
         else
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
                  'W__viconBody', 'V__viconBody', 'gfrAcc', 'qOri', 'x0', 'idx')
@@ -341,7 +349,16 @@ function results = runNeuRAExperiment(dataS, ...
         
         cs = setups{sI};
         
-        csGfrAcc = gfrAcc.(getVLabel(cs.accData, cs.accDataNoise));
+        
+        if (cs.accData == 'w__s') | (cs.accData == 'v__s')
+            if cs.initSrc(end) == 'v'
+                csGfrAcc = gfrAcc.(getVLabel(cs.accData, cs.accDataNoise));
+            else
+                csGfrAcc = gfrAcc.(strcat(cs.accData, cs.initSrc(end)));
+            end
+        else
+            csGfrAcc = gfrAcc.(cs.accData);
+        end
         if (cs.oriData == 'w__s') | (cs.oriData == 'v__s')
             csQOri = qOri.(strcat(cs.oriData, cs.initSrc(end)));
         else
@@ -364,12 +381,12 @@ function results = runNeuRAExperiment(dataS, ...
             d_rtibia = norm(V__dataV.RFEO(sIdx,:) - V__dataV.RTIO(sIdx,:));
             d_ltibia = norm(V__dataV.LFEO(sIdx,:) - V__dataV.LTIO(sIdx,:));
         else
-            csActBodyRel = xsensBodyRel;
-            d_pelvis = norm(dataX.RightUpLeg(sIdx,:) - dataX.LeftUpLeg(sIdx,:));
-            d_rfemur = norm(dataX.RightUpLeg(sIdx,:) - dataX.RightLeg(sIdx,:));
-            d_lfemur = norm(dataX.LeftUpLeg(sIdx,:) - dataX.LeftLeg(sIdx,:));
-            d_rtibia = norm(dataX.RightLeg(sIdx,:) - dataX.RightFoot(sIdx,:));
-            d_ltibia = norm(dataX.LeftLeg(sIdx,:) - dataX.LeftFoot(sIdx,:));
+            csActBodyRel = PV__xsensBody;
+            d_pelvis = norm(W__dataX.RightUpLeg(sIdx,:) - W__dataX.LeftUpLeg(sIdx,:));
+            d_rfemur = norm(W__dataX.RightUpLeg(sIdx,:) - W__dataX.RightLeg(sIdx,:));
+            d_lfemur = norm(W__dataX.LeftUpLeg(sIdx,:) - W__dataX.LeftLeg(sIdx,:));
+            d_rtibia = norm(W__dataX.RightLeg(sIdx,:) - W__dataX.RightFoot(sIdx,:));
+            d_ltibia = norm(W__dataX.LeftLeg(sIdx,:) - W__dataX.LeftFoot(sIdx,:));
         end
         
         % step detection
@@ -383,7 +400,7 @@ function results = runNeuRAExperiment(dataS, ...
         movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc.RA .^2, 2)), VAR_WIN);
         bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
         
-        try
+%         try
             if cs.est == 'ekfv3'
                 
                 v3Options = struct('fs', fs, 'applyMeas', cs.applyMeas, ...
@@ -431,10 +448,10 @@ function results = runNeuRAExperiment(dataS, ...
             end
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
             results0 = estBodyRel.diffRMSE(csActBodyRel);
-        catch
-            runtime = cputime-t0;
-            results0 = csActBodyRel.diffRMSE(nan);
-        end
+%         catch
+%             runtime = cputime-t0;
+%             results0 = csActBodyRel.diffRMSE(nan);
+%         end
         
         results0.name = name;
         results0.label = cs.label;

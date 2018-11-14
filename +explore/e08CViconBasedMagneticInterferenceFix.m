@@ -2,7 +2,7 @@ global DEGRANGE;
 DEGRANGE = (0:0.1:359) - 180;
 
 dir = 'neura-sparse01';
-for subjIdx = 1:10
+for subjIdx = 10
     subj = sprintf('S%02d', subjIdx); 
 
     options = struct('Pelvis', '00B40B91', ...
