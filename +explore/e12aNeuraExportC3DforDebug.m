@@ -1,14 +1,16 @@
 % motion list
 list = {
-    struct('file', 'S10-Trial-Static-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C176'), ...
-    struct('file', 'S02-Trial-Static-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C176'), ...
-    struct('file', 'S06-Trial-Static-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C176'), ...
-    struct('file', 'S05-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C176'), ...
-    struct('file', 'S08-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C176'), ...
-    struct('file', 'S07-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C176'), ...
-    struct('file', 'S02-Trial-JumpingJacks-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C176'), ...
-    struct('file', 'S04-Trial-JumpingJacks-2', 'algo', 'NS1+Av__sOv__sIv__v+M02+C176'), ...
-    struct('file', 'S01-Trial-JumpingJacks-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C176'), ...
+    % vicon result investigation
+%     struct('file', 'S10-Trial-Static-1', 'algo', 'NS1+Av__sOv__sIv__v+Sav01+M02+C176'), ...
+%     struct('file', 'S02-Trial-Static-1', 'algo', 'NS1+Av__sOv__sIv__v+Sav01+M02+C176'), ...
+%     struct('file', 'S06-Trial-Static-1', 'algo', 'NS1+Av__sOv__sIv__v+Sav01+M02+C176'), ...
+%     struct('file', 'S05-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+Sav01+M02+C176'), ...
+%     struct('file', 'S08-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+Sav01+M02+C176'), ...
+%     struct('file', 'S07-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+Sav01+M02+C176'), ...
+%     struct('file', 'S02-Trial-JumpingJacks-1', 'algo', 'NS1+Av__sOv__sIv__v+Sav01+M02+C176'), ...
+%     struct('file', 'S04-Trial-JumpingJacks-2', 'algo', 'NS1+Av__sOv__sIv__v+Sav01+M02+C176'), ...
+%     struct('file', 'S01-Trial-JumpingJacks-1', 'algo', 'NS1+Av__sOv__sIv__v+Sav01+M02+C176'), ...
+     % others
 %     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C203'), ...
 %     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Av__sOv__sIv__v+M02+C203'), ...
 %     struct('file', 'S03-Trial-Walk-1', 'algo', 'NS1+Av__sOw__sIw__v+M02+C201'), ...
@@ -31,16 +33,23 @@ for lIdx=1:length(list)
     
     targetname = sprintf('explore_output/neura-%s-%s', list{lIdx}.file, list{lIdx}.algo);
     
-    if cs.accData == 'w__s'
-        eLabel = 'w__s';
+    if cs.initSrc == 'w__v'
         aLabel = 'w__v';
         vb = W__viconBody;
-    else
-        eLabel = 'v__s';
+    elseif cs.initSrc == 'v__v'
         aLabel = 'v__v';
         vb = V__viconBody;
+    else
+        aLabel = 'w__x';
+        vb = W__xsensBody;
     end
-    
+    if ( strcmp(cs.accData, 'w__s') || strcmp(cs.accData, 'v__s') || ...
+       strcmp(cs.accData, 'w__sf') || strcmp(cs.accData, 'v__sf') )
+        eLabel = strcat(cs.accData, cs.initSrc(end));
+    else
+        eLabel = cs.accData;
+    end
+
     eMarkers = struct();
 
     % estBodyPred = estBody.copy();
@@ -78,31 +87,15 @@ for lIdx=1:length(list)
 %     sensors = struct();
     sensors = dataS.exportRawMeasurementAsStruct({'Pelvis', 'L_LowLeg', 'R_LowLeg'}, ...
                     {'PELV', 'LANK', 'RANK'});
-%     sensors.PELVFreeAccX = gfrAcc.(eLabel).MP(:,1);
-%     sensors.PELVFreeAccY = gfrAcc.(eLabel).MP(:,2);
-%     sensors.PELVFreeAccZ = gfrAcc.(eLabel).MP(:,3);
-%     sensors.LANKFreeAccX = gfrAcc.(eLabel).LA(:,1);
-%     sensors.LANKFreeAccY = gfrAcc.(eLabel).LA(:,2);
-%     sensors.LANKFreeAccZ = gfrAcc.(eLabel).LA(:,3);
-%     sensors.RANKFreeAccX = gfrAcc.(eLabel).RA(:,1);
-%     sensors.RANKFreeAccY = gfrAcc.(eLabel).RA(:,2);
-%     sensors.RANKFreeAccZ = gfrAcc.(eLabel).RA(:,3);
-% 
-%     sensors.PELVFreeAccRefX = gfrAcc.(aLabel).MP(:,1);
-%     sensors.PELVFreeAccRefY = gfrAcc.(aLabel).MP(:,2);
-%     sensors.PELVFreeAccRefZ = gfrAcc.(aLabel).MP(:,3);
-%     sensors.LANKFreeAccRefX = gfrAcc.(aLabel).LA(:,1);
-%     sensors.LANKFreeAccRefY = gfrAcc.(aLabel).LA(:,2);
-%     sensors.LANKFreeAccRefZ = gfrAcc.(aLabel).LA(:,3);
-%     sensors.RANKFreeAccRefX = gfrAcc.(aLabel).RA(:,1);
-%     sensors.RANKFreeAccRefY = gfrAcc.(aLabel).RA(:,2);
-%     sensors.RANKFreeAccRefZ = gfrAcc.(aLabel).RA(:,3);
     sensors.PELVFreeAcc = gfrAcc.(eLabel).MP;
     sensors.LANKFreeAcc = gfrAcc.(eLabel).LA;
     sensors.RANKFreeAcc = gfrAcc.(eLabel).RA;
     sensors.PELVFreeAccRef = gfrAcc.(aLabel).MP;
     sensors.LANKFreeAccRef = gfrAcc.(aLabel).LA;
     sensors.RANKFreeAccRef = gfrAcc.(aLabel).RA;
+    sensors.PELVVel = estState(:, 4:6);
+    sensors.LANKVel = estState(:, 14:16);
+    sensors.RANKVel = estState(:, 24:26);
     
     % step detection
     fs = estBody.fs;

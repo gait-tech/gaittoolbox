@@ -6,30 +6,38 @@ expDir = sprintf('%s/explore', dir);
 
 DEGRANGE = (0:0.1:359) - 180;
 dataList = { ...
-    struct('subj', 'S01', 'act', 'Trial-Walk-1');
+%     struct('subj', 'S10', 'act', "Trial-Static-1");
+%     struct('subj', 'S02', 'act', "Trial-Static-1");
+%     struct('subj', 'S06', 'act', "Trial-Static-1");
+%     struct('subj', 'S05', 'act', "Trial-Walk-1");
+%     struct('subj', 'S08', 'act', "Trial-Walk-1");
+%     struct('subj', 'S07', 'act', "Trial-Walk-1");
+%     struct('subj', 'S02', 'act', "Trial-JumpingJacks-1");
+%     struct('subj', 'S04', 'act', "Trial-JumpingJacks-2");
+%     struct('subj', 'S01', 'act', "Trial-JumpingJacks-1");
 };
 
-% subject = {'S01'};
-% target = {'Static-1', 'Walk-1', 'Walk-2', 'TUG-1', 'Jog-1', 'Jog-2', ...
-%     'JumpingJacks-1', 'JumpingJacks-2', 'FigureofEight-1', 'FigureofEight-2', ...
-%     'Zigzag-1', 'Zigzag-2', 'SpeedSkater-1', 'SpeedSkater-2', ...
-%     'HighKneeJog-1', 'HighKneeJog-2', 'Fivemin-1', 'Fivemin-2'};
-% for i=1:length(target)
-%     for s=1:length(subject)    
-%         dataList{end+1} = struct('subj', subject{s}, 'act', sprintf('Trial-%s', target{i}));
-%     end
-% end
-%  
-% subject = {'S02', 'S03', 'S04', 'S05', 'S06', 'S07', 'S08', 'S09', 'S10'};
-% target = {'Static-1', 'Walk-1', 'Walk-2', 'TUG-1', 'TUG-2', 'Jog-1', 'Jog-2', ...
-%     'JumpingJacks-1', 'JumpingJacks-2', 'FigureofEight-1', 'FigureofEight-2', ...
-%     'Zigzag-1', 'Zigzag-2', 'SpeedSkater-1', 'SpeedSkater-2', ...
-%     'HighKneeJog-1', 'HighKneeJog-2', 'Fivemin-1', 'Fivemin-2'};
-% for i=1:length(target)
-%     for s=1:length(subject)    
-%         dataList{end+1} = struct('subj', subject{s}, 'act', sprintf('Trial-%s', target{i}));
-%     end
-% end
+subject = {'S01'};
+target = {'Static-1', 'Walk-1', 'Walk-2', 'TUG-1', 'Jog-1', 'Jog-2', ...
+    'JumpingJacks-1', 'JumpingJacks-2', 'FigureofEight-1', 'FigureofEight-2', ...
+    'Zigzag-1', 'Zigzag-2', 'SpeedSkater-1', 'SpeedSkater-2', ...
+    'HighKneeJog-1', 'HighKneeJog-2', 'Fivemin-1', 'Fivemin-2'};
+for i=1:length(target)
+    for s=1:length(subject)    
+        dataList{end+1} = struct('subj', subject{s}, 'act', sprintf('Trial-%s', target{i}));
+    end
+end
+ 
+subject = {'S02', 'S03', 'S04', 'S05', 'S06', 'S07', 'S08', 'S09', 'S10'};
+target = {'Static-1', 'Walk-1', 'Walk-2', 'TUG-1', 'TUG-2', 'Jog-1', 'Jog-2', ...
+    'JumpingJacks-1', 'JumpingJacks-2', 'FigureofEight-1', 'FigureofEight-2', ...
+    'Zigzag-1', 'Zigzag-2', 'SpeedSkater-1', 'SpeedSkater-2', ...
+    'HighKneeJog-1', 'HighKneeJog-2', 'Fivemin-1', 'Fivemin-2'};
+for i=1:length(target)
+    for s=1:length(subject)    
+        dataList{end+1} = struct('subj', subject{s}, 'act', sprintf('Trial-%s', target{i}));
+    end
+end
 
 % options = struct('Pelvis', '00B40B91', ...
 %     'L_UpLeg', '00B40C45', 'R_UpLeg', '00B40C3C', ...
@@ -50,8 +58,11 @@ setups = {
 %            'accDataNoise', 0, 'applyMeas', 21, 'applyCstr', 0, 'P', 0.5), ...
 %     struct('est', 'ekfv3', 'accData', 'v', 'oriData', 'v', 'accDataNoise', 0, ...
 %            'applyMeas', 21, 'applyCstr', 0, 'P', 0.5), ...
-};
-
+      struct('est', 'ekfv3', 'accData', 'v__v', 'oriData', 'v__v', 'accDataNoise', 0, ...
+             'initSrc', 'v__v', 'applyMeas', 02, 'applyCstr', 201, 'P', 0.5);
+      struct('est', 'ekfv3', 'accData', 'w__x', 'oriData', 'w__x', 'accDataNoise', 0, ...
+             'initSrc', 'w__x', 'applyMeas', 02, 'applyCstr', 201, 'P', 0.5);
+};                   
 % setups{end+1} = struct('est', 'ekfv3', 'frame', 'world', ...
 %            'accData', 'v__v', 'oriData', 'v__v', 'accDataNoise', 0, ...
 %            'initSrc', 'v__v', 'applyMeas', 02, 'applyCstr', 201, ...
@@ -65,30 +76,21 @@ setups = {
 %     end
 % end
 
-% for iI = {'w__v', 'v__v'} % ['v' 'x']
     for mI = [2]
 %         for cI = [0 1:8 21:23 51:54 71:78 121:122 124:125 131:132 134:135 ...
 %               141:144 151:154 201:208 221:223 271:278]
-%         for cI = [0 201:208 221:223 132 135 151:154 ]
-%         for cI = [201 202 203 152 172]
-          for cI = [203]
-%         for cI = [0 1:8 21:23 122 125 141:144 ...
-%                     201:208 221:223 132 135 151:154 ]
-%             setups{end+1} = struct('est', 'ekfv3', 'frame', 'world', ...
-%                        'accData', 'v__s', 'oriData', 'v__s', 'accDataNoise', 0, ...
-%                        'initSrc', 'v__v', 'applyMeas', mI, 'applyCstr', cI, ...
-%                        'P', 0.5);
+        for cI = [201 202 203 152 172 175 176]
+%         for cI = [176]
+            setups{end+1} = struct('est', 'ekfv3', ...
+                       'accData', 'v__s', 'oriData', 'v__s', 'accDataNoise', 0, ...
+                       'initSrc', 'v__v', 'stepDetection', 'av01', ...
+                       'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
             setups{end+1} = struct('est', 'ekfv3', ...
                        'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
-                       'initSrc', 'w__x', 'applyMeas', mI, 'applyCstr', cI, ...
-                       'P', 0.5);
-            setups{end+1} = struct('est', 'ekfv3', ...
-                       'accData', 'w__x', 'oriData', 'w__x', 'accDataNoise', 0, ...
-                       'initSrc', 'w__x', 'applyMeas', mI, 'applyCstr', cI, ...
-                       'P', 0.5);
+                       'initSrc', 'w__x', 'stepDetection', 'av01', ...
+                       'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
         end
     end
-% end
 
 for i = 1:length(setups)
     setups{i}.label = getLabel(setups{i});
@@ -100,7 +102,7 @@ results = table();
 for i = 1:dataN
     n = dataList{i};
     
-    name = sprintf('%s-%s-%s', 'neura', n.subj, n.act);
+    name = sprintf("%s-%s-%s", 'neura', n.subj, n.act);
     dataPath = sprintf('%s/mat/%s.mat', dir, name);
 %     if exist(dataPath, 'file')
 %         load(dataPath, 'data');
@@ -117,7 +119,6 @@ for i = 1:dataN
         else
             data.dataX = [];
         end
-%         data.dataS = mocapdb.XsensBody.loadMVNX(data.fnameS, options);
         data.dataS = mocapdb.XsensBody.loadMTExport(data.fnameS, options);
         data.dataS.fs = 100;
         data.calibV2W = rotm2quat(mocapdb.loadPendulumCompassMat( ...
@@ -175,6 +176,6 @@ function label = getLabel(setup)
     else
         aD = setup.accData;
     end
-    label = sprintf('NS1+A%sO%sI%s+M%02d+C%03d', aD, setup.oriData, setup.initSrc, ...
-        setup.applyMeas, setup.applyCstr);
+    label = sprintf("NS1+A%sO%sI%s+S%s+M%02d+C%03d", aD, setup.oriData, setup.initSrc, ...
+        setup.stepDetection, setup.applyMeas, setup.applyCstr);
 end

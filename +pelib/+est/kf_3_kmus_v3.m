@@ -550,7 +550,6 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %             F(idxVelLA,idxAccBiasLA) = -dt.*LTIB_CS;
 %             F(idxVelRA,idxAccBiasRA) = -dt.*RTIB_CS;
 %         end
-        
         x_min = F * x_tilde + G * u_k(:,n) ;
         P_min = F * P_tilde * F' + Q;
         xhat_pri(n,:) = x_min;
@@ -1343,7 +1342,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         end
 
         if (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77) || ...
-           (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 174)
+           (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 176)
             % 001 constraints + MP/LA/RA zpos = floor zpos         
             idx = [idxPosMP(3), idxPosLA(3), idxPosRA(3)];
             [lpy lpi] = min(x_tilde(idx));

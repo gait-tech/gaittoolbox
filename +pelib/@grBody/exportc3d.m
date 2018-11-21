@@ -68,8 +68,10 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     if ~islogical(refBody)
         for i = 1:length(refBody.posList)
             ptName = refBody.posList{i};
-            btkAppendPoint(acq, 'marker', sprintf('%sRef', refBody.posList{i}), ...
+            if size(ptName, 1) > 0
+                btkAppendPoint(acq, 'marker', sprintf('%sRef', refBody.posList{i}), ...
                             refBody.(ptName), zeroRes, desc.(ptName));
+            end
         end
     end
     eMarkerLabels = fieldnames(extraMarkers);

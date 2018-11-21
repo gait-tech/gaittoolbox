@@ -34,19 +34,19 @@ classdef grBody < matlab.mixin.Copyable
         RTIO
         RTOE
         
-        %> pelvis orientation (n x 4 OR 3 x 3 x n)
+        %> pelvis orientation (n x 4)
         qRPV
-        %> right femur orientation (n x 4 OR 3 x 3 x n)
+        %> right femur orientation (n x 4)
         qRTH
-        %> left femur orientation (n x 4 OR 3 x 3 x n)
+        %> left femur orientation (n x 4)
         qLTH
-        %> right tibia orientation (n x 4 OR 3 x 3 x n)
+        %> right tibia orientation (n x 4)
         qRSK
-        %> left tibia orientation (n x 4 OR 3 x 3 x n)
+        %> left tibia orientation (n x 4)
         qLSK
-        %> right foot orientation (n x 4 OR 3 x 3 x n)
+        %> right foot orientation (n x 4)
         qRFT
-        %> left foot orientation (n x 4 OR 3 x 3 x n)
+        %> left foot orientation (n x 4)
         qLFT
     end
     
@@ -74,7 +74,7 @@ classdef grBody < matlab.mixin.Copyable
             for i=1:length(obj.posList)
                 data = obj.(obj.posList{i});
                 low = min([low; data(:,idx)]);
-                high = max([high;, data(:,idx)]);
+                high = max([high; data(:,idx)]);
             end
             
             out = [low high];
@@ -127,20 +127,24 @@ classdef grBody < matlab.mixin.Copyable
             ptsX = pts(:,1); ptsY = pts(:,2); ptsZ = pts(:,3);
         end
 
-        function theta = calcJointAnglesLHip(obj)
-            theta = pelib.grBody.calcJointAngles(obj.qRPV, obj.qLTH) .* [-1 -1 -1];
+        function theta = calcJointAnglesLHip(obj, idx)
+            if nargin <= 1, idx = 1:size(obj.qRPV, 1); end
+            theta = pelib.grBody.calcJointAngles(obj.qRPV(idx, :), obj.qLTH(idx, :)) .* [-1 -1 -1];
         end
         
-        function theta = calcJointAnglesRHip(obj)
-            theta = pelib.grBody.calcJointAngles(obj.qRPV, obj.qRTH) .* [1 -1 1];
+        function theta = calcJointAnglesRHip(obj, idx)
+            if nargin <= 1, idx = 1:size(obj.qRPV, 1); end
+            theta = pelib.grBody.calcJointAngles(obj.qRPV(idx, :), obj.qRTH(idx, :)) .* [1 -1 1];
         end
 
-        function theta = calcJointAnglesLKnee(obj)
-            theta = pelib.grBody.calcJointAngles(obj.qLTH, obj.qLSK) .* [-1 1 -1];
+        function theta = calcJointAnglesLKnee(obj, idx)
+            if nargin <= 1, idx = 1:size(obj.qLTH, 1); end
+            theta = pelib.grBody.calcJointAngles(obj.qLTH(idx, :), obj.qLSK(idx, :)) .* [-1 1 -1];
         end
         
-        function theta = calcJointAnglesRKnee(obj)
-            theta = pelib.grBody.calcJointAngles(obj.qRTH, obj.qRSK);
+        function theta = calcJointAnglesRKnee(obj, idx)
+            if nargin <= 1, idx = 1:size(obj.qRTH, 1); end
+            theta = pelib.grBody.calcJointAngles(obj.qRTH(idx, :), obj.qRSK(idx, :));
         end
         
         function d = getPelvisLength(obj, idx)

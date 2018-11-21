@@ -20,7 +20,8 @@
 %>      - v__s: sparse (vicon frame)
 %>      - w__x: xsens
 %> - stepDetection: step detection algorithm to be used
-%>      - 1: fixed variance on tibia accData
+%>      - false: turn off
+%>      - av01: fixed acceleration variance on tibia accData (var = 1)
 %> - initSrc: source of sensor to body orientation and position init
 %>      - w__v: vicon (world frame) (default)
 %>      - v__v: vicon (vicon frame)
@@ -60,7 +61,7 @@ function results = runNeuRAExperiment(dataS, ...
     fs = dataS.fs;
     setupDefault = struct('label', 'ekfv3', 'est', 'ekfv3', ...
         'accData', 'v', 'accDataNoise', 0.0, 'oriData', 'v', ...
-        'initSrc', 'v', ...
+        'initSrc', 'v', 'stepDetection', 'av01', ...
         'stepDetectWindow', 0.25, 'stepDetectThreshold', 1, ...
         'meas', 0, 'cstr', 0, ...
         'sigmaQAcc', 0.5, 'P', 100);
@@ -132,23 +133,23 @@ function results = runNeuRAExperiment(dataS, ...
         end
 
         % gfrAcc from sparse
-        gfrAcc.w__s = {};
-        gfrAcc.w__s.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
+        gfrAcc.w__sv = {};
+        gfrAcc.w__sv.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
                                 W__dataS.Pelvis.acc) - [0 0 9.81];
-        gfrAcc.w__s.MP = gfrAcc.w__s.MP(sIdx:eIdx,:);
-        gfrAcc.w__s.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
+        gfrAcc.w__sv.MP = gfrAcc.w__sv.MP(sIdx:eIdx,:);
+        gfrAcc.w__sv.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
                                 W__dataS.L_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.w__s.LA = gfrAcc.w__s.LA(sIdx:eIdx,:);
-        gfrAcc.w__s.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
+        gfrAcc.w__sv.LA = gfrAcc.w__sv.LA(sIdx:eIdx,:);
+        gfrAcc.w__sv.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
                                 W__dataS.R_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.w__s.RA = gfrAcc.w__s.RA(sIdx:eIdx,:);
+        gfrAcc.w__sv.RA = gfrAcc.w__sv.RA(sIdx:eIdx,:);
 
         % gfrAcc from filtered sparse
         fc = 10;
         [lpf_b, lpf_a] = butter(6, fc/(fs/2));
-        gfrAcc.w__sf.MP = filter(lpf_b, lpf_a, gfrAcc.w__s.MP);
-        gfrAcc.w__sf.LA = filter(lpf_b, lpf_a, gfrAcc.w__s.LA);
-        gfrAcc.w__sf.RA = filter(lpf_b, lpf_a, gfrAcc.w__s.RA);
+        gfrAcc.w__sfv.MP = filter(lpf_b, lpf_a, gfrAcc.w__sv.MP);
+        gfrAcc.w__sfv.LA = filter(lpf_b, lpf_a, gfrAcc.w__sv.LA);
+        gfrAcc.w__sfv.RA = filter(lpf_b, lpf_a, gfrAcc.w__sv.RA);
         
         % debug purposes
         W__viconBody = W__dataV.togrBody(idx+1, {'name', 'act', 'oriUnit', 'deg', ...
@@ -184,7 +185,6 @@ function results = runNeuRAExperiment(dataS, ...
         qOri.v__v.LTIB = V__dataV.qLSK(sIdx+1:eIdx+1, :);
         qOri.v__v.RTIB = V__dataV.qRSK(sIdx+1:eIdx+1, :);
         
-        
         %% position, velocity, acceleration
         V__viconBody = V__dataV.togrBody(1:nSamples, {'name', 'act', 'oriUnit', 'deg', ...
                          'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
@@ -209,46 +209,32 @@ function results = runNeuRAExperiment(dataS, ...
         end
 
         % gfrAcc from sparse
-        gfrAcc.v__s = {};
-        gfrAcc.v__s.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
+        gfrAcc.v__sv = {};
+        gfrAcc.v__sv.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
                                 W__dataS.Pelvis.acc) - [0 0 9.81];
-        gfrAcc.v__s.MP = gfrAcc.v__s.MP(sIdx:eIdx,:);
-        gfrAcc.v__s.MP = quatrotate(quatconj(calibW2V.Pelvis.ori), gfrAcc.v__s.MP);
-        gfrAcc.v__s.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
-                                W__dataS.L_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.v__s.LA = gfrAcc.v__s.LA(sIdx:eIdx,:);
-        gfrAcc.v__s.LA = quatrotate(quatconj(calibW2V.L_LowLeg.ori), gfrAcc.v__s.LA);
-        gfrAcc.v__s.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
-                                W__dataS.R_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.v__s.RA = gfrAcc.v__s.RA(sIdx:eIdx,:);
-        gfrAcc.v__s.RA = quatrotate(quatconj(calibW2V.R_LowLeg.ori), gfrAcc.v__s.RA);
+        gfrAcc.v__sv.MP = gfrAcc.v__sv.MP(sIdx:eIdx,:);
+        gfrAcc.v__sv.MP = quatrotate(quatconj(calibW2V.Pelvis.ori), gfrAcc.v__sv.MP);
         
+        gfrAcc.v__sv.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
+                                W__dataS.L_LowLeg.acc) - [0 0 9.81];
+        gfrAcc.v__sv.LA = gfrAcc.v__sv.LA(sIdx:eIdx,:);
+        gfrAcc.v__sv.LA = quatrotate(quatconj(calibW2V.L_LowLeg.ori), gfrAcc.v__sv.LA);
+        gfrAcc.v__sv.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
+                                W__dataS.R_LowLeg.acc) - [0 0 9.81];
+        gfrAcc.v__sv.RA = gfrAcc.v__sv.RA(sIdx:eIdx,:);
+        gfrAcc.v__sv.RA = quatrotate(quatconj(calibW2V.R_LowLeg.ori), gfrAcc.v__sv.RA);
+               
         % gfrAcc from filtered sparse
         fc = 10;
         [lpf_b, lpf_a] = butter(6, fc/(fs/2));
-        gfrAcc.v__sf.MP = filter(lpf_b, lpf_a, gfrAcc.v__s.MP);
-        gfrAcc.v__sf.LA = filter(lpf_b, lpf_a, gfrAcc.v__s.LA);
-        gfrAcc.v__sf.RA = filter(lpf_b, lpf_a, gfrAcc.v__s.RA);
+        gfrAcc.v__sfv.MP = filter(lpf_b, lpf_a, gfrAcc.v__sv.MP);
+        gfrAcc.v__sfv.LA = filter(lpf_b, lpf_a, gfrAcc.v__sv.LA);
+        gfrAcc.v__sfv.RA = filter(lpf_b, lpf_a, gfrAcc.v__sv.RA);
         
         % debug purposes
         V__viconBody = V__dataV.togrBody(idx+1, {'name', 'act', 'oriUnit', 'deg', ...
                          'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
                          'xyzColor', {'m', 'y', 'c'}});
-        
-        % gfrAcc from sparse
-%         gfrAcc.w__s = {};
-%         gfrAcc.w__s.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
-%                                 W__dataS.Pelvis.acc) - [0 0 9.81];
-%         gfrAcc.w__s.MP = gfrAcc.s.MP(sIdx:eIdx,:);
-%     %     gfr_acc_MP = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_MP);
-%         gfrAcc.w__s.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
-%                                 W__dataS.L_LowLeg.acc) - [0 0 9.81];
-%         gfrAcc.w__s.LA = gfrAcc.s.LA(sIdx:eIdx,:);
-%     %     gfr_acc_LA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_LA);
-%         gfrAcc.w__s.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
-%                                 W__dataS.R_LowLeg.acc) - [0 0 9.81];
-%         gfrAcc.w__s.RA = gfrAcc.s.RA(sIdx:eIdx,:);
-%     %     gfr_acc_RA = quatrotate(quatconj(calibIR.Pelvis.ori), gfr_acc_RA);
     end
     
     if ~isempty(dataX)
@@ -258,7 +244,7 @@ function results = runNeuRAExperiment(dataS, ...
         dataX = dataX.toWorldFrame(qXsensV2W);
         W__dataX = dataX.getSubset(1:nSamples);
         W__dataX.changePosUnit('m', true);
-        W__dataS = dataS.getSubset(1:nSamples);
+        W__dataS = dataS.getSubset(1:nSamples).toViconFrame(calibW2V);
 
         sIdx = 100;
         eIdx = length(W__dataX.Hips(:,1)) - 1;
@@ -350,21 +336,33 @@ function results = runNeuRAExperiment(dataS, ...
         cs = setups{sI};
         
         
-        if (cs.accData == 'w__s') | (cs.accData == 'v__s')
-            if cs.initSrc(end) == 'v'
-                csGfrAcc = gfrAcc.(getVLabel(cs.accData, cs.accDataNoise));
-            else
-                csGfrAcc = gfrAcc.(strcat(cs.accData, cs.initSrc(end)));
-            end
+        if cs.accData(end) == 'v'
+            csGfrAcc = gfrAcc.(getVLabel(cs.accData, cs.accDataNoise));
+        elseif ( strcmp(cs.accData, 'w__s') || strcmp(cs.accData, 'v__s') || ...
+           strcmp(cs.accData, 'w__sf') || strcmp(cs.accData, 'v__sf') )
+            csGfrAcc = gfrAcc.(strcat(cs.accData, cs.initSrc(end)));
         else
             csGfrAcc = gfrAcc.(cs.accData);
         end
+        
         if (cs.oriData == 'w__s') | (cs.oriData == 'v__s')
             csQOri = qOri.(strcat(cs.oriData, cs.initSrc(end)));
         else
             csQOri = qOri.(cs.oriData);
         end
-        csx0 = x0.(cs.initSrc);
+        
+        if ( strcmp(cs.accData, 'w__s') || strcmp(cs.accData, 'v__s') || ...
+           strcmp(cs.accData, 'w__sf') || strcmp(cs.accData, 'v__sf') )
+            % init velocity adjustment so pos at t=1 is equal to
+            % vicon/xsens body
+            csx0 = x0.(cs.initSrc);
+            dt = 1.0/fs;
+            csx0(4:6, :) = (csx0(4:6, :)*dt - 0.5*csGfrAcc.MP(1,:)'*dt^2)/dt;
+            csx0(14:16, :) = (csx0(14:16, :)*dt - 0.5*csGfrAcc.LA(1,:)'*dt^2)/dt;
+            csx0(24:26, :) = (csx0(24:26, :)*dt - 0.5*csGfrAcc.RA(1,:)'*dt^2)/dt;
+        else
+            csx0 = x0.(cs.initSrc);
+        end
         
         if cs.initSrc == 'w__v'
             csActBodyRel = PV__viconBody;
@@ -390,22 +388,37 @@ function results = runNeuRAExperiment(dataS, ...
         end
         
         % step detection
-        VAR_WIN  = floor(fs*cs.stepDetectWindow); % NUM_SAMPLES
-        ACC_VAR_THRESH = cs.stepDetectThreshold;
+        if strcmp(cs.stepDetection, 'av01')
+            VAR_WIN  = floor(fs*cs.stepDetectWindow); % NUM_SAMPLES
+            ACC_VAR_THRESH = cs.stepDetectThreshold;
 
-        movVarAcc_pelvis = movingvar(sqrt( sum(csGfrAcc.MP .^2, 2)), VAR_WIN);
-        bIsStatMP = movVarAcc_pelvis < 0;
-        movVarAcc_lankle = movingvar(sqrt( sum(csGfrAcc.LA .^2, 2)), VAR_WIN);
-        bIsStatLA = movVarAcc_lankle < ACC_VAR_THRESH;
-        movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc.RA .^2, 2)), VAR_WIN);
-        bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
+            movVarAcc_pelvis = movingvar(sqrt( sum(csGfrAcc.MP .^2, 2)), VAR_WIN);
+            bIsStatMP = movVarAcc_pelvis < 0;
+            movVarAcc_lankle = movingvar(sqrt( sum(csGfrAcc.LA .^2, 2)), VAR_WIN);
+            bIsStatLA = movVarAcc_lankle < ACC_VAR_THRESH;
+            movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc.RA .^2, 2)), VAR_WIN);
+            bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
+        else
+            csNSamples = size(csGfrAcc.MP, 1);
+            bIsStatMP = false(csNSamples, 1);
+            bIsStatLA = false(csNSamples, 1);
+            bIsStatRA = false(csNSamples, 1);
+        end
         
-%         try
+        % if the init position is negative knee angle, allow it
+        alphaLKmin = csActBodyRel.calcJointAnglesLKnee(1);
+        alphaLKmin = min(alphaLKmin(2), 0);
+        alphaRKmin = csActBodyRel.calcJointAnglesRKnee(1);
+        alphaRKmin = min(alphaRKmin(2), 0);
+        
+        try
             if cs.est == 'ekfv3'
                 
                 v3Options = struct('fs', fs, 'applyMeas', cs.applyMeas, ...
                     'applyCstr', cs.applyCstr, 'sigmaQAccMP', cs.sigmaQAcc, ...
-                    'sigmaQAccLA', cs.sigmaQAcc, 'sigmaQAccRA', cs.sigmaQAcc);
+                    'sigmaQAccLA', cs.sigmaQAcc, 'sigmaQAccRA', cs.sigmaQAcc, ...
+                    'alphaLKmin', alphaLKmin, 'alphaRKmin', alphaRKmin);
+%                 display(sprintf('%.2f %.2f', rad2deg(alphaLKmin), rad2deg(alphaRKmin)));
                 
                 [ x_pri_v2, x_pos_v2, t_dat_v2 ] = pelib.est.kf_3_kmus_v3( ...
                     csx0, cs.P, csGfrAcc.MP, bIsStatMP, csQOri.PELV, ...
@@ -448,10 +461,10 @@ function results = runNeuRAExperiment(dataS, ...
             end
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
             results0 = estBodyRel.diffRMSE(csActBodyRel);
-%         catch
-%             runtime = cputime-t0;
-%             results0 = csActBodyRel.diffRMSE(nan);
-%         end
+        catch
+            runtime = cputime-t0;
+            results0 = csActBodyRel.diffRMSE(nan);
+        end
         
         results0.name = name;
         results0.label = cs.label;
