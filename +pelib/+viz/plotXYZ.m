@@ -2,6 +2,7 @@
 %> @brief Plot x y z of inputs
 %> @author Luke Sy
 %>
+%> @param fs sampling frequency
 %> @param inputs array of n x 3's to be plotted
 % ======================================================================
 

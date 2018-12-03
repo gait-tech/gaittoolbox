@@ -163,6 +163,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + adj knee + knee ineq + no P update + lowest point = floor
 %           176: smoothly constraint kf (W=pelvis frame, use maxIter)
 %                + adj knee + knee ineq + no P update + lowest point = floor
+%           177: smoothly constraint kf (W=pelvis frame, early stop)
+%                + adj knee + knee ineq + no P update
+%           178: smoothly constraint kf (W=pelvis frame, use maxIter)
+%                + adj knee + knee ineq + no P update
 %           201: estimate projection (W=P^-1) assuming perfect orientation
 %                + knee angle inequality constraint
 %           202: estimate projection (W=I) assuming perfect orientation
@@ -534,7 +538,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             'MaxFunctionEvaluations', fOpt.optimMaxFunctionEvaluations, ...
             'UseParallel', fOpt.optimUseParallel);
     elseif (fOpt.applyCstr >= 155 && fOpt.applyCstr <= 156) || ...
-        (fOpt.applyCstr >= 175 && fOpt.applyCstr <= 176)
+        (fOpt.applyCstr >= 175 && fOpt.applyCstr <= 178)
         P_custom = eye(nStates);
         P_custom(idxPosMP,idxPosMP) = 0;
     end
@@ -1014,7 +1018,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             end
             P_tilde = P_plus;
         elseif (fOpt.applyCstr >= 151 && fOpt.applyCstr <= 156) || ...
-               (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 176)
+               (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 178)
             sckfAlpha = fOpt.sckfAlpha;
             sckfThreshold = fOpt.sckfThreshold;
             x_tilde = x_plus;
@@ -1112,6 +1116,11 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                         Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
                         P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
                     case 6
+                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
+                    case 7
+                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
+                        P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
+                    case 8
                         Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
                     otherwise
                         Kk = 0;

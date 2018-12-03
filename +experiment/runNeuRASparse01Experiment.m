@@ -41,10 +41,12 @@
 %> @param setups list of experiment parameters (struct) to be run. see
 %> details above
 %> @param savedir filepath to save .mat output/debug files (optional)
+%> @param startFrame frame number at which the algorithm will start
+%> @param endFrame frame number at which the algorithm will end
 % ======================================================================
 function results = runNeuRAExperiment(dataS, ...
                         dataV, calibV2W, calibW2V, dataX, ...
-                        name, setups, savedir)
+                        name, setups, savedir, startFrame, endFrame)
     %% Inputs and Input Check
     validateattributes(dataS, {'mocapdb.XsensBody'}, {});
     validateattributes(dataV, {'mocapdb.ViconBody', 'numeric'}, {});
@@ -52,9 +54,9 @@ function results = runNeuRAExperiment(dataS, ...
     validateattributes(calibW2V, {'mocapdb.XsensBody', 'numeric'}, {});
     validateattributes(dataX, {'mocapdb.BVHBody', 'numeric'}, {});
     
-    if nargin <= 7
-        savedir = '';
-    end
+    if nargin <= 7, savedir = ''; end
+    if nargin <= 8, startFrame = 100; end
+    if nargin <= 9, endFrame = inf; end
     
     %% Initialization   
     % Initialize other variables
@@ -65,6 +67,7 @@ function results = runNeuRAExperiment(dataS, ...
         'stepDetectWindow', 0.25, 'stepDetectThreshold', 1, ...
         'meas', 0, 'cstr', 0, ...
         'sigmaQAcc', 0.5, 'P', 100);
+    
     setupN = length(setups);
     setupDefaultFN = fieldnames(setupDefault);
         
@@ -88,8 +91,8 @@ function results = runNeuRAExperiment(dataS, ...
         W__dataV.changePosUnit('m', true);
         W__dataS = dataS.getSubset(1:nSamples);
         
-        sIdx = max(W__dataV.getStartIndex()+1, 100);
-        eIdx = length(W__dataV.PELV(:,1)) - 1;
+        sIdx = max(W__dataV.getStartIndex()+1, startFrame);
+        eIdx = min(length(W__dataV.PELV(:,1)) - 1, endFrame);
         idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
         allIdx.w__v = idx;
         
@@ -165,8 +168,8 @@ function results = runNeuRAExperiment(dataS, ...
         W__dataS = dataS.getSubset(1:nSamples);
         V__dataS = W__dataS.toViconFrame(calibW2V);
         
-        sIdx = max(V__dataV.getStartIndex()+1, 100);
-        eIdx = length(V__dataV.PELV(:,1)) - 1;
+        sIdx = max(V__dataV.getStartIndex()+1, startFrame);
+        eIdx = min(length(V__dataV.PELV(:,1)) - 1, endFrame);
         idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
         allIdx.v__v = idx;
         
@@ -246,8 +249,8 @@ function results = runNeuRAExperiment(dataS, ...
         W__dataX.changePosUnit('m', true);
         W__dataS = dataS.getSubset(1:nSamples).toViconFrame(calibW2V);
 
-        sIdx = 100;
-        eIdx = length(W__dataX.Hips(:,1)) - 1;
+        sIdx = startFrame;
+        eIdx = min(length(W__dataX.Hips(:,1)) - 1, endFrame);
         idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
         allIdx.w__x = idx;
         xsensCalibSB = W__dataS.calcCalibSB(W__dataX.togrBody(sIdx+1:sIdx+1, {}), sIdx(1)); 
@@ -335,6 +338,10 @@ function results = runNeuRAExperiment(dataS, ...
         
         cs = setups{sI};
         
+        idx = allIdx.(cs.initSrc);
+        sIdx = idx(1);
+        eIdx = idx(end);
+        idx0 = 1:(eIdx-sIdx+1);
         
         if cs.accData(end) == 'v'
             csGfrAcc = gfrAcc.(getVLabel(cs.accData, cs.accDataNoise));
@@ -411,7 +418,7 @@ function results = runNeuRAExperiment(dataS, ...
         alphaRKmin = csActBodyRel.calcJointAnglesRKnee(1);
         alphaRKmin = min(alphaRKmin(2), 0);
         
-        try
+%         try
             if cs.est == 'ekfv3'
                 
                 v3Options = struct('fs', fs, 'applyMeas', cs.applyMeas, ...
@@ -461,10 +468,10 @@ function results = runNeuRAExperiment(dataS, ...
             end
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
             results0 = estBodyRel.diffRMSE(csActBodyRel);
-        catch
-            runtime = cputime-t0;
-            results0 = csActBodyRel.diffRMSE(nan);
-        end
+%         catch
+%             runtime = cputime-t0;
+%             results0 = csActBodyRel.diffRMSE(nan);
+%         end
         
         results0.name = name;
         results0.label = cs.label;
