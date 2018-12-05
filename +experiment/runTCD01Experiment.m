@@ -35,8 +35,8 @@
 %> details above
 %> @param savedir filepath to save .mat output/debug files (optional)
 % ======================================================================
-function results = runTCDExperiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
-                                    name, setups, savedir)
+function results = runTCD01Experiment(fnameV, fnameS, fnameCIB, fnameCIR, ...
+                                      name, setups, savedir)
     %% Inputs and Input Check
     validateattributes(fnameV, {'char', 'string', 'mocapdb.BVHBody'}, {});
     validateattributes(fnameS, {'char', 'string', 'mocapdb.XsensBody'}, {});

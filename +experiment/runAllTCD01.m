@@ -65,29 +65,18 @@ setups = {
 %            'applyMeas', 21, 'applyCstr', 0, 'P', 0.5), ...
 %     struct('est', 'ekfv3', 'accData', 'v', 'oriData', 'v', 'accDataNoise', 0, ...
 %            'applyMeas', 21, 'applyCstr', 0, 'P', 0.5), ...
+    struct('est', 'ekfv3', 'accData', 'v', 'oriData', 'v', 'accDataNoise', 0, ...
+           'applyMeas', 2, 'applyCstr', 201, 'P', 0.5);
 };
 
 for mI = [2]
-    for cI = [201 202 203 152 172]
-        for aI = ['v', 'x']
-            for oI = ['v', 'x']
-                setups{end+1} = struct('est', 'ekfv3', ...
-                   'accData', aI, 'oriData', oI, 'accDataNoise', 0, ...
-                   'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
-            end
-        end
+    for cI = [201 202 203 146 175 178]
+        setups{end+1} = struct('est', 'ekfv3', ...
+           'accData', 'x', 'oriData', 'x', 'accDataNoise', 0, ...
+           'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
     end
 end
 
-% for mI = [0]
-%     for cI = [0 1:8 21:23 51:54 71:77 121:122 124:125 131:132 134:135 ...
-%               141:144 151:154 201:208 221:223 271:278]
-%         setups{end+1} = struct('est', 'ekfv3', ...
-%            'accData', 'v', 'oriData', 'v', 'accDataNoise', 0, ...
-%            'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
-%     end
-% end
-% 
 % % For list of cstr not to include, see link
 % % http://www.evernote.com/l/ARITmupsvtpPnoGOqP5ucSIreJZKt37EI_s/
 % for mI = [0 1:2]
@@ -128,8 +117,8 @@ for i = 1:dataN
         save(dataPath, 'data');
     end
     display(sprintf("Data %3d/%3d: %s", i, dataN, data.name));
-    r = runTCDExperiment(data.dataV, data.dataS, data.calibIB, data.calibIR, ...
-                                data.name, setups, expDir);
+    r = experiment.runTCD01Experiment(data.dataV, data.dataS, data.calibIB, data.calibIR, ...
+                                    data.name, setups, expDir);
     results = [results; struct2table(r)];
 end
 
@@ -154,6 +143,6 @@ function label = getLabel(setup)
     else
         aD = setup.accData;
     end
-    label = sprintf('D%s%s+M%02d+C%03d', aD, setup.oriData, ...
+    label = sprintf('TC1+D%s%s+M%02d+C%03d', aD, setup.oriData, ...
         setup.applyMeas, setup.applyCstr);
 end
