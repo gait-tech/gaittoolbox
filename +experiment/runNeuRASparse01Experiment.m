@@ -43,10 +43,11 @@
 %> @param savedir filepath to save .mat output/debug files (optional)
 %> @param startFrame frame number at which the algorithm will start
 %> @param endFrame frame number at which the algorithm will end
+%> @param bias pelvis accelerometer bias in sensor frame
 % ======================================================================
 function results = runNeuRAExperiment(dataS, ...
                         dataV, calibV2W, calibW2V, dataX, ...
-                        name, setups, savedir, startFrame, endFrame)
+                        name, setups, savedir, startFrame, endFrame, bias)
     %% Inputs and Input Check
     validateattributes(dataS, {'mocapdb.XsensBody'}, {});
     validateattributes(dataV, {'mocapdb.ViconBody', 'numeric'}, {});
@@ -55,8 +56,12 @@ function results = runNeuRAExperiment(dataS, ...
     validateattributes(dataX, {'mocapdb.BVHBody', 'numeric'}, {});
     
     if nargin <= 7, savedir = ''; end
-    if nargin <= 8, startFrame = 100; end
-    if nargin <= 9, endFrame = inf; end
+    if nargin <= 8 || startFrame < 0, startFrame = 100; end
+    if nargin <= 9 || endFrame < 0, endFrame = inf; end
+    if nargin <= 10
+        bias = struct('w__v', zeros(1, 3), 'v__v', zeros(1, 3), ...
+                      'w__x', zeros(1, 3));
+    end
     
     %% Initialization   
     % Initialize other variables
@@ -65,7 +70,7 @@ function results = runNeuRAExperiment(dataS, ...
         'accData', 'v', 'accDataNoise', 0.0, 'oriData', 'v', ...
         'initSrc', 'v', 'stepDetection', 'av01', ...
         'stepDetectWindow', 0.25, 'stepDetectThreshold', 1, ...
-        'meas', 0, 'cstr', 0, ...
+        'meas', 0, 'cstr', 0, 'accPelvBias', false, ...
         'sigmaQAcc', 0.5, 'P', 100);
     
     setupN = length(setups);
@@ -90,6 +95,7 @@ function results = runNeuRAExperiment(dataS, ...
         W__dataV = dataV.getSubset(1:nSamples).toWorldFrame(calibV2W);
         W__dataV.changePosUnit('m', true);
         W__dataS = dataS.getSubset(1:nSamples);
+        W__dataS.Pelvis.acc = W__dataS.Pelvis.acc - bias.v__v;
         
         sIdx = max(W__dataV.getStartIndex()+1, startFrame);
         eIdx = min(length(W__dataV.PELV(:,1)) - 1, endFrame);
@@ -106,7 +112,7 @@ function results = runNeuRAExperiment(dataS, ...
         qOri.w__sv.LTIB = qLankleEst0(sIdx:eIdx, :);
         qOri.w__sv.RTIB = qRankleEst0(sIdx:eIdx, :);
         
-        % orientation of body from vicon
+        % orientation of body from vicosIdxn
         qOri.w__v.PELV = W__dataV.qRPV(sIdx+1:eIdx+1, :);
         qOri.w__v.LTIB = W__dataV.qLSK(sIdx+1:eIdx+1, :);
         qOri.w__v.RTIB = W__dataV.qRSK(sIdx+1:eIdx+1, :);
@@ -124,14 +130,15 @@ function results = runNeuRAExperiment(dataS, ...
                    W__viconBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]';     
 
         vsigma = unique([cellfun(@(x) x.accDataNoise, setups), 0]);
+        randnN = size(acc.MIDPEL, 1);
         for i = 1:length(vsigma)
             vLabel = getVLabel('w__v', vsigma(i));
             gfrAcc.(vLabel) = {};
-            gfrAcc.(vLabel).MP = acc.MIDPEL + randn(eIdx,3).*vsigma(i);
+            gfrAcc.(vLabel).MP = acc.MIDPEL + randn(randnN,3).*vsigma(i);
             gfrAcc.(vLabel).MP = gfrAcc.(vLabel).MP(sIdx:eIdx,:);
-            gfrAcc.(vLabel).LA = acc.LTIO + randn(eIdx,3).*vsigma(i);
+            gfrAcc.(vLabel).LA = acc.LTIO + randn(randnN,3).*vsigma(i);
             gfrAcc.(vLabel).LA = gfrAcc.(vLabel).LA(sIdx:eIdx,:);
-            gfrAcc.(vLabel).RA = acc.RTIO + randn(eIdx,3).*vsigma(i);
+            gfrAcc.(vLabel).RA = acc.RTIO + randn(randnN,3).*vsigma(i);
             gfrAcc.(vLabel).RA = gfrAcc.(vLabel).RA(sIdx:eIdx,:);
         end
 
@@ -166,6 +173,7 @@ function results = runNeuRAExperiment(dataS, ...
         V__dataV = dataV.getSubset(1:nSamples);
         V__dataV.changePosUnit('m', true);
         W__dataS = dataS.getSubset(1:nSamples);
+        W__dataS.Pelvis.acc = W__dataS.Pelvis.acc - bias.w__v;
         V__dataS = W__dataS.toViconFrame(calibW2V);
         
         sIdx = max(V__dataV.getStartIndex()+1, startFrame);
@@ -200,14 +208,15 @@ function results = runNeuRAExperiment(dataS, ...
                    V__viconBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]';     
 
         vsigma = unique([cellfun(@(x) x.accDataNoise, setups), 0]);
+        randnN = size(acc.MIDPEL, 1);
         for i = 1:length(vsigma)
             vLabel = getVLabel('v__v', vsigma(i));
             gfrAcc.(vLabel) = {};
-            gfrAcc.(vLabel).MP = acc.MIDPEL + randn(eIdx,3).*vsigma(i);
+            gfrAcc.(vLabel).MP = acc.MIDPEL + randn(randnN,3).*vsigma(i);
             gfrAcc.(vLabel).MP = gfrAcc.(vLabel).MP(sIdx:eIdx,:);
-            gfrAcc.(vLabel).LA = acc.LTIO + randn(eIdx,3).*vsigma(i);
+            gfrAcc.(vLabel).LA = acc.LTIO + randn(randnN,3).*vsigma(i);
             gfrAcc.(vLabel).LA = gfrAcc.(vLabel).LA(sIdx:eIdx,:);
-            gfrAcc.(vLabel).RA = acc.RTIO + randn(eIdx,3).*vsigma(i);
+            gfrAcc.(vLabel).RA = acc.RTIO + randn(randnN,3).*vsigma(i);
             gfrAcc.(vLabel).RA = gfrAcc.(vLabel).RA(sIdx:eIdx,:);
         end
 
@@ -248,7 +257,9 @@ function results = runNeuRAExperiment(dataS, ...
         W__dataX = dataX.getSubset(1:nSamples);
         W__dataX.changePosUnit('m', true);
         W__dataS = dataS.getSubset(1:nSamples).toViconFrame(calibW2V);
-
+        % order is not important as calibW2V fixes only the ankle yaw offset
+        W__dataS.Pelvis.acc = W__dataS.Pelvis.acc - bias.w__x; 
+        
         sIdx = startFrame;
         eIdx = min(length(W__dataX.Hips(:,1)) - 1, endFrame);
         idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
@@ -323,10 +334,10 @@ function results = runNeuRAExperiment(dataS, ...
     if ~strcmp(savedir, '')
         if ~isempty(dataX)
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
-                 'W__viconBody', 'V__viconBody', 'W__xsensBody', 'gfrAcc', 'qOri', 'x0', 'idx')
+                 'W__viconBody', 'V__viconBody', 'W__xsensBody', 'gfrAcc', 'qOri', 'x0', 'allIdx')
         else
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
-                 'W__viconBody', 'V__viconBody', 'gfrAcc', 'qOri', 'x0', 'idx')
+                 'W__viconBody', 'V__viconBody', 'gfrAcc', 'qOri', 'x0', 'allIdx')
         end
     end
             

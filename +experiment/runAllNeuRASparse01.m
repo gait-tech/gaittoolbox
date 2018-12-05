@@ -6,10 +6,7 @@ dir = 'neura-sparse01';
 expDir = sprintf('%s/explore-v2', dir);
 
 DEGRANGE = (0:0.1:359) - 180;
-dataList = { ...
-%     struct('subj', 'S01', 'act', 'Trial-Walk-1'), ...
-    struct('subj', 'S03', 'act', 'Trial-Fivemin-1'), ...
-};
+dataList = readtable(sprintf('%s/data-list.csv', dir));
 
 % options = struct('Pelvis', '00B40B91', ...
 %     'L_UpLeg', '00B40C45', 'R_UpLeg', '00B40C3C', ...
@@ -53,16 +50,16 @@ setups = {
     for mI = [2]
 %         for cI = [0 1:8 21:23 51:54 71:78 121:122 124:125 131:132 134:135 ...
 %               141:144 151:154 201:208 221:223 271:278]
-%         for cI = [201 202 203 152 172 175 176]
-        for cI = [177 178]
+%         for cI = [201 202 203 171 172 176 178]
+        for cI = [145 146251]
             setups{end+1} = struct('est', 'ekfv3', ...
                        'accData', 'v__s', 'oriData', 'v__s', 'accDataNoise', 0, ...
                        'initSrc', 'v__v', 'stepDetection', 'av01', ...
                        'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
-%             setups{end+1} = struct('est', 'ekfv3', ...
-%                        'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
-%                        'initSrc', 'w__x', 'stepDetection', 'av01', ...
-%                        'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
+            setups{end+1} = struct('est', 'ekfv3', ...
+                       'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
+                       'initSrc', 'w__x', 'stepDetection', 'av01', ...
+                       'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
         end
     end
 
@@ -70,11 +67,11 @@ for i = 1:length(setups)
     setups{i}.label = getLabel(setups{i});
 end
            
-dataN = length(dataList);
+dataN = size(dataList, 1);
 results = table();
 
 for i = 1:dataN
-    n = dataList{i};
+    n = table2struct(dataList(i, :));
     
     name = sprintf("%s-%s-%s", 'neura', n.subj, n.act);
     dataPath = sprintf('%s/mat/%s.mat', dir, name);
@@ -118,6 +115,20 @@ for i = 1:dataN
             data.calibW2V = dataS.calcCalibAnkleSensorW2PelvisWFromROM(viconCalibSB, DEGRANGE);
             data.calibW2V.saveCalibCSV(data.calibFnameSensorW2V);
         end
+        % calculate acc pelvis bias. pelvis bias results to crouch
+        % divergence so I am not using it for now.
+        if true
+            dataS = mocapdb.XsensBody.loadMTExport(sprintf('%s/imu/%s-Trial-TUG-1', dir, n.subj), options);
+            dataS.fs = 100;               
+            dataV = mocapdb.ViconBody.loadViconMat(sprintf('%s/vicon/%s-Trial-TUG-1.mat', dir, n.subj));
+            dataX = mocapdb.BVHBody.loadXsensBVHFile(sprintf('%s/xsens/%s-Trial-TUG-1.bvh', dir, n.subj), "mm");
+            bias = experiment.calcNeuRAPelvisAccBias(dataS, dataV, ...
+                                    data.calibV2W, data.calibW2V, dataX, ...
+                                    100, 1000);
+        else
+            bias = struct('w__v', zeros(1, 3), 'v__v', zeros(1, 3), ...
+                      'w__x', zeros(1, 3));
+        end
         save(dataPath, 'data');
 %     end
     
@@ -125,7 +136,7 @@ for i = 1:dataN
     r = experiment.runNeuRASparse01Experiment(data.dataS, ...
             data.dataV, data.calibV2W, data.calibW2V, ...
             data.dataX, ...
-            data.name, setups, expDir);
+            data.name, setups, expDir, n.startFrame, n.endFrame, bias);
     results = [results; struct2table(r)];
 end
 

@@ -537,7 +537,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             'ConstraintTolerance', fOpt.optimConstraintTolerance, ...
             'MaxFunctionEvaluations', fOpt.optimMaxFunctionEvaluations, ...
             'UseParallel', fOpt.optimUseParallel);
-    elseif (fOpt.applyCstr >= 155 && fOpt.applyCstr <= 156) || ...
+    elseif (fOpt.applyCstr >= 145 && fOpt.applyCstr <= 146) || ...
+        (fOpt.applyCstr >= 155 && fOpt.applyCstr <= 156) || ...
         (fOpt.applyCstr >= 175 && fOpt.applyCstr <= 178)
         P_custom = eye(nStates);
         P_custom(idxPosMP,idxPosMP) = 0;
@@ -958,7 +959,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 quatrotate(quatconj(x_plus(idxOriMP,1)'), x_hat(10:12,1)')';
             
             P_tilde = P_plus;
-        elseif fOpt.applyCstr >= 141 && fOpt.applyCstr <= 144
+        elseif fOpt.applyCstr >= 141 && fOpt.applyCstr <= 146
             sckfAlpha = fOpt.sckfAlpha;
             sckfThreshold = fOpt.sckfThreshold;
             x_tilde = x_plus;
@@ -1004,6 +1005,11 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                         Kk = P_tilde*D'*(D*P_tilde*D'+Ri)^(-1);
                     case 144
                         Kk = D'*(D*D'+Ri)^(-1);
+                    case 145
+                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
+                        P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
+                    case 146
+                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
                     otherwise
                         Kk = 0;
                 end

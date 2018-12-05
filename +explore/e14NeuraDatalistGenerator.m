@@ -54,7 +54,7 @@ for i = 1:dataN
     saveas(gcf, sprintf('explore_output/StartEndFrame/%s.png', name))
 end
 
-writetable(T, sprintf('%s/data-list.csv', dir));
+writetable(T, sprintf('%s/data-list-orig.csv', dir));
 
 function pos = findMovementFromStartFrame(point)
     d = vecnorm(point - point(1, :), 2, 2);
