@@ -383,6 +383,7 @@ function results = runNeuRAExperiment(dataS, ...
         end
         
         if cs.initSrc == 'w__v'
+            csActBody = W__viconBody;
             csActBodyRel = PV__viconBody;
             d_pelvis = norm(W__dataV.RFEP(sIdx,:) - W__dataV.LFEP(sIdx,:));
             d_rfemur = norm(W__dataV.RFEP(sIdx,:) - W__dataV.RFEO(sIdx,:));
@@ -390,6 +391,7 @@ function results = runNeuRAExperiment(dataS, ...
             d_rtibia = norm(W__dataV.RFEO(sIdx,:) - W__dataV.RTIO(sIdx,:));
             d_ltibia = norm(W__dataV.LFEO(sIdx,:) - W__dataV.LTIO(sIdx,:));
         elseif cs.initSrc == 'v__v'
+            csActBody = V__viconBody;
             csActBodyRel = PV__viconBody;
             d_pelvis = norm(V__dataV.RFEP(sIdx,:) - V__dataV.LFEP(sIdx,:));
             d_rfemur = norm(V__dataV.RFEP(sIdx,:) - V__dataV.RFEO(sIdx,:));
@@ -397,6 +399,7 @@ function results = runNeuRAExperiment(dataS, ...
             d_rtibia = norm(V__dataV.RFEO(sIdx,:) - V__dataV.RTIO(sIdx,:));
             d_ltibia = norm(V__dataV.LFEO(sIdx,:) - V__dataV.LTIO(sIdx,:));
         else
+            csActBody = W__xsensBody;
             csActBodyRel = PV__xsensBody;
             d_pelvis = norm(W__dataX.RightUpLeg(sIdx,:) - W__dataX.LeftUpLeg(sIdx,:));
             d_rfemur = norm(W__dataX.RightUpLeg(sIdx,:) - W__dataX.RightLeg(sIdx,:));
@@ -477,8 +480,10 @@ function results = runNeuRAExperiment(dataS, ...
                 save(sprintf("%s/%s-%s.mat", savedir, name, cs.label), ...
                      'estBody', 'estState', 'estState2', 'runtime', 'cs')
             end
+            estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
+            csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
-            results0 = estBodyRel.diffRMSE(csActBodyRel);
+            results0 = estBody2.diffRMSE(csActBody2);
 %         catch
 %             runtime = cputime-t0;
 %             results0 = csActBodyRel.diffRMSE(nan);
