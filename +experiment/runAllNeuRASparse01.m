@@ -3,10 +3,10 @@
 % ======================================================================
 dir = 'neura-sparse01';
 % expDir = sprintf('%s/explore', dir);
-expDir = sprintf('%s/explore-v1', dir);
+expDir = sprintf('%s/explore-v2', dir);
 
 DEGRANGE = (0:0.1:359) - 180;
-dataList = readtable(sprintf('%s/data-list-v1.csv', dir));
+dataList = readtable(sprintf('%s/data-list-v2.csv', dir));
 
 % options = struct('Pelvis', '00B40B91', ...
 %     'L_UpLeg', '00B40C45', 'R_UpLeg', '00B40C3C', ...
@@ -50,7 +50,7 @@ setups = {
     for mI = [2]
 %         for cI = [0 1:8 21:23 51:54 71:78 121:122 124:125 131:132 134:135 ...
 %               141:144 151:154 201:208 221:223 271:278]
-        for cI = [201 202 203 146 175 178]
+        for cI = [175]
             setups{end+1} = struct('est', 'ekfv3', ...
                        'accData', 'v__s', 'oriData', 'v__s', 'accDataNoise', 0, ...
                        'initSrc', 'v__v', 'stepDetection', 'av01', ...
@@ -116,7 +116,7 @@ for i = 1:dataN
         end
         % calculate acc pelvis bias. pelvis bias results to crouch
         % divergence so I am not using it for now.
-        if true
+        if false
             dataS = mocapdb.XsensBody.loadMTExport(sprintf('%s/imu/%s-Trial-TUG-1', dir, n.subj), options);
             dataS.fs = 100;               
             dataV = mocapdb.ViconBody.loadViconMat(sprintf('%s/vicon/%s-Trial-TUG-1.mat', dir, n.subj));
