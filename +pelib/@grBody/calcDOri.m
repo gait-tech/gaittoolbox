@@ -11,17 +11,27 @@
 %> @param obj this grBody
 %> @param ref reference grBody to be compared with
 %>
-%> @retval out array of d_ori
+%> @retval out array of d_ori with respect to time
 % ======================================================================
 function out = calcDOri(obj, ref)
     nameList = {'qLTH', 'qRTH'};
     doriList = {};
+    rN = size(obj.qLTH, 1); cN = length(nameList);
+    dori = zeros(rN, cN);
     
-    for i=1:length(nameList)
+    for i=1:cN
         n = nameList{i};
-        doriList.(n) = cellfun(@(x) logm(x), ...
-            num2cell(quat2rotm(quatmultiply(obj.qLTH, quatconj(ref.qLTH))), [1 2]), ...
-            'UniformOutput', false)
+        buf = calcEul(quat2rotm(quatmultiply(obj.(n), quatconj(ref.(n)))));
+        dori(:, i) = vecnorm(rad2deg(buf), 2, 2);
     end
-    out = [];
+    out = mean(dori, 2);
+end
+
+function eul = calcEul(R)
+    n = size(R, 3);
+    eul = zeros(n, 3);
+    for i=1:n
+        R2 = logm(R(:,:,i));
+        eul(i, :) = [R2(3,2) R2(2,1) R2(1,3)];
+    end
 end

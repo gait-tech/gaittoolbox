@@ -31,6 +31,8 @@ function out = diffRMSE(obj1, obj2, ref, seq)
             out.(sprintf('%sStd', oriFields{i})) = [nan nan nan];
         end
         out.oriMeanRMSE = nan;
+        out.dOri = nan;
+        out.dPos = nan;
     else
         rawDiff = obj1.diff(obj2, seq);
 
@@ -58,5 +60,8 @@ function out = diffRMSE(obj1, obj2, ref, seq)
             out.(sprintf('%sStd', oriFields{i})) = valStd(end,:);
         end
         out.oriMeanRMSE = mean(val(:));
+        
+        out.dOri = mean(obj1.calcDOri(obj2));
+        out.dPos = mean(obj1.calcDPos(obj2));
     end
 end
