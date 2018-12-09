@@ -61,7 +61,8 @@ function out = diffRMSE(obj1, obj2, ref, seq)
         end
         out.oriMeanRMSE = mean(val(:));
         
-        out.dOri = mean(obj1.calcDOri(obj2));
-        out.dPos = mean(obj1.calcDPos(obj2));
+        out.dOri = nanmean(obj1.calcDOri(obj2));
+        out.dPos = nanmean(obj1.calcDPos(obj2));
     end
+    out.trialDuration = obj1.nSamples;
 end

@@ -31,7 +31,11 @@ function eul = calcEul(R)
     n = size(R, 3);
     eul = zeros(n, 3);
     for i=1:n
-        R2 = logm(R(:,:,i));
-        eul(i, :) = [R2(3,2) R2(2,1) R2(1,3)];
+        if any(any(isnan(R(:,:,i))))
+            eul(i, :) = [nan nan nan];
+        else
+            R2 = logm(R(:,:,i));
+            eul(i, :) = [R2(3,2) R2(2,1) R2(1,3)];
+        end
     end
 end
