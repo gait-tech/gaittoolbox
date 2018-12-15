@@ -254,6 +254,12 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     % initialise state vector (must be column)
     validateattributes(x0, {'numeric'}, ...
                        {'2d', 'ncols', 1, 'nrows', nStates});
+    % demo start on floor start
+%     lowestpoint = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
+%     x0(idxPosMP(3)) = x0(idxPosMP(3)) - lowestpoint;
+%     x0(idxPosLA(3)) = x0(idxPosLA(3)) - lowestpoint;
+%     x0(idxPosRA(3)) = x0(idxPosRA(3)) - lowestpoint;
+    % demo start on floor end
     x_tilde = x0;
 
     dt = 1/(fOpt.fs);       % assume constant sampling interval
@@ -1357,6 +1363,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         end
 
         if (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77) || ...
+           (fOpt.applyCstr >= 271 && fOpt.applyCstr <= 277) || ...
            (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 176)
             % 001 constraints + MP/LA/RA zpos = floor zpos         
             idx = [idxPosMP(3), idxPosLA(3), idxPosRA(3)];
