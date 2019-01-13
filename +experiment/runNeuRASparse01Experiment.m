@@ -84,11 +84,14 @@ function results = runNeuRAExperiment(dataS, ...
         end
     end
 
+    uwbMeasSigma = 0.0;
+    
     allIdx = {};
     qOri = {};
     gfrAcc = {};
     x0 = {};
-    
+    uwbMeas = {};
+        
     %% Generate vicon based inputs in world frame
     if ~isempty(dataV) & ~isempty(calibV2W)
         nSamples = min(dataV.nSamples, dataS.nSamples);
@@ -160,7 +163,22 @@ function results = runNeuRAExperiment(dataS, ...
         gfrAcc.w__sfv.MP = filter(lpf_b, lpf_a, gfrAcc.w__sv.MP);
         gfrAcc.w__sfv.LA = filter(lpf_b, lpf_a, gfrAcc.w__sv.LA);
         gfrAcc.w__sfv.RA = filter(lpf_b, lpf_a, gfrAcc.w__sv.RA);
-        
+    
+        % UWB measurements
+        %  Simulate uwb measurement by generating pairwise combinations, using the
+        %  origin of each bone segment as the root point
+        umBuf = struct;
+        umBuf.left_tibia_mid_pelvis = vecnorm((W__viconBody.MIDPEL-W__viconBody.LTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.left_tibia_mid_pelvis = umBuf.left_tibia_mid_pelvis(sIdx:eIdx,:);
+        umBuf.mid_pelvis_right_tibia = vecnorm((W__viconBody.MIDPEL-W__viconBody.RTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.mid_pelvis_right_tibia = umBuf.mid_pelvis_right_tibia(sIdx:eIdx,:);
+        umBuf.left_tibia_right_tibia = vecnorm((W__viconBody.RTIO-W__viconBody.LTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.left_tibia_right_tibia = umBuf.left_tibia_right_tibia(sIdx:eIdx,:);
+        uwbMeas.w__v = umBuf;
+    
         % debug purposes
         W__viconBody = W__dataV.togrBody(idx+1, {'name', 'act', 'oriUnit', 'deg', ...
                          'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
@@ -243,6 +261,21 @@ function results = runNeuRAExperiment(dataS, ...
         gfrAcc.v__sfv.LA = filter(lpf_b, lpf_a, gfrAcc.v__sv.LA);
         gfrAcc.v__sfv.RA = filter(lpf_b, lpf_a, gfrAcc.v__sv.RA);
         
+        % UWB measurements
+        %  Simulate uwb measurement by generating pairwise combinations, using the
+        %  origin of each bone segment as the root point
+        umBuf = struct;
+        umBuf.left_tibia_mid_pelvis = vecnorm((V__viconBody.MIDPEL-V__viconBody.LTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.left_tibia_mid_pelvis = umBuf.left_tibia_mid_pelvis(sIdx:eIdx,:);
+        umBuf.mid_pelvis_right_tibia = vecnorm((V__viconBody.MIDPEL-V__viconBody.RTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.mid_pelvis_right_tibia = umBuf.mid_pelvis_right_tibia(sIdx:eIdx,:);
+        umBuf.left_tibia_right_tibia = vecnorm((V__viconBody.RTIO-V__viconBody.LTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.left_tibia_right_tibia = umBuf.left_tibia_right_tibia(sIdx:eIdx,:);
+        uwbMeas.v__v = umBuf;
+        
         % debug purposes
         V__viconBody = V__dataV.togrBody(idx+1, {'name', 'act', 'oriUnit', 'deg', ...
                          'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
@@ -311,6 +344,21 @@ function results = runNeuRAExperiment(dataS, ...
                                 W__dataS.R_LowLeg.acc) - [0 0 9.81];
         gfrAcc.w__sx.RA = gfrAcc.w__sx.RA(sIdx:eIdx,:);
         
+        % UWB measurements
+        %  Simulate uwb measurement by generating pairwise combinations, using the
+        %  origin of each bone segment as the root point
+        umBuf = struct;
+        umBuf.left_tibia_mid_pelvis = vecnorm((W__xsensBody.MIDPEL-W__xsensBody.LTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.left_tibia_mid_pelvis = umBuf.left_tibia_mid_pelvis(sIdx:eIdx,:);
+        umBuf.mid_pelvis_right_tibia = vecnorm((W__xsensBody.MIDPEL-W__xsensBody.RTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.mid_pelvis_right_tibia = umBuf.mid_pelvis_right_tibia(sIdx:eIdx,:);
+        umBuf.left_tibia_right_tibia = vecnorm((W__xsensBody.RTIO-W__xsensBody.LTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.left_tibia_right_tibia = umBuf.left_tibia_right_tibia(sIdx:eIdx,:);
+        uwbMeas.w__x = umBuf;
+        
         % debug purposes
         W__xsensBody = W__dataX.togrBody(idx+1, {'name', 'act', 'oriUnit', 'deg', ...
                          'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
@@ -318,26 +366,17 @@ function results = runNeuRAExperiment(dataS, ...
         PV__xsensBody = W__xsensBody.changeRefFrame('MIDPEL');
     end
     
-    %% UWB measurements
-    %  Simulate uwb measurement by generating pairwise combinations, using the
-    %  origin of each bone segment as the root point
-    uwb_mea = struct;
-%     
-%     uwb_mea.left_tibia_mid_pelvis = vecnorm((MIDPEL_vicon-W__dataV.LTIO), 2, 2) ...
-%         + normrnd(0, 0.1, [nSamples, 1]);
-%     uwb_mea.mid_pelvis_right_tibia = vecnorm((MIDPEL_vicon-W__dataV.RTIO), 2, 2) ...
-%         + normrnd(0, 0.1, [nSamples, 1]);
-%     uwb_mea.left_tibia_right_tibia = vecnorm((W__dataV.RTIO-W__dataV.LTIO), 2, 2) ...
-%         + normrnd(0, 0.1, [nSamples, 1]);
     
     %% Save processing
     if ~strcmp(savedir, '')
         if ~isempty(dataX)
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
-                 'W__viconBody', 'V__viconBody', 'W__xsensBody', 'gfrAcc', 'qOri', 'x0', 'allIdx')
+                 'W__viconBody', 'V__viconBody', 'W__xsensBody', ...
+                 'gfrAcc', 'qOri', 'x0', 'uwbMeas', 'allIdx')
         else
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
-                 'W__viconBody', 'V__viconBody', 'gfrAcc', 'qOri', 'x0', 'allIdx')
+                 'W__viconBody', 'V__viconBody', ...
+                 'gfrAcc', 'qOri', 'x0', 'uwbMeas', 'allIdx')
         end
     end
             
@@ -432,7 +471,7 @@ function results = runNeuRAExperiment(dataS, ...
         alphaRKmin = csActBodyRel.calcJointAnglesRKnee(1);
         alphaRKmin = min(alphaRKmin(2), 0);
         
-        try
+%         try
             if cs.est == 'ekfv3'
                 
                 v3Options = struct('fs', fs, 'applyMeas', cs.applyMeas, ...
@@ -446,7 +485,7 @@ function results = runNeuRAExperiment(dataS, ...
                     csGfrAcc.LA, bIsStatLA, csQOri.LTIB, ...
                     csGfrAcc.RA, bIsStatRA, csQOri.RTIB, ...
                     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, ...
-                    uwb_mea, v3Options);
+                    uwbMeas.(cs.initSrc), v3Options);
                 
                 estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                    'lnSymbol', '--', 'ptSymbol', 'o', 'frame', 'world', ...
@@ -484,10 +523,10 @@ function results = runNeuRAExperiment(dataS, ...
             csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
             results0 = estBody2.diffRMSE(csActBody2);
-        catch
-            runtime = cputime-t0;
-            results0 = csActBodyRel.diffRMSE(nan);
-        end
+%         catch
+%             runtime = cputime-t0;
+%             results0 = csActBodyRel.diffRMSE(nan);
+%         end
         
         results0.name = name;
         results0.label = cs.label;
