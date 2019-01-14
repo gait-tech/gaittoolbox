@@ -51,6 +51,9 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %           003: standard zupt + floor assumption + reset at both foot
 %           004: standard zupt + floor assumption + series reset at both foot
 %           005: standard zupt + floor assumption + zero first floor foot
+%           006: standard zupt + floor assumption + pelvis z pos assumption
+%           007: standard zupt + floor assumption + pelvis z pos assumption + 
+%                zero first floor foot
 %           021: standard zupt + floor assumption + estimate projection (W=P^-1) assuming perfect orientation
 %           101: 3 point dist + standard zupt
 %           102: 3 point dist + standard zupt + floor assumption
@@ -229,7 +232,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
         'sigmaQOriMP', 1e5, 'sigmaQOriLA', 1e5, 'sigmaQOriRA', 1e5, ...
         'sigmaROriMP', 1e-1, 'sigmaROriLA', 1e-1, 'sigmaROriRA', 1e-1, ...
-        'sigmaRPosLA', 1e-2, 'sigmaRPosRA', 1e-2, ...
+        'sigmaRPosLA', 1e-2, 'sigmaRPosRA', 1e-2, 'sigmaRPosMP', 1, ...
         'sigmaCPos', 1e-2, ...
         'sigmaUwbMPLA', 0.2, 'sigmaUwbMPRA', 0.2, 'sigmaUwbLARA', 0.1, ...
         'sigmaZuptMP', 1e-4, 'sigmaZuptLA', 1e-4, 'sigmaZuptRA', 1e-4, ...
@@ -403,6 +406,21 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         y_k(end+1:end+9, :) = zeros(9, nSamples);
     end
     
+    % add the pelvis z position bias to certain height
+    if mod(fOpt.applyMeas, 100) >= 6 && mod(fOpt.applyMeas, 100) <= 7
+        idxMPosMP = nMeasure+1:nMeasure+1;
+        nMeasure = nMeasure+1;
+        
+        H(end+1:end+1, :) = zeros(1, nStates);
+        H(idxMPosMP, idxPosMP(3)) = 1;
+        
+        Rdiag = diag(R);
+        Rdiag(end+1:end+1) = fOpt.sigmaRPosMP;
+        R = diag(Rdiag);
+        
+        y_k(end+1:end+1, :) = x0(idxPosMP(3));
+    end
+    
     if mod(fOpt.applyMeas, 100) >= 2 % add more zupt features
         floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
         
@@ -417,6 +435,13 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 targetL = idxPosLA;
                 targetR = idxPosRA;
             case 5
+                refSide = 'N';
+                targetL = idxPosLA(3);
+                targetR = idxPosRA(3);
+            case 6
+                targetL = idxPosLA(3);
+                targetR = idxPosRA(3);
+            case 7
                 refSide = 'N';
                 targetL = idxPosLA(3);
                 targetR = idxPosRA(3);
@@ -648,6 +673,30 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             elseif ~(bIsStatLA(n) | bIsStatRA(n))
                 refSide = 'N';
             end
+        elseif mod(fOpt.applyMeas, 100) == 6
+            idx(end+1:end+length(idxMPosMP)) = idxMPosMP; 
+            if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+length(idxMPosLA)) = idxMPosLA; 
+            end
+            if bIsStatRA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+length(idxMPosRA)) = idxMPosRA; 
+            end
+        elseif mod(fOpt.applyMeas, 100) == 7
+            idx(end+1:end+length(idxMPosMP)) = idxMPosMP;
+            
+            refSide = 'N';
+            if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+length(idxMPosLA)) = idxMPosLA; 
+            end
+            if bIsStatRA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+length(idxMPosRA)) = idxMPosRA; 
+            end
+            if refSide == 'N'
+                if bIsStatLA(n), refSide = 'L';
+                elseif bIsStatRA(n), refSide = 'R'; end
+            elseif ~(bIsStatLA(n) | bIsStatRA(n))
+                refSide = 'N';
+            end
         elseif mod(fOpt.applyMeas, 100) == 21
             if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+1) = idxMPosLA;
@@ -722,7 +771,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             K = P_min * H(idx, :)' /(H(idx, :) * P_min * H(idx,:)' + R(idx, idx));
 
             P_min1 = (I_N - K * H(idx, :)) * P_min1;
-        elseif mod(fOpt.applyMeas, 100) == 5
+        elseif mod(fOpt.applyMeas, 100) == 5 || mod(fOpt.applyMeas, 100) == 7
             % zero out part of P_min1
             if refSide == 'L'
                 P_min1(idxPosLA, :) = 0;

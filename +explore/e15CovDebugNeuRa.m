@@ -1,5 +1,5 @@
 % motion list
-listSetup = struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M05+C161");
+listSetup = struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M07+C161");
 
 dataSfname = sprintf('neura-sparse01/imu/%s', listSetup.file);
 load(sprintf('neura-sparse01/explore-v2/neura-%s-debug.mat', listSetup.file));
@@ -107,13 +107,13 @@ estPLAPosDebug = estPDebug(11:13, 11:13, :);
 estPRAPosDebug = estPDebug(21:23, 21:23, :);
 
 %% Animation
-az = 0; el = 180;
+% az = 0; el = 180;
 updateFigureContents('Animation'); 
 tmpBody1 = estBodyDebug;
 tmpBody2 = false;
 tmpBody1Limits = [tmpBody1.xlim() tmpBody1.ylim() tmpBody1.zlim()];
 samplePlotN = 1000;
-for i=225:1:500
+for i=1:2844
     [az, el] = view;
     clf; grid; axis square;
     xlabel('x'); ylabel('y'); zlabel('z');
@@ -135,5 +135,6 @@ for i=225:1:500
     if ~(tmpBody2==false)
         pelib.viz.plotLowerBody(tmpBody2, i, true, false);
     end
+    
     pause(1/1000);
 end
