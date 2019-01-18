@@ -54,12 +54,16 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %           006: standard zupt + floor assumption + pelvis z pos assumption
 %           007: standard zupt + floor assumption + pelvis z pos assumption + 
 %                zero first floor foot
+%           008: standard zupt + floor assumption + reset first floor foot
 %           021: standard zupt + floor assumption + estimate projection (W=P^-1) assuming perfect orientation
 %           101: 3 point dist + standard zupt
 %           102: 3 point dist + standard zupt + floor assumption
 %           103: 3 point dist + standard zupt + floor assumption + reset at both foot
 %           104: 3 point dist + standard zupt + floor assumption + series reset at both foot
 %           105: 3 point dist + standard zupt + floor assumption + zero first floor foot
+%           106: 3 point dist + standard zupt + floor assumption + pelvis z pos assumption
+%           107: 3 point dist + standard zupt + floor assumption + pelvis z pos assumption + 
+%                zero first floor foot
 %           121: 3 point dist + standard zupt + floor assumption + estimate projection (W=P^-1) assuming perfect orientation
 %       applyCstr - turn on/off constraints.
 %           001: estimate projection (W=P^-1) assuming perfect orientation
@@ -161,6 +165,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + adj knee + knee ineq + no P update
 %           156: smoothly constraint kf (W=pelvis frame, use maxIter)
 %                + adj knee + knee ineq + no P update
+%           157: smoothly constraint kf (W=P^-1, early stop)
+%                + adj knee that only increases + knee ineq + no P update
+%           158: smoothly constraint kf (W=P^-1, use maxIter)
+%                + adj knee that only increases + knee ineq + no P update
 %           161: smoothly constraint kf (W=P^-1, early stop)
 %                + adj knee + knee ineq
 %           162: smoothly constraint kf (W=I, early stop)
@@ -173,6 +181,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + adj knee + knee ineq
 %           166: smoothly constraint kf (W=pelvis frame, use maxIter)
 %                + adj knee + knee ineq
+%           167: smoothly constraint kf (W=P^-1, early stop)
+%                + adj knee that only increases + knee ineq
+%           168: smoothly constraint kf (W=P^-1, use maxIter)
+%                + adj knee that only increases + knee ineq
 %           171: smoothly constraint kf (W=P^-1, early stop)
 %                + adj knee + knee ineq + no P update + lowest point = floor
 %           172: smoothly constraint kf (W=I, early stop)
@@ -185,10 +197,12 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + adj knee + knee ineq + no P update + lowest point = floor
 %           176: smoothly constraint kf (W=pelvis frame, use maxIter)
 %                + adj knee + knee ineq + no P update + lowest point = floor
-%           177: smoothly constraint kf (W=pelvis frame, early stop)
-%                + adj knee + knee ineq + no P update
-%           178: smoothly constraint kf (W=pelvis frame, use maxIter)
-%                + adj knee + knee ineq + no P update
+%           177: smoothly constraint kf (W=P^-1, early stop)
+%                + adj knee that only increases + knee ineq + no P update
+%                + lowest point = floor
+%           178: smoothly constraint kf (W=P^-1, use maxIter)
+%                + adj knee that only increases + knee ineq + no P update
+%                + lowest point = floor
 %           201: estimate projection (W=P^-1) assuming perfect orientation
 %                + knee angle inequality constraint
 %           202: estimate projection (W=I) assuming perfect orientation
@@ -227,12 +241,13 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %           278: maximum probability estimate + soft P update
 %                + lowest point = floor + knee angle inequality constraint
 
+%         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
     fOpt = struct('fs', 60, 'applyMeas', false, 'applyUwb', false, ...
         'applyAccBias', false, 'applyCstr', 0, ...
         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
-        'sigmaQOriMP', 1e5, 'sigmaQOriLA', 1e5, 'sigmaQOriRA', 1e5, ...
-        'sigmaROriMP', 1e-1, 'sigmaROriLA', 1e-1, 'sigmaROriRA', 1e-1, ...
-        'sigmaRPosLA', 1e-2, 'sigmaRPosRA', 1e-2, 'sigmaRPosMP', 1, ...
+        'sigmaQOriMP', 1e3, 'sigmaQOriLA', 1e3, 'sigmaQOriRA', 1e3, ...
+        'sigmaROriMP', 1e-3, 'sigmaROriLA', 1e-3, 'sigmaROriRA', 1e-3, ...
+        'sigmaRPosLA', 1e-2, 'sigmaRPosRA', 1e-2, 'sigmaRPosMP', 1e-2, ...
         'sigmaCPos', 1e-2, ...
         'sigmaUwbMPLA', 0.2, 'sigmaUwbMPRA', 0.2, 'sigmaUwbLARA', 0.1, ...
         'sigmaZuptMP', 1e-4, 'sigmaZuptLA', 1e-4, 'sigmaZuptRA', 1e-4, ...
@@ -241,7 +256,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         'optimOptimalityTolerance', 1e-2, ...
         'optimConstraintTolerance', 1e-2, ...
         'optimMaxFunctionEvaluations', 1500, 'optimUseParallel', false, ...
-        'sckfAlpha', 0.1, 'sckfThreshold', 100, 'sckfMaxIter', 50);
+        'sckfAlpha', 0.1, 'sckfThreshold', 100, 'sckfMaxIter', 100);
     
     optionFieldNames = fieldnames(options);
     for i=1:length(optionFieldNames)
@@ -445,6 +460,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 refSide = 'N';
                 targetL = idxPosLA(3);
                 targetR = idxPosRA(3);
+            case 8
+                refSide = 'N';
+                targetL = idxPosLA;
+                targetR = idxPosRA;
             case 21
                 targetL = idxPosLA(3);
                 targetR = idxPosRA(3);
@@ -600,7 +619,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             'UseParallel', fOpt.optimUseParallel);
     elseif (fOpt.applyCstr >= 145 && fOpt.applyCstr <= 146) || ...
         (fOpt.applyCstr >= 155 && fOpt.applyCstr <= 156) || ...
-        (fOpt.applyCstr >= 175 && fOpt.applyCstr <= 178)
+        (fOpt.applyCstr >= 165 && fOpt.applyCstr <= 166) || ...
+        (fOpt.applyCstr >= 175 && fOpt.applyCstr <= 176)
         P_custom = eye(nStates);
         P_custom(idxPosMP,idxPosMP) = 0;
     end
@@ -684,7 +704,6 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         elseif mod(fOpt.applyMeas, 100) == 7
             idx(end+1:end+length(idxMPosMP)) = idxMPosMP;
             
-            refSide = 'N';
             if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+length(idxMPosLA)) = idxMPosLA; 
             end
@@ -696,6 +715,15 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 elseif bIsStatRA(n), refSide = 'R'; end
             elseif ~(bIsStatLA(n) | bIsStatRA(n))
                 refSide = 'N';
+            end
+        elseif mod(fOpt.applyMeas, 100) == 8
+            if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ 
+                idx(end+1:end+length(idxMPosLA)) = idxMPosLA;
+                y_k(idxMPosLA(1:2), n) = x_min(idxPosLA(1:2));
+            end
+            if bIsStatRA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+length(idxMPosRA)) = idxMPosRA;
+                y_k(idxMPosRA(1:2), n) = x_min(idxPosRA(1:2));
             end
         elseif mod(fOpt.applyMeas, 100) == 21
             if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
@@ -1129,8 +1157,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 x_tilde = x_tilde + dx;
             end
             P_tilde = P_plus;
-        elseif (fOpt.applyCstr >= 151 && fOpt.applyCstr <= 156) || ...
-               (fOpt.applyCstr >= 161 && fOpt.applyCstr <= 166) || ...
+        elseif (fOpt.applyCstr >= 151 && fOpt.applyCstr <= 158) || ...
+               (fOpt.applyCstr >= 161 && fOpt.applyCstr <= 168) || ...
                (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 178)
             sckfAlpha = fOpt.sckfAlpha;
             sckfThreshold = fOpt.sckfThreshold;
@@ -1148,7 +1176,21 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                                  -dot(LFEM_z, LTIB_CS(:,1))) + 0.5*pi;
                     alpha_rk = atan2(-dot(RFEM_z, RTIB_CS(:,3)), ...
                                      -dot(RFEM_z, RTIB_CS(:,1))) + 0.5*pi;
-                             
+                                 
+                    if mod(fOpt.applyCstr, 10) >= 7 && mod(fOpt.applyCstr, 10) <= 8 
+%                         alphalimit.lkmin = max(alpha_lk, fOpt.alphaLKmin);
+%                         alphalimit.rkmin = max(alpha_rk, fOpt.alphaRKmin);
+                        
+                        if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
+                            P_tilde(idxPosLA(3), :) = 0; 
+                            P_tilde(:, idxPosLA(3)) = 0; 
+                        end
+                        if bIsStatRA(n) || x_min(idxPosRA(3), 1) < floorZ
+                            P_tilde(idxPosRA(3), :) = 0; 
+                            P_tilde(:, idxPosRA(3)) = 0; 
+                        end
+                    end
+                    
                     if alpha_lk < alphalimit.lkmin
                         tmpLK = sin(alphalimit.lkmin - 0.5*pi)*LTIB_CS(:,1) - ...
                                 cos(alphalimit.lkmin - 0.5*pi)*LTIB_CS(:,3);
@@ -1231,10 +1273,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                     case 6
                         Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
                     case 7
-                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
+                        Kk = P_tilde*D'*(D*P_tilde*D'+Ri)^(-1);
                         P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
                     case 8
-                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
+                        Kk = P_tilde*D'*(D*P_tilde*D'+Ri)^(-1);
                     otherwise
                         Kk = 0;
                 end
@@ -1242,7 +1284,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 dx = Kk*(res);
                 x_tilde = x_tilde + dx;
             end
-            if ~(fOpt.applyCstr >= 161 && fOpt.applyCstr <= 166)
+            if ~(fOpt.applyCstr >= 161 && fOpt.applyCstr <= 168)
                 P_tilde = P_plus;
             end
         elseif fOpt.applyCstr >= 51 && fOpt.applyCstr <= 54
@@ -1467,7 +1509,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 
         if (fOpt.applyCstr >= 71 && fOpt.applyCstr <= 77) || ...
            (fOpt.applyCstr >= 271 && fOpt.applyCstr <= 277) || ...
-           (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 176)
+           (fOpt.applyCstr >= 171 && fOpt.applyCstr <= 178)
             % 001 constraints + MP/LA/RA zpos = floor zpos         
             idx = [idxPosMP(3), idxPosLA(3), idxPosRA(3)];
             [lpy lpi] = min(x_tilde(idx));

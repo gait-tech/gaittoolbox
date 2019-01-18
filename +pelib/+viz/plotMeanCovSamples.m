@@ -15,7 +15,9 @@ function p = plotMeanCovSamples(MU, SIGMA, N, setup)
     if nargin <= 3, setup = 'b.'; end
     hold on;
     
-    SIGMA2 = (SIGMA + SIGMA.') / 2;
-    samples = mvnrnd(MU, SIGMA2, N);
-    scatter3(samples(:, 1), samples(:, 2), samples(:, 3), setup);
+    try
+        SIGMA2 = (SIGMA + SIGMA.') / 2;
+        samples = mvnrnd(MU, SIGMA2, N);
+        scatter3(samples(:, 1), samples(:, 2), samples(:, 3), setup);
+    end
 end

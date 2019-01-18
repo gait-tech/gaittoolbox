@@ -1,5 +1,5 @@
 % motion list
-listSetup = struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M07+C161");
+listSetup = struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M02+C161");
 
 dataSfname = sprintf('neura-sparse01/imu/%s', listSetup.file);
 load(sprintf('neura-sparse01/explore-v2/neura-%s-debug.mat', listSetup.file));
@@ -105,6 +105,53 @@ viconBodyDebug.RTOE = [];
 estPMPPosDebug = estPDebug( 1: 3,  1: 3, :);
 estPLAPosDebug = estPDebug(11:13, 11:13, :);
 estPRAPosDebug = estPDebug(21:23, 21:23, :);
+
+%% Summary Values
+% plot P and rank
+idx2 = 1:estBodyDebug.nSamples;
+estPRank = zeros(estBodyDebug.nSamples, 1);
+for i=1:n2
+    estPRank(i,1) = rank(estPDebug(:,:,i));
+end
+
+updateFigureContents('P and rank');
+subplot(4, 1, 1);
+plot(idx2, squeeze(estPMPPosDebug(1,1,:)), 'r', ...
+     idx2, squeeze(estPMPPosDebug(2,2,:)), 'g', ...
+     idx2, squeeze(estPMPPosDebug(3,3,:)), 'b');
+title('MP P diagonals');
+legend('x', 'y', 'z');
+
+subplot(4, 1, 2);
+plot(idx2, squeeze(estPLAPosDebug(1,1,:)), 'r', ...
+     idx2, squeeze(estPLAPosDebug(2,2,:)), 'g', ...
+     idx2, squeeze(estPLAPosDebug(3,3,:)), 'b');
+title('LA P diagonals');
+legend('x', 'y', 'z');
+
+subplot(4, 1, 3);
+plot(idx2, squeeze(estPRAPosDebug(1,1,:)), 'r', ...
+     idx2, squeeze(estPRAPosDebug(2,2,:)), 'g', ...
+     idx2, squeeze(estPRAPosDebug(3,3,:)), 'b');
+title('RA P diagonals');
+legend('x', 'y', 'z');
+
+subplot(4, 1, 4);
+plot(idx2, estPRank);
+title('Rank');
+
+% plot rank and femur length
+updateFigureContents('Femur length'); 
+subplot(2, 1, 1);
+LFemurLength = estBodyDebug.calcLFemurLength();
+plot(idx2, LFemurLength, ...
+     idx2, repelem(LFemurLength(1), length(idx2)));
+legend('est LFem len', 'act LFem len');
+RFemurLength = estBodyDebug.calcRFemurLength();
+subplot(2, 1, 2);
+plot(idx2, RFemurLength, ...
+     idx2, repelem(RFemurLength(1), length(idx2)));
+legend('est RFem len', 'act RFem len');
 
 %% Animation
 % az = 0; el = 180;

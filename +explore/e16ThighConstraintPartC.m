@@ -3,19 +3,19 @@
 x = [-0.5*cosd(45) 0.5*sind(45) 0 0]';
 P = 1e-2*[1 0 0 0;
          0 1 0 0;
-         0 0 1e-2 0;
-         0 0 0 1e-2];
+         0 0 1e-3 0;
+         0 0 0 1e-3];
 H = [0 0 1 0;
      0 0 0 1];
 R = [1 0; 0 1e-5];
 
-for i=1:500
+for i=1:24
 %     draw(x, P, 500);
 %     pause(1/1000);
     
     [newx, newP] = applySCKF(x, P, 1.0);
     x = newx;
-    P = newP;
+    P = newP
     norm(x(1:2)-x(3:4))
     
     draw(x, P, 500); title('Thigh Constraint Part C');
@@ -24,8 +24,9 @@ for i=1:500
     v = x(1:2) - x(3:4);
     v = v / norm(v);
     x = x + 0.05*[v; 0; 0];
-    P = P + 1e-5*eye(4,4);
+    P = P + 1e-3*eye(4,4);
     
+%     P
     % measurement update
 %     res = [0; 0] - H*x;
 %     K = P * H' /(H*P*H' + R);
@@ -35,8 +36,8 @@ end
 
 function [newx, newP] = applySCKF(x, P, dLFemur)
     sckfAlpha = 0.1;
-    sckfThreshold = 100;
-    sckfMaxIter = 50;
+    sckfThreshold = 50;
+    sckfMaxIter = 10;
     applyCstr = 1;
     I_N = eye(4, 4);
     
