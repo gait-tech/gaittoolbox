@@ -56,6 +56,18 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                zero first floor foot
 %           008: standard zupt + floor assumption + reset first floor foot
 %           021: standard zupt + floor assumption + estimate projection (W=P^-1) assuming perfect orientation
+%           031: standard zupt + floor assumption + recenter at left foot step
+%                + one big cov update
+%           032: standard zupt + floor assumption + limit pos max covariance
+%                + one big cov update
+%           033: standard zupt + floor assumption + recenter at left foot step
+%                + limit pos max covariance + one big cov update
+%           041: standard zupt + floor assumption + recenter at left foot step
+%                + series cov update
+%           042: standard zupt + floor assumption + limit pos max covariance
+%                + series cov update
+%           043: standard zupt + floor assumption + recenter at left foot step
+%                + limit pos max covariance + series cov update
 %           101: 3 point dist + standard zupt
 %           102: 3 point dist + standard zupt + floor assumption
 %           103: 3 point dist + standard zupt + floor assumption + reset at both foot
@@ -240,7 +252,36 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + lowest point = floor + knee angle inequality constraint
 %           278: maximum probability estimate + soft P update
 %                + lowest point = floor + knee angle inequality constraint
-
+%           351: smoothly constraint kf (W=P^-1, early stop)
+%                + adj knee + knee ineq + no P update
+%           352: smoothly constraint kf (W=P^-1, use maxIter)
+%                + adj knee + knee ineq + no P update
+%           353: smoothly constraint kf (W=I, early stop)
+%                + adj knee + knee ineq + no P update
+%           354: smoothly constraint kf (W=I, use maxIter)
+%                + adj knee + knee ineq + no P update
+%           355: smoothly constraint kf (W=P^-1, early stop)
+%                + adj knee that only increases + knee ineq + no P update
+%           356: smoothly constraint kf (W=P^-1, use maxIter)
+%                + adj knee that only increases + knee ineq + no P updates
+%           371: smoothly constraint kf (W=P^-1, early stop)
+%                + adj knee + knee ineq + no P update
+%                + lowest point = floor
+%           372: smoothly constraint kf (W=P^-1, use maxIter)
+%                + adj knee + knee ineq + no P update
+%                + lowest point = floor
+%           373: smoothly constraint kf (W=I, early stop)
+%                + adj knee + knee ineq + no P update
+%                + lowest point = floor
+%           374: smoothly constraint kf (W=I, use maxIter)
+%                + adj knee + knee ineq + no P update
+%                + lowest point = floor
+%           375: smoothly constraint kf (W=P^-1, early stop)
+%                + adj knee that only increases + knee ineq + no P update
+%                + lowest point = floor
+%           376: smoothly constraint kf (W=P^-1, use maxIter)
+%                + adj knee that only increases + knee ineq + no P updates
+%                + lowest point = floor
 %         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
     fOpt = struct('fs', 60, 'applyMeas', false, 'applyUwb', false, ...
         'applyAccBias', false, 'applyCstr', 0, ...
@@ -248,6 +289,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         'sigmaQOriMP', 1e3, 'sigmaQOriLA', 1e3, 'sigmaQOriRA', 1e3, ...
         'sigmaROriMP', 1e-3, 'sigmaROriLA', 1e-3, 'sigmaROriRA', 1e-3, ...
         'sigmaRPosLA', 1e-2, 'sigmaRPosRA', 1e-2, 'sigmaRPosMP', 1e-2, ...
+        'sigmaRPosMPLimit', 1e1, 'sigmaRPosLALimit', 1e1, ...
+        'sigmaRPosRALimit', 1e1, 'sigmaRPosLARecenter', 1e-3, ...
         'sigmaCPos', 1e-2, ...
         'sigmaUwbMPLA', 0.2, 'sigmaUwbMPRA', 0.2, 'sigmaUwbLARA', 0.1, ...
         'sigmaZuptMP', 1e-4, 'sigmaZuptLA', 1e-4, 'sigmaZuptRA', 1e-4, ...
@@ -402,6 +445,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     debug_dat.zuptStateL = bIsStatLA;
     debug_dat.zuptStateR = bIsStatRA;
     
+    % applyMeas update orientation initialization
     if fOpt.applyMeas
         idxMVelMP = nMeasure+1:nMeasure+3;
         idxMVelLA = nMeasure+4:nMeasure+6;
@@ -421,7 +465,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         y_k(end+1:end+9, :) = zeros(9, nSamples);
     end
     
-    % add the pelvis z position bias to certain height
+    % applyMeas set pelvis z position bias to certain height initialization
     if mod(fOpt.applyMeas, 100) >= 6 && mod(fOpt.applyMeas, 100) <= 7
         idxMPosMP = nMeasure+1:nMeasure+1;
         nMeasure = nMeasure+1;
@@ -436,6 +480,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         y_k(end+1:end+1, :) = x0(idxPosMP(3));
     end
     
+    % applyMeas flat floor assumption initialization
     if mod(fOpt.applyMeas, 100) >= 2 % add more zupt features
         floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
         
@@ -464,7 +509,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 refSide = 'N';
                 targetL = idxPosLA;
                 targetR = idxPosRA;
-            case 21
+            otherwise % 21,31-33,41-43
                 targetL = idxPosLA(3);
                 targetR = idxPosRA(3);
         end
@@ -487,6 +532,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         y_k(end+1:end+targetN, :) = floorZ*ones(targetN, nSamples);  
     end
     
+    % applyMeas special measurement update
     if mod(fOpt.applyMeas, 100) == 21
         idxMLHjc = nMeasure+1:nMeasure+3;
         idxMRHjc = nMeasure+4:nMeasure+6;
@@ -502,7 +548,42 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         Rdiag(end+1:end+6) = repelem((fOpt.sigmaCPos)^2, 6);
         R = diag(Rdiag);
         
-        y_k(end+1:end+6, :) = zeros(6, nSamples); 
+        y_k(end+1:end+6, :) = zeros(6, nSamples);
+    end
+    if (mod(fOpt.applyMeas, 100) >= 31 && mod(fOpt.applyMeas, 100) <= 33) || ...
+       (mod(fOpt.applyMeas, 100) >= 41 && mod(fOpt.applyMeas, 100) <= 43)
+        % reset covariance of left foot to certain value       
+        switch (mod(fOpt.applyMeas, 10))
+            case 1
+                target = idxPosLA;
+                sigmas = [fOpt.sigmaRPosLARecenter];
+                idxMCov1 = nMeasure+1:nMeasure+3;
+            case 2
+                target = [idxPosMP idxPosLA idxPosRA];
+                sigmas = [fOpt.sigmaRPosMPLimit fOpt.sigmaRPosLALimit ...
+                          fOpt.sigmaRPosRALimit];
+                idxMCov1 = nMeasure+1:nMeasure+9;
+            case 3
+                target = [idxPosMP idxPosLA idxPosLA idxPosRA];
+                sigmas = [fOpt.sigmaRPosMPLimit fOpt.sigmaRPosLALimit ...
+                          fOpt.sigmaRPosLARecenter fOpt.sigmaRPosRALimit ];
+                idxMCov1 = [nMeasure+1:nMeasure+6 nMeasure+10:nMeasure+12];
+                idxMCov2 = [nMeasure+1:nMeasure+3 nMeasure+7:nMeasure+12];
+        end
+        
+        targetN = length(target);
+        idx = nMeasure+1:nMeasure+targetN;
+        nMeasure = nMeasure+targetN;
+        
+        H(end+1:end+targetN, :) = zeros(targetN, nStates);
+        for i=1:3:targetN
+            idx2 = idx(i:i+2);
+            target2 = target(i:i+2);
+            H(idx2, target2) = eye(3, 3);
+        end
+        Rdiag = diag(R);
+        Rdiag(end+1:end+targetN) = repelem(sigmas.^2, 3);
+        R = diag(Rdiag);
     end
     
     if fOpt.applyMeas >= 100 && fOpt.applyMeas < 200
@@ -656,7 +737,9 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             if bIsStatRA(n) idx(end+1:end+3) = idxMVelRA; end
         end
         
-        if mod(fOpt.applyMeas, 100) == 2
+        if (mod(fOpt.applyMeas, 100) == 2) || ...
+           (mod(fOpt.applyMeas, 100) >= 31 && mod(fOpt.applyMeas, 100) <= 33) || ...
+           (mod(fOpt.applyMeas, 100) >= 41 && mod(fOpt.applyMeas, 100) <= 43) 
             if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+length(idxMPosLA)) = idxMPosLA; 
             end
@@ -789,9 +872,23 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
        
         res = y_k(idx, n) - H(idx, :) * x_min;
         K = P_min * H(idx, :)' /(H(idx, :) * P_min * H(idx,:)' + R(idx, idx));
-
         x_min1 = x_min + K * res;
-        P_min1 = (I_N - K * H(idx, :)) * P_min;
+        
+        if mod(fOpt.applyMeas,100) == 31
+            if bIsStatLA(n), idx2 = [idx idxMCov1];
+            else, idx2 = idx; end
+            K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
+        elseif mod(fOpt.applyMeas,100) == 32
+            idx2 = [idx idxMCov1];
+            K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
+        elseif mod(fOpt.applyMeas,100) == 33
+            if bIsStatLA(n), idx2 = [idx idxMCov2];
+            else, idx2 = [idx idxMCov1]; end
+            K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
+        else
+            idx2 = idx;
+        end
+        P_min1 = (I_N - K * H(idx2, :)) * P_min;
         
         if mod(fOpt.applyMeas, 100) == 4
             idx = [idxMPosLA(1:2) idxMPosRA(1:2)];
@@ -808,6 +905,21 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 P_min1(idxPosRA, :) = 0;
                 P_min1(:, idxPosRA) = 0;
             end
+        elseif mod(fOpt.applyMeas,100) == 41
+            if bIsStatLA(n)
+                idx2 = idxMCov1;
+                K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
+                P_min1 = (I_N - K * H(idx2, :)) * P_min1;
+            end
+        elseif mod(fOpt.applyMeas,100) == 42
+            idx2 = idxMCov1;
+            K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
+            P_min1 = (I_N - K * H(idx2, :)) * P_min1;
+        elseif mod(fOpt.applyMeas,100) == 43
+            if bIsStatLA(n), idx2 = idxMCov2;
+            else, idx2 = idxMCov1; end
+            K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
+            P_min1 = (I_N - K * H(idx2, :)) * P_min1;
         end
         
         if fOpt.applyMeas
@@ -1287,6 +1399,157 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             if ~(fOpt.applyCstr >= 161 && fOpt.applyCstr <= 168)
                 P_tilde = P_plus;
             end
+        elseif (fOpt.applyCstr >= 351 && fOpt.applyCstr <= 356) || ...
+               (fOpt.applyCstr >= 371 && fOpt.applyCstr <= 376)
+            sckfAlpha = fOpt.sckfAlpha;
+            sckfThreshold = fOpt.sckfThreshold;
+            x_tilde = x_plus;
+            P_tilde = P_plus;
+            
+            % preprocessing for knee angle inequality
+            % additional process to ensure knee angle does not increase
+            % during iteration
+            if mod(fOpt.applyCstr, 10) >= 5 && mod(fOpt.applyCstr, 10) <= 6
+                LFEM_z = x_tilde(idxPosMP,1) + dPelvis/2*PELV_CS(:,2) ...
+                         - dLTibia*LTIB_CS(:,3) - x_tilde(idxPosLA,1);
+                RFEM_z = x_tilde(idxPosMP,1) - dPelvis/2*PELV_CS(:,2) ...
+                         - dRTibia*RTIB_CS(:,3) - x_tilde(idxPosRA,1);
+                     
+                alpha_lk = atan2(-dot(LFEM_z, LTIB_CS(:,3)), ...
+                                 -dot(LFEM_z, LTIB_CS(:,1))) + 0.5*pi;
+                alpha_rk = atan2(-dot(RFEM_z, RTIB_CS(:,3)), ...
+                                 -dot(RFEM_z, RTIB_CS(:,1))) + 0.5*pi;
+                alphalimit.lkmax = min(alpha_lk, fOpt.alphaLKmax);
+                alphalimit.rkmax = min(alpha_rk, fOpt.alphaRKmax);
+            end
+            
+            tmpLKmin = sin(alphalimit.lkmin - 0.5*pi)*LTIB_CS(:,1) - ...
+                       cos(alphalimit.lkmin - 0.5*pi)*LTIB_CS(:,3);
+            tmpLKmax = sin(alphalimit.lkmax - 0.5*pi)*LTIB_CS(:,1) - ...
+                       cos(alphalimit.lkmax - 0.5*pi)*LTIB_CS(:,3);
+            tmpRKmin = sin(alphalimit.rkmin - 0.5*pi)*RTIB_CS(:,1) - ...
+                       cos(alphalimit.rkmin - 0.5*pi)*RTIB_CS(:,3);
+            tmpRKmax = sin(alphalimit.rkmax - 0.5*pi)*RTIB_CS(:,1) - ...
+                       cos(alphalimit.rkmax - 0.5*pi)*RTIB_CS(:,3);
+                   
+            for i=0:fOpt.sckfMaxIter
+                % Step 1: construct D matrix              
+                % calculate the z axis of femur and tibia
+                LFEM_z = x_tilde(idxPosMP,1) + dPelvis/2*PELV_CS(:,2) ...
+                         - dLTibia*LTIB_CS(:,3) - x_tilde(idxPosLA,1);
+                RFEM_z = x_tilde(idxPosMP,1) - dPelvis/2*PELV_CS(:,2) ...
+                         - dRTibia*RTIB_CS(:,3) - x_tilde(idxPosRA,1);
+                g_dlfem = norm(LFEM_z, 2);
+                g_drfem = norm(RFEM_z, 2);
+                
+                % D matrix construction: femur length constraint and knee hinge joint
+                D = zeros(4, length(x_tilde));
+                D(1, idxPosMP) = LFEM_z'/g_dlfem;
+                D(1, idxPosLA) = -LFEM_z'/g_dlfem;
+                D(2, idxPosMP) = RFEM_z'/g_drfem;
+                D(2, idxPosRA) = -RFEM_z'/g_drfem;
+                D(3, idxPosMP) = LTIB_CS(:,2)';
+                D(3, idxPosLA) = -LTIB_CS(:,2)';
+                D(4, idxPosMP) = RTIB_CS(:,2)';
+                D(4, idxPosRA) = -RTIB_CS(:,2)';
+
+                res = [dLFemur - g_dlfem; ...
+                       dRFemur - g_drfem; ...
+                      (-dPelvis/2*PELV_CS(:,2) + dLTibia*LTIB_CS(:,3))'*LTIB_CS(:,2) ...
+                            - D(3,:)*x_tilde; ...
+                      (dPelvis/2*PELV_CS(:,2) + dRTibia*RTIB_CS(:,3))'*RTIB_CS(:,2) ...
+                            - D(4,:)*x_tilde];
+                  
+                % add knee inequality constraint via active set
+                alpha_lk = atan2(-dot(LFEM_z, LTIB_CS(:,3)), ...
+                                 -dot(LFEM_z, LTIB_CS(:,1))) + 0.5*pi;
+                alpha_rk = atan2(-dot(RFEM_z, RTIB_CS(:,3)), ...
+                                 -dot(RFEM_z, RTIB_CS(:,1))) + 0.5*pi;
+                if alpha_lk < alphalimit.lkmin
+                    D(end+1, :) = zeros(1, length(x_tilde));
+                    D(end, idxPosMP) = tmpLKmin';
+                    D(end, idxPosLA) = -tmpLKmin';
+                    res(end+1, 1) = (-dPelvis/2*PELV_CS(:,2) + dLTibia*LTIB_CS(:,3))'*tmpLKmin ...
+                        - D(end, :)*x_tilde;
+                elseif alpha_lk > alphalimit.lkmax
+                    D(end+1, :) = zeros(1, length(x_tilde));
+                    D(end, idxPosMP) = tmpLKmax';
+                    D(end, idxPosLA) = -tmpLKmax';
+                    res(end+1, 1) = (-dPelvis/2*PELV_CS(:,2) + dLTibia*LTIB_CS(:,3))'*tmpLKmax ...
+                        - D(end, :)*x_tilde;
+                end
+                    
+                if alpha_rk < alphalimit.rkmin
+                    D(end+1, :) = zeros(1, length(x_tilde));
+                    D(end, idxPosMP) = tmpRKmin';
+                    D(end, idxPosRA) = -tmpRKmin';
+                    res(end+1, 1) = (dPelvis/2*PELV_CS(:,2) + dRTibia*RTIB_CS(:,3))'*tmpRKmin ...
+                        - D(end, :)*x_tilde;
+                elseif alpha_rk > alphalimit.rkmax
+                    D(end+1, :) = zeros(1, length(x_tilde));
+                    D(end, idxPosMP) = tmpRKmax';
+                    D(end, idxPosRA) = -tmpRKmax';
+                    res(end+1, 1) = (dPelvis/2*PELV_CS(:,2) + dRTibia*RTIB_CS(:,3))'*tmpRKmax ...
+                        - D(end, :)*x_tilde;
+                end
+                
+                % add flat floor constraint
+                if (fOpt.applyCstr >= 371 && fOpt.applyCstr <= 376)
+                    stepCstrCount = 0;
+                    if bIsStatLA(n) || x_tilde(idxPosLA(3), 1) < floorZ
+                        D(end+1, :) = zeros(1, length(x_tilde));
+                        D(end, idxPosLA(3)) = 1;
+                        res(end+1, 1) = floorZ - D(end, :)*x_tilde;
+                        stepCstrCount = stepCstrCount + 1;
+                    end
+                    if bIsStatRA(n) || x_tilde(idxPosRA(3), 1) < floorZ
+                        D(end+1, :) = zeros(1, length(x_tilde));
+                        D(end, idxPosRA(3)) = 1;
+                        res(end+1, 1) = floorZ - D(end, :)*x_tilde;
+                        stepCstrCount = stepCstrCount + 1;
+                    end
+                    if stepCstrCount == 2
+                        P_tilde_cstr = D*P_tilde*D';
+                        % if condition number is high enough (singular
+                        % matrix), delete last constraint
+                        if cond(P_tilde_cstr) > 1e5
+                            D(end, :) = [];
+                            res(end, :) = [];
+                        end
+                    end
+                end
+                
+                % Step 3: calculate Ri               
+                Ri = sckfAlpha*D*P_tilde*D'*exp(-i);
+                Si = max(D.^2 .* diag(P_tilde)', [], 2) ./ diag(D * P_tilde* D');
+                Si(isnan(Si)) = sckfThreshold+1;
+                if sum(Si < sckfThreshold) == 0, break, end
+
+                % Step 4: update x_tilde and P_tilde
+                switch mod(fOpt.applyCstr, 10)
+                    case 1
+                        Kk = P_tilde*D'*(D*P_tilde*D'+Ri)^(-1);
+                        P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
+                    case 2
+                        Kk = P_tilde*D'*(D*P_tilde*D'+Ri)^(-1);
+                    case 3
+                        Kk = D'*(D*D'+Ri)^(-1);
+                        P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
+                    case 4
+                        Kk = D'*(D*D'+Ri)^(-1);
+                    case 5
+                        Kk = P_tilde*D'*(D*P_tilde*D'+Ri)^(-1);
+                        P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
+                    case 6
+                        Kk = P_tilde*D'*(D*P_tilde*D'+Ri)^(-1);
+                    otherwise
+                        Kk = 0;
+                end
+                
+                dx = Kk*(res);
+                x_tilde = x_tilde + dx;
+            end
+            P_tilde = P_plus;
         elseif fOpt.applyCstr >= 51 && fOpt.applyCstr <= 54
             % 001 constraints + MP/LA/RA zpos = floor zpos         
             d_k = solve_linhjc_d(x_plus(idxPosMP,1), x_plus(idxPosLA,1), ...

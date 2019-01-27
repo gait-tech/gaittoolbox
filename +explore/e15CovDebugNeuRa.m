@@ -1,5 +1,5 @@
 % motion list
-listSetup = struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M02+C161");
+listSetup = struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M41+C351");
 
 dataSfname = sprintf('neura-sparse01/imu/%s', listSetup.file);
 load(sprintf('neura-sparse01/explore-v2/neura-%s-debug.mat', listSetup.file));
