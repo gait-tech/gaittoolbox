@@ -162,6 +162,14 @@ classdef grBody < matlab.mixin.Copyable
             d = norm(obj.RFEO(idx, :) - obj.RTIO(idx, :));
         end
         
+        function d = calcLFemurLength(obj)
+            d = vecnorm(obj.LFEP - obj.LFEO, 2, 2);
+        end
+        
+        function d = calcRFemurLength(obj)
+            d = vecnorm(obj.RFEP - obj.RFEO, 2, 2);
+        end
+        
         out = calcJointVel(obj, pts);
         out = calcJointAcc(obj, pts);
         out = calcDOri(obj, ref);
