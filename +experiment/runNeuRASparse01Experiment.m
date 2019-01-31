@@ -22,6 +22,7 @@
 %> - stepDetection: step detection algorithm to be used
 %>      - false: turn off
 %>      - av01: fixed acceleration variance on tibia accData (var = 1)
+%>      - av01: fixed acceleration variance on vicon tibia accData (var = 1)
 %> - initSrc: source of sensor to body orientation and position init
 %>      - w__v: vicon (world frame) (default)
 %>      - v__v: vicon (vicon frame)
@@ -457,6 +458,19 @@ function results = runNeuRAExperiment(dataS, ...
             movVarAcc_lankle = movingvar(sqrt( sum(csGfrAcc.LA .^2, 2)), VAR_WIN);
             bIsStatLA = movVarAcc_lankle < ACC_VAR_THRESH;
             movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc.RA .^2, 2)), VAR_WIN);
+            bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
+        elseif strcmp(cs.stepDetection, 'av02')
+            if cs.accData(1) == 'w', csGfrAcc2 = gfrAcc.w__v;
+            else, csGfrAcc2 = gfrAcc.v__v; end
+            
+            VAR_WIN  = floor(fs*cs.stepDetectWindow); % NUM_SAMPLES
+            ACC_VAR_THRESH = cs.stepDetectThreshold;
+
+            movVarAcc_pelvis = movingvar(sqrt( sum(csGfrAcc2.MP .^2, 2)), VAR_WIN);
+            bIsStatMP = movVarAcc_pelvis < 0;
+            movVarAcc_lankle = movingvar(sqrt( sum(csGfrAcc2.LA .^2, 2)), VAR_WIN);
+            bIsStatLA = movVarAcc_lankle < ACC_VAR_THRESH;
+            movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc2.RA .^2, 2)), VAR_WIN);
             bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
         else
             csNSamples = size(csGfrAcc.MP, 1);

@@ -1,5 +1,5 @@
 % motion list
-listSetup = struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M41+C351");
+listSetup = struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M51+C373");
 
 dataSfname = sprintf('neura-sparse01/imu/%s', listSetup.file);
 load(sprintf('neura-sparse01/explore-v2/neura-%s-debug.mat', listSetup.file));
@@ -152,6 +152,19 @@ subplot(2, 1, 2);
 plot(idx2, RFemurLength, ...
      idx2, repelem(RFemurLength(1), length(idx2)));
 legend('est RFem len', 'act RFem len');
+
+vel1 = vb.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
+vel2 = estBody.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
+
+updateFigureContents('Vicon Joint Velocities'); 
+viconMPVel = vel1.MIDPEL; viconLAVel = vel1.LTIO; viconRAVel = vel1.RTIO;
+viconLARAMeanVel = (viconLAVel+viconRAVel)./2;
+pelib.viz.plotXYZ(fs, viconMPVel, viconLARAMeanVel, viconLAVel, viconRAVel);
+
+updateFigureContents('Vicon Joint Positions'); 
+viconMPPos = vb.MIDPEL; viconLAPos = vb.LTIO; viconRAPos = vb.RTIO;
+viconLARAMeanPos = (viconLAPos+viconRAPos)./2;
+pelib.viz.plotXYZ(fs, viconMPPos, viconLARAMeanPos, viconLAPos, viconRAPos);
 
 %% Animation
 % az = 0; el = 180;
