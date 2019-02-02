@@ -34,8 +34,9 @@
 %>
 %> @param fnameV loaded mocapdb.ViconBody
 %> @param calibV2W quaternion (1 x 4) transforming vicon frame to world frame
+%> @param calibYawFix mocapdb.XsensBody fix ankle sensor yaw orientation offset
 %> @param calibW2V mocapdb.XsensBody transforming each sensor's world frame
-%>                 to vicon frame
+%>                 to vicon frame. Includes yaw realignment calibration.
 %> @param fnameX loaded mocapdb.BVHBody 
 %> @param fnameS loaded mocapdb.XsensBody
 %> @param name name of the experiment
@@ -47,7 +48,7 @@
 %> @param bias pelvis accelerometer bias in sensor frame
 % ======================================================================
 function results = runNeuRAExperiment(dataS, ...
-                        dataV, calibV2W, calibW2V, dataX, ...
+                        dataV, calibV2W, calibYawFix, calibW2V, dataX, ...
                         name, setups, savedir, startFrame, endFrame, bias)
     %% Inputs and Input Check
     validateattributes(dataS, {'mocapdb.XsensBody'}, {});
@@ -93,13 +94,16 @@ function results = runNeuRAExperiment(dataS, ...
     x0 = {};
     uwbMeas = {};
         
-    %% Generate vicon based inputs in world frame
+    %% Preprocessing in world frame
     if ~isempty(dataV) & ~isempty(calibV2W)
         nSamples = min(dataV.nSamples, dataS.nSamples);
         W__dataV = dataV.getSubset(1:nSamples).toWorldFrame(calibV2W);
         W__dataV.changePosUnit('m', true);
         W__dataS = dataS.getSubset(1:nSamples);
-        W__dataS.Pelvis.acc = W__dataS.Pelvis.acc - bias.v__v;
+        W__dataS.Pelvis.acc = W__dataS.Pelvis.acc - bias.w__v;
+        % apply yaw offset to orientation
+        W__dataS.L_LowLeg.ori = quatmultiply(calibYawFix.L_LowLeg.ori, W__dataS.L_LowLeg.ori);
+        W__dataS.R_LowLeg.ori = quatmultiply(calibYawFix.R_LowLeg.ori, W__dataS.R_LowLeg.ori);
         
         sIdx = max(W__dataV.getStartIndex()+1, startFrame);
         eIdx = min(length(W__dataV.PELV(:,1)) - 1, endFrame);
@@ -187,6 +191,7 @@ function results = runNeuRAExperiment(dataS, ...
         PV__viconBody = W__viconBody.changeRefFrame('MIDPEL');
     end
     
+    %% Preprocessing in vicon frame
     if ~isempty(dataV) & ~isempty(calibW2V)
         nSamples = min(dataV.nSamples, dataS.nSamples);
         V__dataV = dataV.getSubset(1:nSamples);
@@ -485,7 +490,7 @@ function results = runNeuRAExperiment(dataS, ...
         alphaRKmin = csActBodyRel.calcJointAnglesRKnee(1);
         alphaRKmin = min(alphaRKmin(2), 0);
         
-%         try
+        try
             if cs.est == 'ekfv3'
                 
                 v3Options = struct('fs', fs, 'applyMeas', cs.applyMeas, ...
@@ -537,10 +542,10 @@ function results = runNeuRAExperiment(dataS, ...
             csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
             results0 = estBody2.diffRMSE(csActBody2);
-%         catch
-%             runtime = cputime-t0;
-%             results0 = csActBodyRel.diffRMSE(nan);
-%         end
+        catch
+            runtime = cputime-t0;
+            results0 = csActBodyRel.diffRMSE(nan);
+        end
         
         results0.name = name;
         results0.label = cs.label;

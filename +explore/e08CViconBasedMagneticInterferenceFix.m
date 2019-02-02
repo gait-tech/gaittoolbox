@@ -2,7 +2,7 @@ global DEGRANGE;
 DEGRANGE = (0:0.1:359) - 180;
 
 dir = 'neura-sparse01';
-for subjIdx = 10
+for subjIdx = 9
     subj = sprintf('S%02d', subjIdx); 
 
     options = struct('Pelvis', '00B40B91', ...
@@ -10,6 +10,10 @@ for subjIdx = 10
         'L_LowLeg', '00B40C44', 'R_LowLeg', '00B40C47', ...
         'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
 
+    calibV2W = rotm2quat(mocapdb.loadPendulumCompassMat( ...
+             sprintf('%s/calib/%s-Calib-V2W-Pendulum.mat', dir, subj), ...
+             sprintf('%s/calib/%s-Calib-V2W-Compass.mat', dir, subj))' );
+         
     calibW2V = mocapdb.XsensBody.loadCalibSensorW2V( ...
                  sprintf('%s/calib/%s-Calib-SensorW2V.mat', dir, subj), ...
                  sprintf('%s/calib/%s-Calib-SensorW2V', dir, subj), ...
@@ -26,6 +30,8 @@ for subjIdx = 10
     V__dataV.changePosUnit('m', true);
     W__dataS = dataS.getSubset(1:nSamples);
     % V__dataS = W__dataS.toViconFrame(calibW2V);
+    
+    V__dataV = V__dataV.toWorldFrame(calibV2W);
     V__dataS = W__dataS;
 
     sIdx = max(V__dataV.getStartIndex()+1, 100);

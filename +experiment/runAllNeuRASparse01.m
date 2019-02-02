@@ -39,26 +39,47 @@ setups = {
 %     end
 % end
 
-for mI = [2 51 52]
-    for cI = [371 373 375 381 383 385]
+for mI = [66]
+    for cI = [393]
         setups{end+1} = struct('est', 'ekfv3', ...
                    'accData', 'v__s', 'oriData', 'v__s', 'accDataNoise', 0, ...
-                   'initSrc', 'v__v', 'stepDetection', 'av02', ...
+                   'initSrc', 'v__v', 'stepDetection', 'av01', ...
+                   'applyMeas', mI, 'applyCstr', cI, 'P', 0.5, ...
+                   'sigmaQAcc', 1e1);
+    end
+end
+
+for mI = [2]
+    for cI = [172, 175, 353, 373, 383, 393]
+        setups{end+1} = struct('est', 'ekfv3', ...
+                   'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
+                   'initSrc', 'w__v', 'stepDetection', 'av01', ...
+                   'applyMeas', mI, 'applyCstr', cI, 'P', 0.5, ...
+                   'sigmaQAcc', 1e1);
+    end
+end
+
+for mI = [51, 52, 56, 62]
+    for cI = [393]
+        setups{end+1} = struct('est', 'ekfv3', ...
+                   'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
+                   'initSrc', 'w__v', 'stepDetection', 'av01', ...
+                   'applyMeas', mI, 'applyCstr', cI, 'P', 0.5, ...
+                   'sigmaQAcc', 1e1);
+    end
+end
+
+for mI = [66 76]
+    for cI = [391 393 395]
+        setups{end+1} = struct('est', 'ekfv3', ...
+                   'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
+                   'initSrc', 'w__v', 'stepDetection', 'av01', ...
                    'applyMeas', mI, 'applyCstr', cI, 'P', 0.5, ...
                    'sigmaQAcc', 1e1);
 %             setups{end+1} = struct('est', 'ekfv3', ...
 %                        'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
 %                        'initSrc', 'w__x', 'stepDetection', 'av01', ...
 %                        'applyMeas', mI, 'applyCstr', cI, 'P', 0.5);
-    end
-end
-for mI = [52]
-    for cI = [373 383]
-        setups{end+1} = struct('est', 'ekfv3', ...
-                   'accData', 'v__s', 'oriData', 'v__s', 'accDataNoise', 0, ...
-                   'initSrc', 'v__v', 'stepDetection', 'av01', ...
-                   'applyMeas', mI, 'applyCstr', cI, 'P', 0.5, ...
-                   'sigmaQAcc', 1e1);
     end
 end
 
@@ -74,13 +95,15 @@ for i = 1:dataN
     
     name = sprintf("%s-%s-%s", 'neura', n.subj, n.act);
     dataPath = sprintf('%s/mat/%s.mat', dir, name);
-%     if exist(dataPath, 'file')
-%         load(dataPath, 'data');
-%     else
+    if exist(dataPath, 'file')
+        load(dataPath, 'data');
+    else
         data = struct('name', name, ...
             'fnameV', sprintf('%s/vicon/%s-%s.mat', dir, n.subj, n.act), ...
             'fnameX', sprintf('%s/xsens/%s-%s.bvh', dir, n.subj, n.act), ...
             'fnameS', sprintf('%s/imu/%s-%s', dir, n.subj, n.act), ...
+            'calibFnameSensorYawFixWorldFrame', ...
+            sprintf('%s/calib/%s-Calib-SensorYawFixWorldFrame.txt', dir, n.subj), ...
             'calibFnameSensorW2V', sprintf('%s/calib/%s-Calib-SensorW2V.txt', dir, n.subj));
         
         data.dataV = mocapdb.ViconBody.loadViconMat(data.fnameV);
@@ -94,6 +117,23 @@ for i = 1:dataN
         data.calibV2W = rotm2quat(mocapdb.loadPendulumCompassMat( ...
              sprintf('%s/calib/%s-Calib-V2W-Pendulum.mat', dir, n.subj), ...
              sprintf('%s/calib/%s-Calib-V2W-Compass.mat', dir, n.subj))' );
+        if exist(data.calibFnameSensorYawFixWorldFrame, 'file')
+            data.calibYawFix = mocapdb.XsensBody.loadCalibCSV(data.calibFnameSensorYawFixWorldFrame);
+        else
+            % using ROM calibration
+            dataS = mocapdb.XsensBody.loadMTExport(sprintf('%s/imu/%s-Trial-Walk-1', dir, n.subj), options);
+            dataS.fs = 100;           
+            W__dataV = mocapdb.ViconBody.loadViconMat(sprintf('%s/vicon/%s-Trial-Walk-1.mat', dir, n.subj));
+            W__dataV.changePosUnit('m', true);
+            W__dataV = W__dataV.toWorldFrame(data.calibV2W);
+            
+            sIdx = max(W__dataV.getStartIndex()+1, 100);
+            
+            viconCalibSB = dataS.calcCalibSB(W__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));
+            data.calibYawFix = dataS.calcCalibAnkleSensorW2PelvisWFromROM(viconCalibSB, DEGRANGE);
+            data.calibYawFix.saveCalibCSV(data.calibFnameSensorYawFixWorldFrame);
+        end
+        
         if exist(data.calibFnameSensorW2V, 'file')
             data.calibW2V = mocapdb.XsensBody.loadCalibCSV(data.calibFnameSensorW2V);
         else
@@ -105,7 +145,7 @@ for i = 1:dataN
               % using ROM calibration
             dataS = mocapdb.XsensBody.loadMTExport(sprintf('%s/imu/%s-Trial-Walk-1', dir, n.subj), options);
             dataS.fs = 100;           
-            V__dataV = data.dataV.copy();
+            V__dataV = mocapdb.ViconBody.loadViconMat(sprintf('%s/vicon/%s-Trial-Walk-1.mat', dir, n.subj));
             V__dataV.changePosUnit('m', true);
             
             sIdx = max(V__dataV.getStartIndex()+1, 100);
@@ -143,11 +183,11 @@ for i = 1:dataN
                       'w__x', zeros(1, 3));
         end
         save(dataPath, 'data');
-%     end
+    end
     
     display(sprintf("Data %3d/%3d: %s", i, dataN, data.name));
     r = experiment.runNeuRASparse01Experiment(data.dataS, ...
-            data.dataV, data.calibV2W, data.calibW2V, ...
+            data.dataV, data.calibV2W, data.calibYawFix, data.calibW2V, ...
             data.dataX, ...
             data.name, setups, expDir, n.startFrame, n.endFrame, data.bias);
     results = [results; struct2table(r)];

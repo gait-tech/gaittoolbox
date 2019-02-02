@@ -1,5 +1,5 @@
 % motion list
-listSetup = struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M51+C373");
+listSetup = struct('file', 'S08-Trial-Fivemin-1', 'algo', "NS1+Aw__sOw__sIw__v+Sav01+M56+C395");
 
 dataSfname = sprintf('neura-sparse01/imu/%s', listSetup.file);
 load(sprintf('neura-sparse01/explore-v2/neura-%s-debug.mat', listSetup.file));
@@ -158,14 +158,36 @@ vel2 = estBody.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
 
 updateFigureContents('Vicon Joint Velocities'); 
 viconMPVel = vel1.MIDPEL; viconLAVel = vel1.LTIO; viconRAVel = vel1.RTIO;
-viconLARAMeanVel = (viconLAVel+viconRAVel)./2;
-pelib.viz.plotXYZ(fs, viconMPVel, viconLARAMeanVel, viconLAVel, viconRAVel);
+viconLARAMeanVel001 = (viconLAVel+viconRAVel)./2;
+viconLARAMeanVel025 = movmean(viconLARAMeanVel001, [25, 0]);
+viconLARAMeanVel050 = movmean(viconLARAMeanVel001, [50, 0]);
+viconLARAMeanVel100 = movmean(viconLARAMeanVel001, [100, 0]);
+viconLARAMeanVel999 = movmean(viconLARAMeanVel001, [999, 0]);
+pelib.viz.plotXYZ(fs, viconMPVel, viconLARAMeanVel001, viconLARAMeanVel025, ...
+                  viconLARAMeanVel050, viconLARAMeanVel100, ...
+                  viconLARAMeanVel999);
 
 updateFigureContents('Vicon Joint Positions'); 
 viconMPPos = vb.MIDPEL; viconLAPos = vb.LTIO; viconRAPos = vb.RTIO;
-viconLARAMeanPos = (viconLAPos+viconRAPos)./2;
-pelib.viz.plotXYZ(fs, viconMPPos, viconLARAMeanPos, viconLAPos, viconRAPos);
-
+viconLARAMeanPos001 = (viconLAPos+viconRAPos)./2;
+viconLARAMeanPos025 = movmean(viconLARAMeanPos001, [25, 0]);
+viconLARAMeanPos050 = movmean(viconLARAMeanPos001, [50, 0]);
+viconLARAMeanPos100 = movmean(viconLARAMeanPos001, [100, 0]);
+viconLARAMeanPos999 = movmean(viconLARAMeanPos001, [999, 0]);
+hold on;
+pelib.viz.plotXYZ(fs, viconMPPos, viconLARAMeanPos001, ...
+                  viconLARAMeanPos025, viconLARAMeanPos050, ...
+                  viconLARAMeanPos100, viconLARAMeanPos999);
+%                   viconLAPos, viconRAPos);
+zuptStateL = vb.MIDPEL;
+zuptStateL(~estState2.zuptStateL(:,1), :) = nan;
+zuptStateR = vb.MIDPEL;
+zuptStateR(~estState2.zuptStateR(:,1), :) = nan;
+for i=1:3
+    subplot(3,1,i);
+    scatter((1:size(zuptStateL, 1))/fs, zuptStateL(:,i), '<g');
+    scatter((1:size(zuptStateR, 1))/fs, zuptStateR(:,i), '>g');
+end        
 %% Animation
 % az = 0; el = 180;
 updateFigureContents('Animation'); 
