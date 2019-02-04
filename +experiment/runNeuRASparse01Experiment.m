@@ -490,7 +490,7 @@ function results = runNeuRAExperiment(dataS, ...
         alphaRKmin = csActBodyRel.calcJointAnglesRKnee(1);
         alphaRKmin = min(alphaRKmin(2), 0);
         
-        try
+%         try
             if cs.est == 'ekfv3'
                 
                 v3Options = struct('fs', fs, 'applyMeas', cs.applyMeas, ...
@@ -542,10 +542,10 @@ function results = runNeuRAExperiment(dataS, ...
             csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
             results0 = estBody2.diffRMSE(csActBody2);
-        catch
-            runtime = cputime-t0;
-            results0 = csActBodyRel.diffRMSE(nan);
-        end
+%         catch
+%             runtime = cputime-t0;
+%             results0 = csActBodyRel.diffRMSE(nan);
+%         end
         
         results0.name = name;
         results0.label = cs.label;

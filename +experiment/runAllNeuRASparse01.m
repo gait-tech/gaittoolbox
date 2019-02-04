@@ -1,5 +1,6 @@
 % ======================================================================
 %> Run experiment for all NeuRA data
+%> writetable(results, 'neura-sparse01/explore-v2/results20190204.csv')
 % ======================================================================
 dir = 'neura-sparse01';
 % expDir = sprintf('%s/explore', dir);
@@ -39,18 +40,8 @@ setups = {
 %     end
 % end
 
-for mI = [66]
-    for cI = [393]
-        setups{end+1} = struct('est', 'ekfv3', ...
-                   'accData', 'v__s', 'oriData', 'v__s', 'accDataNoise', 0, ...
-                   'initSrc', 'v__v', 'stepDetection', 'av01', ...
-                   'applyMeas', mI, 'applyCstr', cI, 'P', 0.5, ...
-                   'sigmaQAcc', 1e1);
-    end
-end
-
-for mI = [2]
-    for cI = [172, 175, 353, 373, 383, 393]
+for mI = [76]
+    for cI = [375 385 395 373 383 393]
         setups{end+1} = struct('est', 'ekfv3', ...
                    'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
                    'initSrc', 'w__v', 'stepDetection', 'av01', ...
@@ -59,8 +50,8 @@ for mI = [2]
     end
 end
 
-for mI = [51, 52, 56, 62]
-    for cI = [393]
+for mI = [70 71 72 74]
+    for cI = [355]
         setups{end+1} = struct('est', 'ekfv3', ...
                    'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
                    'initSrc', 'w__v', 'stepDetection', 'av01', ...
@@ -68,9 +59,10 @@ for mI = [51, 52, 56, 62]
                    'sigmaQAcc', 1e1);
     end
 end
+
 
 for mI = [66 76]
-    for cI = [391 393 395]
+    for cI = [351 353 355]
         setups{end+1} = struct('est', 'ekfv3', ...
                    'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
                    'initSrc', 'w__v', 'stepDetection', 'av01', ...
