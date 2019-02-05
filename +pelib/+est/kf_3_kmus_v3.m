@@ -72,6 +72,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %           060-067: standard zupt + floor assumption during step + 
 %           070-077: standard zupt + floor assumption during step 
 %                    + limit pos max covariance with one big cov update
+%           080-087: standard zupt + floor assumption during step + below floor zupt
+%                    + limit pos max covariance with one big cov update
 %                    1st bit (+1): pelvis = ankle speed
 %                    2nd bit (+2): pelvis = ankle XY pos
 %                    3rd bit (+4): pelvis = initial pelvis z pos
@@ -271,10 +273,17 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + adj knee that only increases + knee ineq + no P update
 %           3X6: smoothly constraint kf (W=P^-1, use maxIter)
 %                + adj knee that only increases + knee ineq + no P updates
+%                X=1: foot step (z pos) = floor (step detect only)
+%                X=2: foot step (z pos) = floor (step detect only)
+%                     + static foot step (x,y pos)
+%                X=3: foot step (z pos) = floor (step detect only)
+%                     + zero sigma for foot x,y pos
 %                X=5: no foot related locking
-%                X=7: foot step (z pos) = floor
-%                X=8: foot step (z pos) = floor + static foot step (x,y pos)
-%                X=9: foot step (z pos) = floor + zero sigma for foot x,y pos
+%                X=7: foot step (z pos) = floor (step detect and < floorZ)
+%                X=8: foot step (z pos) = floor (step detect and < floorZ)
+%                     + static foot step (x,y pos)
+%                X=9: foot step (z pos) = floor (step detect and < floorZ)
+%                     + zero sigma for foot x,y pos
 %         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
     fOpt = struct('fs', 60, 'applyMeas', false, 'applyUwb', false, ...
         'applyAccBias', false, 'applyCstr', 0, ...
@@ -548,9 +557,11 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     end
     if (modHundredApplyMeas >= 31 && modHundredApplyMeas <= 33) || ...
        (modHundredApplyMeas >= 41 && modHundredApplyMeas <= 43) || ...
-       (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77)
+       (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77) || ...
+       (modHundredApplyMeas >= 80 && modHundredApplyMeas <= 87)
         % reset covariance of left foot to certain value
-        if (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77)
+        if (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77) || ...
+           (modHundredApplyMeas >= 80 && modHundredApplyMeas <= 87)
             modTenApplyMeas = 2;
         else
             modTenApplyMeas = mod(fOpt.applyMeas, 10);
@@ -594,7 +605,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     
     if (modHundredApplyMeas >= 50 && modHundredApplyMeas <= 57) || ...
        (modHundredApplyMeas >= 60 && modHundredApplyMeas <= 67) || ...
-       (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77)
+       (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77) || ...
+       (modHundredApplyMeas >= 80 && modHundredApplyMeas <= 87)
         % bit 1: pelvis vel = ankle average vel
         % bit 2: pelvis x y pos = ankle average x y pos
         % bit 3: pelvis z pos = initial pelvis z pos
@@ -796,7 +808,17 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             refSide = 'N';
         end
             
-        if modHundredApplyMeas >= 1
+        if (modHundredApplyMeas >= 80 && modHundredApplyMeas <= 87)
+            if bIsStatMP(n) || x_min(idxPosMP(3), 1) < floorZ 
+                idx(end+1:end+3) = idxMVelMP; 
+            end
+            if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
+                idx(end+1:end+3) = idxMVelLA;
+            end
+            if bIsStatRA(n) || x_min(idxPosRA(3), 1) < floorZ
+                idx(end+1:end+3) = idxMVelRA; 
+            end
+        elseif modHundredApplyMeas >= 1
             if bIsStatMP(n) idx(end+1:end+3) = idxMVelMP; end
             if bIsStatLA(n) idx(end+1:end+3) = idxMVelLA; end
             if bIsStatRA(n) idx(end+1:end+3) = idxMVelRA; end
@@ -805,7 +827,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         if (modHundredApplyMeas == 2) || ...
            (modHundredApplyMeas >= 31 && modHundredApplyMeas <= 33) || ...
            (modHundredApplyMeas >= 41 && modHundredApplyMeas <= 43) || ...
-           (modHundredApplyMeas >= 50 && modHundredApplyMeas <= 57)
+           (modHundredApplyMeas >= 50 && modHundredApplyMeas <= 57) || ...
+           (modHundredApplyMeas >= 80 && modHundredApplyMeas <= 87)
             if bIsStatLA(n) || x_min(idxPosLA(3), 1) < floorZ
                 idx(end+1:end+length(idxMPosLA)) = idxMPosLA; 
             end
@@ -903,7 +926,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         
         if (modHundredApplyMeas >= 50 && modHundredApplyMeas <= 57) || ...
            (modHundredApplyMeas >= 60 && modHundredApplyMeas <= 67) || ...
-           (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77)
+           (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77) || ...
+           (modHundredApplyMeas >= 80 && modHundredApplyMeas <= 87)
             modTenApplyMeas = mod(fOpt.applyMeas, 10);
             if bitand(modTenApplyMeas, 1)
                 idx(end+1:end+3) = idxMVelMPLARA;
@@ -968,7 +992,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             else, idx2 = idx; end
             K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
         elseif (modHundredApplyMeas == 32) || ...
-               (modHundredApplyMeas >= 71 && modHundredApplyMeas <= 77)
+               (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77) || ...
+               (modHundredApplyMeas >= 80 && modHundredApplyMeas <= 87)
             idx2 = [idx idxMCov1];
             K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
         elseif modHundredApplyMeas == 33
@@ -1489,7 +1514,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             if ~(fOpt.applyCstr >= 161 && fOpt.applyCstr <= 168)
                 P_tilde = P_plus;
             end
-        elseif (fOpt.applyCstr >= 351 && fOpt.applyCstr <= 356) || ...
+        elseif (fOpt.applyCstr >= 311 && fOpt.applyCstr <= 316) || ...
+               (fOpt.applyCstr >= 321 && fOpt.applyCstr <= 326) || ...
+               (fOpt.applyCstr >= 331 && fOpt.applyCstr <= 336) || ...
+               (fOpt.applyCstr >= 351 && fOpt.applyCstr <= 356) || ...
                (fOpt.applyCstr >= 371 && fOpt.applyCstr <= 376) || ...
                (fOpt.applyCstr >= 381 && fOpt.applyCstr <= 386) || ...
                (fOpt.applyCstr >= 391 && fOpt.applyCstr <= 396)
@@ -1589,21 +1617,31 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 end
                 
                 % add flat floor constraint
-                if (applyCstrX >= 7 && applyCstrX <= 9)
-                    stepCstrCount = 0;
+                if (applyCstrX >= 1 && applyCstrX <= 3)
+                    if refSide == 'L'
+                        D(end+1, :) = zeros(1, length(x_tilde));
+                        D(end, idxPosLA(3)) = 1;
+                        res(end+1, 1) = floorZ - D(end, :)*x_tilde;
+                    elseif refSide == 'R'
+                        D(end+1, :) = zeros(1, length(x_tilde));
+                        D(end, idxPosRA(3)) = 1;
+                        res(end+1, 1) = floorZ - D(end, :)*x_tilde;
+                    end
+                elseif (applyCstrX >= 7 && applyCstrX <= 9)
+%                     stepCstrCount = 0;
 %                     if bIsStatLA(n) || x_tilde(idxPosLA(3), 1) < floorZ
                     if refSide == 'L' || x_tilde(idxPosLA(3), 1) < floorZ
                         D(end+1, :) = zeros(1, length(x_tilde));
                         D(end, idxPosLA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
-                        stepCstrCount = stepCstrCount + 1;
+%                         stepCstrCount = stepCstrCount + 1;
 %                     end
 %                     if bIsStatRA(n) || x_tilde(idxPosRA(3), 1) < floorZ
                     elseif refSide == 'R' || x_tilde(idxPosRA(3), 1) < floorZ
                         D(end+1, :) = zeros(1, length(x_tilde));
                         D(end, idxPosRA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
-                        stepCstrCount = stepCstrCount + 1;
+%                         stepCstrCount = stepCstrCount + 1;
                     end
 %                     if stepCstrCount == 2
 %                         P_tilde_cstr = D*P_tilde*D';
@@ -1617,7 +1655,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 end
                 
                 % add static foot pos x y on foot step constraint
-                if applyCstrX == 8
+                if (applyCstrX == 2) || (applyCstrX == 8)
 %                     if bIsStatLA(n)
                     if refSide == 'L'
                         D(end+1:end+2, :) = zeros(2, length(x_tilde));
@@ -1637,7 +1675,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                     P_custom = P_tilde;
                 end
                 
-                if applyCstrX == 9
+                if (applyCstrX == 3) || (applyCstrX == 9)
 %                     if bIsStatLA(n)
                     if refSide == 'L'
                         P_custom(idxPosLA(1:2), idxPosLA(1:2)) = 0;
