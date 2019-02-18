@@ -261,18 +261,20 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + lowest point = floor + knee angle inequality constraint
 %           278: maximum probability estimate + soft P update
 %                + lowest point = floor + knee angle inequality constraint
-%           3X1: smoothly constraint kf (W=P^-1, early stop)
+%           WX1: smoothly constraint kf (W=P^-1, early stop)
 %                + adj knee + knee ineq + no P update
-%           3X2: smoothly constraint kf (W=P^-1, use maxIter)
+%           WX2: smoothly constraint kf (W=P^-1, use maxIter)
 %                + adj knee + knee ineq + no P update
-%           3X3: smoothly constraint kf (W=I, early stop)
+%           WX3: smoothly constraint kf (W=I, early stop)
 %                + adj knee + knee ineq + no P update
-%           3X4: smoothly constraint kf (W=I, use maxIter)
+%           WX4: smoothly constraint kf (W=I, use maxIter)
 %                + adj knee + knee ineq + no P update
-%           3X5: smoothly constraint kf (W=P^-1, early stop)
+%           WX5: smoothly constraint kf (W=P^-1, early stop)
 %                + adj knee that only increases + knee ineq + no P update
-%           3X6: smoothly constraint kf (W=P^-1, use maxIter)
+%           WX6: smoothly constraint kf (W=P^-1, use maxIter)
 %                + adj knee that only increases + knee ineq + no P updates
+%                W=3: Use all 30 states
+%                W=4: Use only 12 states (pelv, lank, rank position)
 %                X=1: foot step (z pos) = floor (step detect only)
 %                X=2: foot step (z pos) = floor (step detect only)
 %                     + static foot step (x,y pos)
@@ -452,6 +454,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
     
     modHundredApplyMeas = mod(fOpt.applyMeas, 100);
+    applyCstrW = idivide(int32(fOpt.applyCstr), 100, 'floor');
     
     % applyMeas update orientation initialization
     if fOpt.applyMeas
@@ -1514,29 +1517,40 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             if ~(fOpt.applyCstr >= 161 && fOpt.applyCstr <= 168)
                 P_tilde = P_plus;
             end
-        elseif (fOpt.applyCstr >= 311 && fOpt.applyCstr <= 316) || ...
-               (fOpt.applyCstr >= 321 && fOpt.applyCstr <= 326) || ...
-               (fOpt.applyCstr >= 331 && fOpt.applyCstr <= 336) || ...
-               (fOpt.applyCstr >= 351 && fOpt.applyCstr <= 356) || ...
-               (fOpt.applyCstr >= 371 && fOpt.applyCstr <= 376) || ...
-               (fOpt.applyCstr >= 381 && fOpt.applyCstr <= 386) || ...
-               (fOpt.applyCstr >= 391 && fOpt.applyCstr <= 396)
+        elseif (applyCstrW >= 3 && applyCstrW <= 4)
             applyCstrX = mod(idivide(int32(fOpt.applyCstr), 10, 'floor'), 10);
             applyCstrModTen = mod(fOpt.applyCstr, 10);
             
             sckfAlpha = fOpt.sckfAlpha;
             sckfThreshold = fOpt.sckfThreshold;
-            x_tilde = x_plus;
-            P_tilde = P_plus;
+            if applyCstrW == 3
+                x_tilde = x_plus;
+                P_tilde = P_plus;
+                
+                idxCPosMP = idxPosMP;
+                idxCPosLA = idxPosLA;
+                idxCPosRA = idxPosRA;
+                I_N2 = I_N;
+            else
+                % applyCstrW == 4
+                idx = [idxPosMP idxPosLA idxPosRA];
+                x_tilde = x_plus(idx);
+                P_tilde = P_plus(idx, idx);
+                
+                idxCPosMP = 1:3;
+                idxCPosLA = 4:6;
+                idxCPosRA = 7:9;
+                I_N2 = eye(length(x_tilde), length(x_tilde));
+            end
             
             % preprocessing for knee angle inequality
             % additional process to ensure knee angle does not increase
             % during iteration
             if (applyCstrModTen >= 5 && applyCstrModTen <= 6)
-                LFEM_z = x_tilde(idxPosMP,1) + dPelvis/2*PELV_CS(:,2) ...
-                         - dLTibia*LTIB_CS(:,3) - x_tilde(idxPosLA,1);
-                RFEM_z = x_tilde(idxPosMP,1) - dPelvis/2*PELV_CS(:,2) ...
-                         - dRTibia*RTIB_CS(:,3) - x_tilde(idxPosRA,1);
+                LFEM_z = x_tilde(idxCPosMP,1) + dPelvis/2*PELV_CS(:,2) ...
+                         - dLTibia*LTIB_CS(:,3) - x_tilde(idxCPosLA,1);
+                RFEM_z = x_tilde(idxCPosMP,1) - dPelvis/2*PELV_CS(:,2) ...
+                         - dRTibia*RTIB_CS(:,3) - x_tilde(idxCPosRA,1);
                      
                 alpha_lk = atan2(-dot(LFEM_z, LTIB_CS(:,3)), ...
                                  -dot(LFEM_z, LTIB_CS(:,1))) + 0.5*pi;
@@ -1558,23 +1572,23 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             for i=0:fOpt.sckfMaxIter
                 % Step 1: construct D matrix              
                 % calculate the z axis of femur and tibia
-                LFEM_z = x_tilde(idxPosMP,1) + dPelvis/2*PELV_CS(:,2) ...
-                         - dLTibia*LTIB_CS(:,3) - x_tilde(idxPosLA,1);
-                RFEM_z = x_tilde(idxPosMP,1) - dPelvis/2*PELV_CS(:,2) ...
-                         - dRTibia*RTIB_CS(:,3) - x_tilde(idxPosRA,1);
+                LFEM_z = x_tilde(idxCPosMP,1) + dPelvis/2*PELV_CS(:,2) ...
+                         - dLTibia*LTIB_CS(:,3) - x_tilde(idxCPosLA,1);
+                RFEM_z = x_tilde(idxCPosMP,1) - dPelvis/2*PELV_CS(:,2) ...
+                         - dRTibia*RTIB_CS(:,3) - x_tilde(idxCPosRA,1);
                 g_dlfem = norm(LFEM_z, 2);
                 g_drfem = norm(RFEM_z, 2);
                 
                 % D matrix construction: femur length constraint and knee hinge joint
                 D = zeros(4, length(x_tilde));
-                D(1, idxPosMP) = LFEM_z'/g_dlfem;
-                D(1, idxPosLA) = -LFEM_z'/g_dlfem;
-                D(2, idxPosMP) = RFEM_z'/g_drfem;
-                D(2, idxPosRA) = -RFEM_z'/g_drfem;
-                D(3, idxPosMP) = LTIB_CS(:,2)';
-                D(3, idxPosLA) = -LTIB_CS(:,2)';
-                D(4, idxPosMP) = RTIB_CS(:,2)';
-                D(4, idxPosRA) = -RTIB_CS(:,2)';
+                D(1, idxCPosMP) = LFEM_z'/g_dlfem;
+                D(1, idxCPosLA) = -LFEM_z'/g_dlfem;
+                D(2, idxCPosMP) = RFEM_z'/g_drfem;
+                D(2, idxCPosRA) = -RFEM_z'/g_drfem;
+                D(3, idxCPosMP) = LTIB_CS(:,2)';
+                D(3, idxCPosLA) = -LTIB_CS(:,2)';
+                D(4, idxCPosMP) = RTIB_CS(:,2)';
+                D(4, idxCPosRA) = -RTIB_CS(:,2)';
 
                 res = [dLFemur - g_dlfem; ...
                        dRFemur - g_drfem; ...
@@ -1590,28 +1604,28 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                                  -dot(RFEM_z, RTIB_CS(:,1))) + 0.5*pi;
                 if alpha_lk < alphalimit.lkmin
                     D(end+1, :) = zeros(1, length(x_tilde));
-                    D(end, idxPosMP) = tmpLKmin';
-                    D(end, idxPosLA) = -tmpLKmin';
+                    D(end, idxCPosMP) = tmpLKmin';
+                    D(end, idxCPosLA) = -tmpLKmin';
                     res(end+1, 1) = (-dPelvis/2*PELV_CS(:,2) + dLTibia*LTIB_CS(:,3))'*tmpLKmin ...
                         - D(end, :)*x_tilde;
                 elseif alpha_lk > alphalimit.lkmax
                     D(end+1, :) = zeros(1, length(x_tilde));
-                    D(end, idxPosMP) = tmpLKmax';
-                    D(end, idxPosLA) = -tmpLKmax';
+                    D(end, idxCPosMP) = tmpLKmax';
+                    D(end, idxCPosLA) = -tmpLKmax';
                     res(end+1, 1) = (-dPelvis/2*PELV_CS(:,2) + dLTibia*LTIB_CS(:,3))'*tmpLKmax ...
                         - D(end, :)*x_tilde;
                 end
                     
                 if alpha_rk < alphalimit.rkmin
                     D(end+1, :) = zeros(1, length(x_tilde));
-                    D(end, idxPosMP) = tmpRKmin';
-                    D(end, idxPosRA) = -tmpRKmin';
+                    D(end, idxCPosMP) = tmpRKmin';
+                    D(end, idxCPosRA) = -tmpRKmin';
                     res(end+1, 1) = (dPelvis/2*PELV_CS(:,2) + dRTibia*RTIB_CS(:,3))'*tmpRKmin ...
                         - D(end, :)*x_tilde;
                 elseif alpha_rk > alphalimit.rkmax
                     D(end+1, :) = zeros(1, length(x_tilde));
-                    D(end, idxPosMP) = tmpRKmax';
-                    D(end, idxPosRA) = -tmpRKmax';
+                    D(end, idxCPosMP) = tmpRKmax';
+                    D(end, idxCPosRA) = -tmpRKmax';
                     res(end+1, 1) = (dPelvis/2*PELV_CS(:,2) + dRTibia*RTIB_CS(:,3))'*tmpRKmax ...
                         - D(end, :)*x_tilde;
                 end
@@ -1620,26 +1634,26 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 if (applyCstrX >= 1 && applyCstrX <= 3)
                     if refSide == 'L'
                         D(end+1, :) = zeros(1, length(x_tilde));
-                        D(end, idxPosLA(3)) = 1;
+                        D(end, idxCPosLA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
                     elseif refSide == 'R'
                         D(end+1, :) = zeros(1, length(x_tilde));
-                        D(end, idxPosRA(3)) = 1;
+                        D(end, idxCPosRA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
                     end
                 elseif (applyCstrX >= 7 && applyCstrX <= 9)
 %                     stepCstrCount = 0;
-%                     if bIsStatLA(n) || x_tilde(idxPosLA(3), 1) < floorZ
-                    if refSide == 'L' || x_tilde(idxPosLA(3), 1) < floorZ
+%                     if bIsStatLA(n) || x_tilde(idxCPosLA(3), 1) < floorZ
+                    if refSide == 'L' || x_tilde(idxCPosLA(3), 1) < floorZ
                         D(end+1, :) = zeros(1, length(x_tilde));
-                        D(end, idxPosLA(3)) = 1;
+                        D(end, idxCPosLA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
 %                         stepCstrCount = stepCstrCount + 1;
 %                     end
-%                     if bIsStatRA(n) || x_tilde(idxPosRA(3), 1) < floorZ
-                    elseif refSide == 'R' || x_tilde(idxPosRA(3), 1) < floorZ
+%                     if bIsStatRA(n) || x_tilde(idxCPosRA(3), 1) < floorZ
+                    elseif refSide == 'R' || x_tilde(idxCPosRA(3), 1) < floorZ
                         D(end+1, :) = zeros(1, length(x_tilde));
-                        D(end, idxPosRA(3)) = 1;
+                        D(end, idxCPosRA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
 %                         stepCstrCount = stepCstrCount + 1;
                     end
@@ -1659,18 +1673,18 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                     if bIsStatLA(n)
                     if refSide == 'L'
                         D(end+1:end+2, :) = zeros(2, length(x_tilde));
-                        D(end-1:end, idxPosLA(1:2)) = eye(2,2);
-                        res(end+1:end+2, 1) = x_plus(idxPosLA(1:2), 1) - x_tilde(idxPosLA(1:2), 1);
+                        D(end-1:end, idxCPosLA(1:2)) = eye(2,2);
+                        res(end+1:end+2, 1) = x_plus(idxCPosLA(1:2), 1) - x_tilde(idxCPosLA(1:2), 1);
 %                     elseif bIsStatRA(n)
                     elseif refSide == 'R'
                         D(end+1:end+2, :) = zeros(2, length(x_tilde));
-                        D(end-1:end, idxPosRA(1:2)) = eye(2,2);
-                        res(end+1:end+2, 1) = x_plus(idxPosRA(1:2), 1) - x_tilde(idxPosRA(1:2), 1);
+                        D(end-1:end, idxCPosRA(1:2)) = eye(2,2);
+                        res(end+1:end+2, 1) = x_plus(idxCPosRA(1:2), 1) - x_tilde(idxCPosRA(1:2), 1);
                     end
                 end
                 
                 if (applyCstrModTen >= 3 && applyCstrModTen <= 4)
-                    P_custom = eye(nStates, nStates);
+                    P_custom = eye(length(x_tilde), length(x_tilde));
                 else
                     P_custom = P_tilde;
                 end
@@ -1678,10 +1692,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 if (applyCstrX == 3) || (applyCstrX == 9)
 %                     if bIsStatLA(n)
                     if refSide == 'L'
-                        P_custom(idxPosLA(1:2), idxPosLA(1:2)) = 0;
+                        P_custom(idxCPosLA(1:2), idxCPosLA(1:2)) = 0;
 %                     elseif bIsStatRA(n)
                     elseif refSide == 'R'
-                        P_custom(idxPosRA(1:2), idxPosRA(1:2)) = 0;
+                        P_custom(idxCPosRA(1:2), idxCPosRA(1:2)) = 0;
                     end
                 end
                 
@@ -1697,19 +1711,19 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 switch mod(fOpt.applyCstr, 10)
                     case 1
                         Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
-                        P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
+                        P_tilde = (I_N2-Kk*D)*P_tilde*(I_N2-Kk*D)' + Kk*Ri*Kk';
                     case 2
                         Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
                     case 3
                         Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
 %                         Kk = D'*(D*D'+Ri)^(-1);
-                        P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
+                        P_tilde = (I_N2-Kk*D)*P_tilde*(I_N2-Kk*D)' + Kk*Ri*Kk';
                     case 4
                         Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
 %                         Kk = D'*(D*D'+Ri)^(-1);
                     case 5
                         Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
-                        P_tilde = (I_N-Kk*D)*P_tilde*(I_N-Kk*D)' + Kk*Ri*Kk';
+                        P_tilde = (I_N2-Kk*D)*P_tilde*(I_N2-Kk*D)' + Kk*Ri*Kk';
                     case 6
                         Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
                     otherwise
@@ -1719,7 +1733,14 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 dx = Kk*(res);
                 x_tilde = x_tilde + dx;
             end
-            P_tilde = P_plus;
+            if applyCstrW == 3
+                P_tilde = P_plus;
+            else % applyCstrW == 4
+                x_tilde2 = x_tilde;
+                x_tilde = x_plus;
+                x_tilde(idx) = x_tilde2;
+                P_tilde = P_plus;
+            end
         elseif (fOpt.applyCstr >= 51 && fOpt.applyCstr <= 54)
             % 001 constraints + MP/LA/RA zpos = floor zpos         
             d_k = solve_linhjc_d(x_plus(idxPosMP,1), x_plus(idxPosLA,1), ...
@@ -1962,22 +1983,22 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         debug_dat.LFEP(n, :) = x_tilde(idxPosMP) + dPelvis/2 * PELV_CS(:, 2);
         debug_dat.RFEP(n, :) = x_tilde(idxPosMP) - dPelvis/2 * PELV_CS(:, 2);
         
-        if fOpt.applyCstr
-            LFEM_z = (debug_dat.LFEP(n,:)-debug_dat.LFEO(n,:))'; 
-            LFEM_y = LTIB_CS(:,2);
-            LFEM_x = cross(LFEM_y, LFEM_z);
-            LFEM_z = LFEM_z / norm(LFEM_z);
-            LFEM_y = LFEM_y / norm(LFEM_y);
-            LFEM_x = LFEM_x / norm(LFEM_x);
-            RFEM_z = (debug_dat.RFEP(n,:)-debug_dat.RFEO(n,:))';
-            RFEM_y = RTIB_CS(:,2);
-            RFEM_x = cross(RFEM_y, RFEM_z);
-            RFEM_y = RFEM_y / norm(RFEM_y);
-            RFEM_z = RFEM_z / norm(RFEM_z);
-            RFEM_x = RFEM_x / norm(RFEM_x);
-            debug_dat.qLTH(n, :) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
-            debug_dat.qRTH(n, :) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
-        end
+%         if fOpt.applyCstr
+        LFEM_z = (debug_dat.LFEP(n,:)-debug_dat.LFEO(n,:))'; 
+        LFEM_y = LTIB_CS(:,2);
+        LFEM_x = cross(LFEM_y, LFEM_z);
+        LFEM_z = LFEM_z / norm(LFEM_z);
+        LFEM_y = LFEM_y / norm(LFEM_y);
+        LFEM_x = LFEM_x / norm(LFEM_x);
+        RFEM_z = (debug_dat.RFEP(n,:)-debug_dat.RFEO(n,:))';
+        RFEM_y = RTIB_CS(:,2);
+        RFEM_x = cross(RFEM_y, RFEM_z);
+        RFEM_y = RFEM_y / norm(RFEM_y);
+        RFEM_z = RFEM_z / norm(RFEM_z);
+        RFEM_x = RFEM_x / norm(RFEM_x);
+        debug_dat.qLTH(n, :) = rotm2quat([LFEM_x LFEM_y LFEM_z]);
+        debug_dat.qRTH(n, :) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
+%         end
     end
 end
 

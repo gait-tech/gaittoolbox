@@ -53,6 +53,7 @@ classdef XsensBody < matlab.mixin.Copyable
         out = calcCalibAnkleSensorW2PelvisWFromAcc(obj, idx);
         out = calcCalibAnkleSensorW2PelvisWFromROM(obj, calibS2B, DEGRANGE);
         out = calcCalibAnkleSensorW2PelvisWFromGyroSkewness(obj, DEGRANGE);
+        out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV);
         out = exportRawMeasurementAsStruct(obj, seg, segAlias);
         out = getSubset(obj, idx);
         out = toViconFrame(obj, qR);
