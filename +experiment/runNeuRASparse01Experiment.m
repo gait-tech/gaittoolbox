@@ -22,7 +22,8 @@
 %> - stepDetection: step detection algorithm to be used
 %>      - false: turn off
 %>      - av01: fixed acceleration variance on tibia accData (var = 1)
-%>      - av01: fixed acceleration variance on vicon tibia accData (var = 1)
+%>      - av02: fixed acceleration variance on vicon tibia accData (var = 1)
+%>      - av03: use reviewed step detect file. Dimension similar to dataS
 %> - initSrc: source of sensor to body orientation and position init
 %>      - w__v: vicon (world frame) (default)
 %>      - v__v: vicon (vicon frame)
@@ -32,23 +33,24 @@
 %> - sigmaQAcc: Q acceleration sigma (variance)
 %> - P: initial P matrix
 %>
-%> @param fnameV loaded mocapdb.ViconBody
+%> @param dataS loaded mocapdb.XsensBody
+%> @param dataV loaded mocapdb.ViconBody
 %> @param calibV2W quaternion (1 x 4) transforming vicon frame to world frame
 %> @param calibYawFix mocapdb.XsensBody fix ankle sensor yaw orientation offset
 %> @param calibW2V mocapdb.XsensBody transforming each sensor's world frame
 %>                 to vicon frame. Includes yaw realignment calibration.
-%> @param fnameX loaded mocapdb.BVHBody 
-%> @param fnameS loaded mocapdb.XsensBody
+%> @param dataX loaded mocapdb.BVHBody 
+%> @param revStepDetect manually reviewed table if stepL and stepR was detected
 %> @param name name of the experiment
-%> @param setups list of experiment parameters (struct) to be run. see
-%> details above
+%> @param setups list of experiment parameters (struct) to be run. see details above
 %> @param savedir filepath to save .mat output/debug files (optional)
 %> @param startFrame frame number at which the algorithm will start
 %> @param endFrame frame number at which the algorithm will end
 %> @param bias pelvis accelerometer bias in sensor frame
 % ======================================================================
-function results = runNeuRAExperiment(dataS, ...
-                        dataV, calibV2W, calibYawFix, calibW2V, dataX, ...
+function results = runNeuRASparse01Experiment(dataS, dataV, ...
+                        calibV2W, calibYawFix, calibW2V, ...
+                        dataX, revStepDetect, ...
                         name, setups, savedir, startFrame, endFrame, bias)
     %% Inputs and Input Check
     validateattributes(dataS, {'mocapdb.XsensBody'}, {});
@@ -95,7 +97,7 @@ function results = runNeuRAExperiment(dataS, ...
     uwbMeas = {};
         
     %% Preprocessing in world frame
-    if ~isempty(dataV) & ~isempty(calibV2W)
+    if ~isempty(dataV) && ~isempty(calibV2W)
         nSamples = min(dataV.nSamples, dataS.nSamples);
         W__dataV = dataV.getSubset(1:nSamples).toWorldFrame(calibV2W);
         W__dataV.changePosUnit('m', true);
@@ -192,7 +194,7 @@ function results = runNeuRAExperiment(dataS, ...
     end
     
     %% Preprocessing in vicon frame
-    if ~isempty(dataV) & ~isempty(calibW2V)
+    if ~isempty(dataV) && ~isempty(calibW2V)
         nSamples = min(dataV.nSamples, dataS.nSamples);
         V__dataV = dataV.getSubset(1:nSamples);
         V__dataV.changePosUnit('m', true);
@@ -295,9 +297,12 @@ function results = runNeuRAExperiment(dataS, ...
         dataX = dataX.toWorldFrame(qXsensV2W);
         W__dataX = dataX.getSubset(1:nSamples);
         W__dataX.changePosUnit('m', true);
-        W__dataS = dataS.getSubset(1:nSamples).toViconFrame(calibW2V);
+        W__dataS = dataS.getSubset(1:nSamples) % .toViconFrame(calibW2V);
         % order is not important as calibW2V fixes only the ankle yaw offset
         W__dataS.Pelvis.acc = W__dataS.Pelvis.acc - bias.w__x; 
+        % apply yaw offset to orientation
+        W__dataS.L_LowLeg.ori = quatmultiply(calibYawFix.L_LowLeg.ori, W__dataS.L_LowLeg.ori);
+        W__dataS.R_LowLeg.ori = quatmultiply(calibYawFix.R_LowLeg.ori, W__dataS.R_LowLeg.ori);
         
         sIdx = startFrame;
         eIdx = min(length(W__dataX.Hips(:,1)) - 1, endFrame);
@@ -408,7 +413,7 @@ function results = runNeuRAExperiment(dataS, ...
             csGfrAcc = gfrAcc.(cs.accData);
         end
         
-        if (cs.oriData == 'w__s') | (cs.oriData == 'v__s')
+        if strcmp(cs.oriData, 'w__s') || strcmp(cs.oriData, 'v__s')
             csQOri = qOri.(strcat(cs.oriData, cs.initSrc(end)));
         else
             csQOri = qOri.(cs.oriData);
@@ -427,7 +432,7 @@ function results = runNeuRAExperiment(dataS, ...
             csx0 = x0.(cs.initSrc);
         end
         
-        if cs.initSrc == 'w__v'
+        if strcmp(cs.initSrc, 'w__v')
             csActBody = W__viconBody;
             csActBodyRel = PV__viconBody;
             d_pelvis = norm(W__dataV.RFEP(sIdx,:) - W__dataV.LFEP(sIdx,:));
@@ -435,7 +440,7 @@ function results = runNeuRAExperiment(dataS, ...
             d_lfemur = norm(W__dataV.LFEP(sIdx,:) - W__dataV.LFEO(sIdx,:));
             d_rtibia = norm(W__dataV.RFEO(sIdx,:) - W__dataV.RTIO(sIdx,:));
             d_ltibia = norm(W__dataV.LFEO(sIdx,:) - W__dataV.LTIO(sIdx,:));
-        elseif cs.initSrc == 'v__v'
+        elseif strcmp(cs.initSrc, 'v__v')
             csActBody = V__viconBody;
             csActBodyRel = PV__viconBody;
             d_pelvis = norm(V__dataV.RFEP(sIdx,:) - V__dataV.LFEP(sIdx,:));
@@ -477,6 +482,11 @@ function results = runNeuRAExperiment(dataS, ...
             bIsStatLA = movVarAcc_lankle < ACC_VAR_THRESH;
             movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc2.RA .^2, 2)), VAR_WIN);
             bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
+        elseif strcmp(cs.stepDetection, 'av03')
+            csNSamples = size(csGfrAcc.MP, 1);
+            bIsStatMP = false(csNSamples, 1);
+            bIsStatLA = revStepDetect.stepL(idx);
+            bIsStatRA = revStepDetect.stepR(idx);
         else
             csNSamples = size(csGfrAcc.MP, 1);
             bIsStatMP = false(csNSamples, 1);
@@ -506,21 +516,30 @@ function results = runNeuRAExperiment(dataS, ...
                     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, ...
                     uwbMeas.(cs.initSrc), v3Options);
                 
+                idx1EndIdx = find(any(isnan(x_pos_v2), 2), 1);
+                if isempty(idx1EndIdx), idx1 = idx0; 
+                else, 
+                    idx1 = idx0(1):idx0(idx1EndIdx-1); 
+                    csActBody = csActBody.getSubset(idx1);
+                    csActBodyRel = csActBodyRel.getSubset(idx1);
+                    display('NaN found in estimator result. Only evaluating until the last non NaN value');
+                end
+                
                 estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
                    'lnSymbol', '--', 'ptSymbol', 'o', 'frame', 'world', ...
                    'xyzColor', {'r', 'g', 'b'}, 'fs', fs, ...
-                   'MIDPEL', x_pos_v2(idx0, 1:3), ...
-                   'LFEP', t_dat_v2.LFEP(idx0, :), ...
-                   'LFEO', t_dat_v2.LFEO(idx0, :), ...
-                   'LTIO', x_pos_v2(idx0, 11:13), ...
-                   'RFEP', t_dat_v2.RFEP(idx0, :), ...
-                   'RFEO', t_dat_v2.RFEO(idx0, :), ...
-                   'RTIO', x_pos_v2(idx0, 21:23), ...
-                   'qRPV', x_pos_v2(idx0, 7:10), ...
-                   'qLTH', t_dat_v2.qLTH(idx0, :), ...
-                   'qRTH', t_dat_v2.qRTH(idx0, :), ...
-                   'qLSK', x_pos_v2(idx0, 17:20), ...
-                   'qRSK', x_pos_v2(idx0, 27:30));
+                   'MIDPEL', x_pos_v2(idx1, 1:3), ...
+                   'LFEP', t_dat_v2.LFEP(idx1, :), ...
+                   'LFEO', t_dat_v2.LFEO(idx1, :), ...
+                   'LTIO', x_pos_v2(idx1, 11:13), ...
+                   'RFEP', t_dat_v2.RFEP(idx1, :), ...
+                   'RFEO', t_dat_v2.RFEO(idx1, :), ...
+                   'RTIO', x_pos_v2(idx1, 21:23), ...
+                   'qRPV', x_pos_v2(idx1, 7:10), ...
+                   'qLTH', t_dat_v2.qLTH(idx1, :), ...
+                   'qRTH', t_dat_v2.qRTH(idx1, :), ...
+                   'qLSK', x_pos_v2(idx1, 17:20), ...
+                   'qRSK', x_pos_v2(idx1, 27:30));
                
                 estState = x_pos_v2;
                 estState2 = t_dat_v2;

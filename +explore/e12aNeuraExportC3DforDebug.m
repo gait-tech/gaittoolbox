@@ -25,6 +25,7 @@ list = {
 %       struct('file', 'S03-Trial-Walk-1', 'algo', "NS1+Aw__sOw__sIw__v+Sav01+M76+C455"), ...
 %       struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav01+M76+C455"), ...
       struct('file', 'S07-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav01+M76+C355"), ...
+      struct('file', 'S07-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
 %       struct('file', 'S02-Trial-Walk-2', 'algo', "NS1+Aw__sOw__sIw__v+Sav01+M72+C355"), ...
 %       struct('file', 'S02-Trial-Walk-2', 'algo', "NS1+Aw__sOw__sIw__v+Sav01+M74+C355"), ...
 %       struct('file', 'S02-Trial-Walk-2', 'algo', "NS1+Aw__sOw__sIw__v+Sav01+M76+C355"), ...
@@ -45,8 +46,11 @@ for lIdx=1:length(list)
     
     load(sprintf('neura-sparse01/explore-v2/%s-%s-debug.mat', ns, list{lIdx}.file));
     load(sprintf('neura-sparse01/explore-v2/%s-%s-%s.mat', ns, list{lIdx}.file, list{lIdx}.algo));
-    
     targetname = sprintf('explore_output/%s-%s-%s', ns, list{lIdx}.file, list{lIdx}.algo);
+    
+    if strcmp(cs.stepDetection, 'av03')
+        revStepDetect = readtable(sprintf('neura-sparse01/step-detect/%s-revStepDetect.csv', list{lIdx}.file));
+    end
     
     if cs.initSrc == 'w__v'
         aLabel = 'w__v';
@@ -141,6 +145,11 @@ for lIdx=1:length(list)
         bIsStatLA = movVarAcc_lankle < ACC_VAR_THRESH;
         movVarAcc_rankle = movingvar(sqrt( sum(csGfrAcc2.RA .^2, 2)), VAR_WIN);
         bIsStatRA = movVarAcc_rankle < ACC_VAR_THRESH;
+    elseif strcmp(cs.stepDetection, 'av03')
+        csNSamples = size(csGfrAcc.MP, 1);
+        bIsStatMP = false(csNSamples, 1);
+        bIsStatLA = revStepDetect.stepL(idx);
+        bIsStatRA = revStepDetect.stepR(idx);
     end
 
     estBody.exportc3d(sprintf('%s.c3d', targetname), sensors, ...
