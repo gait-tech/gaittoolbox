@@ -297,7 +297,7 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         dataX = dataX.toWorldFrame(qXsensV2W);
         W__dataX = dataX.getSubset(1:nSamples);
         W__dataX.changePosUnit('m', true);
-        W__dataS = dataS.getSubset(1:nSamples) % .toViconFrame(calibW2V);
+        W__dataS = dataS.getSubset(1:nSamples); % .toViconFrame(calibW2V);
         % order is not important as calibW2V fixes only the ankle yaw offset
         W__dataS.Pelvis.acc = W__dataS.Pelvis.acc - bias.w__x; 
         % apply yaw offset to orientation
@@ -570,7 +570,7 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         results0.label = cs.label;
         results0.runtime = runtime;
         results(resultsIdx) = results0;
-        display(sprintf("Index %3d/%3d: Running time: %.4f", resultsIdx, setupN, cputime-t0));
+        fprintf("Index %3d/%3d: Running time: %.4f\n", resultsIdx, setupN, cputime-t0);
         resultsIdx = resultsIdx + 1;
     end
 end

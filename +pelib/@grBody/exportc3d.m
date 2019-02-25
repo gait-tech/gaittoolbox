@@ -22,10 +22,11 @@
 %> @param oriMode [Optional] 01: refBody axis on refBody. obj axis on obj.
 %>                           02: refBody and obj axis on obj.
 %>                           03: refBody and obj axis on refBody.
+%> @param spevents (Optional) (n x 1) logical where special event happens
 %> @retval acq handle pointer to new btk c3d
 % ======================================================================
 function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
-                         extraMarkers, oriMode)
+                         extraMarkers, oriMode, spevents)
     if nargin <= 2, sensors = struct(); 
     else, validateattributes(sensors, {'struct', 'logical'}, {}); end
     if nargin <= 3, refBody = false; 
@@ -33,10 +34,11 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     
     %% c3d file initializations and metadata
     n = obj.nSamples; fs = obj.fs;
-    if nargin <= 4, lsteps = logical(n); end
-    if nargin <= 5, rsteps = logical(n); end
+    if nargin <= 4, lsteps = false(n, 1); end
+    if nargin <= 5, rsteps = false(n, 1); end
     if nargin <= 6, extraMarkers = struct(); end
     if nargin <= 7, oriMode = 1; end
+    if nargin <= 8, events = false(n, 1); end
     
     zeroRes = zeros(n, 1);
     acq = btkNewAcquisition(0, n, 0, 1);
@@ -134,26 +136,30 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     % add step detection
     event = lsteps - lsteps([1, 1:end-1]);
     [idx, val] = find(event == 1);
-    setEvents(acq, true, idx/fs, 'Left', '', '');
+    setEvents(acq, true, idx/fs, 'Left', '', '', 'Foot Strike');
     [idx, val] = find(event == -1);
-    setEvents(acq, false, idx/fs, 'Left', '', '');
+    setEvents(acq, false, idx/fs, 'Left', '', '', 'Foot Off');
 
     event = rsteps - rsteps([1, 1:end-1]);
     [idx, val] = find(event == 1);
-    setEvents(acq, true, idx/fs, 'Right', '', '');
+    setEvents(acq, true, idx/fs, 'Right', '', '', 'Foot Strike');
     [idx, val] = find(event == -1);
-    setEvents(acq, false, idx/fs, 'Right', '', '');
+    setEvents(acq, false, idx/fs, 'Right', '', '', 'Foot Off');
+    
+    event = spevents- spevents([1, 1:end-1]);
+    [idx, val] = find(event == 1);
+    setEvents(acq, true, idx/fs, 'General', '', '', 'Start');
+    [idx, val] = find(event == -1);
+    setEvents(acq, false, idx/fs, 'General', '', '', 'End');
     
     % save c3d file
     btkWriteAcquisition(acq, fname);
 end
 
-function setEvents(acq, step, idx, context, subject, desc)
+function setEvents(acq, step, idx, context, subject, desc, label)
     if step
-        label = 'Foot Strike';
         id = 1;
     else
-        label = 'Foot Off';
         id = 2;
     end
     for i=1:length(idx)

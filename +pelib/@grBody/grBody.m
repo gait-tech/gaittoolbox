@@ -181,6 +181,6 @@ classdef grBody < matlab.mixin.Copyable
         out = changePosUnit(obj, newUnit, update);
         out = getSubset(obj, idx);
         out = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
-                        extraMarkers, oriMode);
+                        extraMarkers, oriMode, spevents);
     end
 end
