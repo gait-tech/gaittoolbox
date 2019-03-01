@@ -6,7 +6,7 @@ expDir = sprintf('%s/explore-v2', dir);
 stepDir = sprintf('%s/step-detect', dir);
 ns = "NS2";
 algo = "NS2+Aw__sOw__sIw__v+Sav01+M76+C355";
-instruction = readtable(sprintf('%s/edit2.csv', dir));
+instruction = readtable(sprintf('%s/edit.csv', dir));
 dataN = size(instruction, 1);
 
 step = table();

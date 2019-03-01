@@ -8,7 +8,7 @@ outDir = sprintf('%s/step-detect-c3d', dir);
 ns = "NS2";
 algo = "NS2+Aw__sOw__sIw__v+Sav01+M76+C355";
 outEdit = sprintf('%s/edit.csv', dir);
-velThreshold = 0.15;
+velThreshold = 0.1;
 
 dataList = readtable(sprintf('%s/data-list-v2.csv', dir));
 options = struct('Pelvis', '00B40B91', ...
@@ -68,39 +68,32 @@ for i = 1:dataN
     
     bIsStatLA = imuStep.stepL(idx);
     bIsStatRA = imuStep.stepR(idx);    
-    events = false(length(idx), 1);
+    nSamples = length(idx);
+    events = false(nSamples, 1);
     
     outInst(outIdx) = struct('cmd', 'load', 'v0', imuStepFName, 'v1', "", 'v2', "");
     outIdx = outIdx+1;
-    %% check those that are detected as step from IMU data but has some velocity according from Vicon data
-    velmagLA = vecnorm(vel.LTIO, 2, 2);
-    fixstepLfromvel = bIsStatLA & (velmagLA > velThreshold);
-    [sIdxs eIdxs] = getStartEndIndices(fixstepLfromvel);
-    for j=1:length(sIdxs)
-        outInst(outIdx) = struct('cmd', 'clear', 'v0', "L", 'v1', sIdxs(j), 'v2', eIdxs(j));
-        outIdx = outIdx+1;
-    end
-    
-    velmagRA = vecnorm(vel.RTIO, 2, 2);
-    fixstepRfromvel = bIsStatRA & (velmagRA > velThreshold);
-    [sIdxs eIdxs] = getStartEndIndices(fixstepRfromvel);
-    for j=1:length(sIdxs)
-        outInst(outIdx) = struct('cmd', 'clear', 'v0', "R", 'v1', sIdxs(j), 'v2', eIdxs(j));
-        outIdx = outIdx+1;
-    end
-    
-    doublefoot = bIsStatLA & bIsStatRA & ~fixstepLfromvel & ~fixstepRfromvel;
+    %% check those that are detected as double step from IMU data but has some velocity according from Vicon data
+    velmagLA = vecnorm(vel.LTIO, 2, 2);    
+    velmagRA = vecnorm(vel.RTIO, 2, 2);   
+    doublefoot = (bIsStatLA & bIsStatRA) & ((velmagLA > velThreshold) | (velmagRA > velThreshold));
     [sIdxs eIdxs] = getStartEndIndices([0; doublefoot; 0]);
     for j=1:length(sIdxs)
-        outInst(outIdx) = struct('cmd', 'clear', 'v0', "", 'v1', sIdxs(j)-1, 'v2', eIdxs(j)-1);
+        sIdx = sIdxs(j)-1; eIdx = min(eIdxs(j)-1, nSamples);
+        velmag2LA = norm(velmagLA(sIdx:eIdx));
+        velmag2RA = norm(velmagRA(sIdx:eIdx));
+        if velmag2LA > velmag2RA, side = "L";
+        elseif velmag2LA < velmag2RA, side = "R";
+        else side = ""; end
+
+        outInst(outIdx) = struct('cmd', 'clear', 'v0', side, 'v1',sIdx , 'v2', eIdx);
         outIdx = outIdx+1;
     end
     
-    events = fixstepLfromvel | fixstepRfromvel | doublefoot;
     outInst(outIdx) = struct('cmd', 'save', 'v0', revStepFName, 'v1', '', 'v2', '');
     outIdx = outIdx+1;
     estBody.exportc3d(sprintf('%s.c3d', targetname), sensors, ...
-                      vb, bIsStatLA, bIsStatRA, struct(), 1, events);
+                      vb, bIsStatLA, bIsStatRA, struct(), 1, doublefoot);
     fprintf("Data %3d/%3d: %s\n", i, dataN, name);
 end
 writetable(struct2table(outInst), outEdit);
