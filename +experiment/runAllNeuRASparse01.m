@@ -9,7 +9,7 @@ dir = 'neura-sparse01';
 expDir = sprintf('%s/explore-v2', dir);
 
 DEGRANGE = (0:0.1:359) - 180;
-dataList = readtable(sprintf('%s/data-list-v2-test.csv', dir));
+dataList = readtable(sprintf('%s/data-list-v2.csv', dir));
 
 % options = struct('Pelvis', '00B40B91', ...
 %     'L_UpLeg', '00B40C45', 'R_UpLeg', '00B40C3C', ...
@@ -57,7 +57,7 @@ for nsI = 1:length(nsList)
         
     for mI = [76]
         for cI = [355]
-            for sdI = {'av01', 'av03'}
+            for sdI = {'av02'}
                 setups{end+1} = struct('est', 'ekfv3', ...
                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
                            'initSrc', 'w__v', 'stepDetection', sdI, ...

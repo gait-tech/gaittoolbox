@@ -24,6 +24,7 @@
 %>      - av01: fixed acceleration variance on tibia accData (var = 1)
 %>      - av02: fixed acceleration variance on vicon tibia accData (var = 1)
 %>      - av03: use reviewed step detect file. Dimension similar to dataS
+%>      - av03: use reviewed step detect file. Dimension similar to dataS
 %> - initSrc: source of sensor to body orientation and position init
 %>      - w__v: vicon (world frame) (default)
 %>      - v__v: vicon (vicon frame)

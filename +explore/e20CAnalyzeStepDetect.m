@@ -6,9 +6,11 @@ expDir = sprintf('%s/explore-v2', dir);
 stepDir = sprintf('%s/step-detect', dir);
 outDir = sprintf('%s/step-detect-c3d', dir);
 ns = "NS2";
-algo = "NS2+Aw__sOw__sIw__v+Sav01+M76+C355";
-outEdit = sprintf('%s/edit.csv', dir);
+algo = "NS2+Aw__sOw__sIw__v+Sav02+M76+C355";
+outEdit = sprintf('%s/edit-v3.csv', dir);
+
 velThreshold = 0.1;
+minStepFrameLength = 5;
 
 dataList = readtable(sprintf('%s/data-list-v2.csv', dir));
 options = struct('Pelvis', '00B40B91', ...
@@ -68,14 +70,17 @@ for i = 1:dataN
     
     bIsStatLA = imuStep.stepL(idx);
     bIsStatRA = imuStep.stepR(idx);    
+%     bIsStatLA = viconStep.stepL(idx);
+%     bIsStatRA = viconStep.stepR(idx);    
     nSamples = length(idx);
-    events = false(nSamples, 1);
+    speventsL = false(nSamples, 1);
+    speventsR = false(nSamples, 1);
     
-    outInst(outIdx) = struct('cmd', 'load', 'v0', imuStepFName, 'v1', "", 'v2', "");
+    outInst(outIdx) = struct('cmd', 'load', 'v0', imuStepFName, 'v1', "", 'v2', "", 'cmt',  "");
     outIdx = outIdx+1;
     %% check those that are detected as double step from IMU data but has some velocity according from Vicon data
     velmagLA = vecnorm(vel.LTIO, 2, 2);    
-    velmagRA = vecnorm(vel.RTIO, 2, 2);   
+    velmagRA = vecnorm(vel.RTIO, 2, 2);
     doublefoot = (bIsStatLA & bIsStatRA) & ((velmagLA > velThreshold) | (velmagRA > velThreshold));
     [sIdxs eIdxs] = getStartEndIndices([0; doublefoot; 0]);
     for j=1:length(sIdxs)
@@ -86,14 +91,60 @@ for i = 1:dataN
         elseif velmag2LA < velmag2RA, side = "R";
         else side = ""; end
 
-        outInst(outIdx) = struct('cmd', 'clear', 'v0', side, 'v1',sIdx , 'v2', eIdx);
+        outInst(outIdx) = struct('cmd', 'clear', 'v0', side, 'v1', sIdx, 'v2', eIdx, 'cmt',  "doublefoot");
         outIdx = outIdx+1;
     end
-    
-    outInst(outIdx) = struct('cmd', 'save', 'v0', revStepFName, 'v1', '', 'v2', '');
+    speventsL = speventsL | doublefoot;
+    speventsR = speventsR | doublefoot;
+
+    velLA = ~speventsL & bIsStatLA & (velmagLA > velThreshold);
+    [sIdxs eIdxs] = getStartEndIndices([0; velLA; 0]);
+    for j=1:length(sIdxs)
+        sIdx = sIdxs(j)-1; eIdx = min(eIdxs(j)-1, nSamples);
+        outInst(outIdx) = struct('cmd', 'clear', 'v0', "L", 'v1', sIdx, 'v2', eIdx, 'cmt',  "velThreshL");
+        outIdx = outIdx+1;
+    end
+    speventsL = speventsL | velLA;
+
+    shortLA = ~speventsL & bIsStatLA;
+    [sIdxs eIdxs] = getStartEndIndices([0; shortLA; 0]);
+    for j=1:length(sIdxs)
+        sIdx = sIdxs(j)-1; eIdx = min(eIdxs(j)-1, nSamples);
+        if ((eIdx - sIdx) <= minStepFrameLength) && (eIdx ~= nSamples)
+            outInst(outIdx) = struct('cmd', 'clear', 'v0', "L", 'v1', sIdx, 'v2', eIdx, 'cmt',  "shortFrameThreshL");
+            outIdx = outIdx+1;
+        else
+            shortLA(sIdx:eIdx) = false;
+        end
+    end
+    speventsL = speventsL | shortLA;
+
+    velRA = ~speventsR & bIsStatRA & (velmagRA > velThreshold);
+    [sIdxs eIdxs] = getStartEndIndices([0; velRA; 0]);
+    for j=1:length(sIdxs)
+        sIdx = sIdxs(j)-1; eIdx = min(eIdxs(j)-1, nSamples);
+        outInst(outIdx) = struct('cmd', 'clear', 'v0', "R", 'v1', sIdx, 'v2', eIdx, 'cmt',  "velThreshR");
+        outIdx = outIdx+1;
+    end
+    speventsR = speventsR | velRA;
+
+    shortRA = ~speventsR & bIsStatRA;
+    [sIdxs eIdxs] = getStartEndIndices([0; shortRA; 0]);
+    for j=1:length(sIdxs)
+        sIdx = sIdxs(j)-1; eIdx = min(eIdxs(j)-1, nSamples);
+        if ((eIdx - sIdx) <= minStepFrameLength) && (eIdx ~= nSamples)
+            outInst(outIdx) = struct('cmd', 'clear', 'v0', "R", 'v1', sIdx, 'v2', eIdx, 'cmt', "shortFrameThreshR");
+            outIdx = outIdx+1;
+        else
+            shortRA(sIdx:eIdx) = false;
+        end
+    end
+    speventsR = speventsR | shortRA;
+
+    outInst(outIdx) = struct('cmd', 'save', 'v0', revStepFName, 'v1', '', 'v2', '', 'cmt', "");
     outIdx = outIdx+1;
     estBody.exportc3d(sprintf('%s.c3d', targetname), sensors, ...
-                      vb, bIsStatLA, bIsStatRA, struct(), 1, doublefoot);
+                      vb, bIsStatLA, bIsStatRA, struct(), 1, speventsL|speventsR);
     fprintf("Data %3d/%3d: %s\n", i, dataN, name);
 end
 writetable(struct2table(outInst), outEdit);

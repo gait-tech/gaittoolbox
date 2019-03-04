@@ -38,7 +38,7 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     if nargin <= 5, rsteps = false(n, 1); end
     if nargin <= 6, extraMarkers = struct(); end
     if nargin <= 7, oriMode = 1; end
-    if nargin <= 8, events = false(n, 1); end
+    if nargin <= 8, spevents = false(n, 1); end
     
     zeroRes = zeros(n, 1);
     acq = btkNewAcquisition(0, n, 0, 1);
@@ -136,21 +136,21 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     % add step detection
     event = lsteps - lsteps([1, 1:end-1]);
     [idx, val] = find(event == 1);
-    setEvents(acq, true, idx/fs, 'Left', '', '', 'Foot Strike');
+    setEvents(acq, true, (idx-1)/fs, 'Left', '', '', 'Foot Strike');
     [idx, val] = find(event == -1);
-    setEvents(acq, false, idx/fs, 'Left', '', '', 'Foot Off');
+    setEvents(acq, false, (idx-1)/fs, 'Left', '', '', 'Foot Off');
 
     event = rsteps - rsteps([1, 1:end-1]);
     [idx, val] = find(event == 1);
-    setEvents(acq, true, idx/fs, 'Right', '', '', 'Foot Strike');
+    setEvents(acq, true, (idx-1)/fs, 'Right', '', '', 'Foot Strike');
     [idx, val] = find(event == -1);
-    setEvents(acq, false, idx/fs, 'Right', '', '', 'Foot Off');
+    setEvents(acq, false, (idx-1)/fs, 'Right', '', '', 'Foot Off');
     
     event = spevents- spevents([1, 1:end-1]);
     [idx, val] = find(event == 1);
-    setEvents(acq, true, idx/fs, 'General', '', '', 'Start');
+    setEvents(acq, true, (idx-1)/fs, 'General', '', '', 'Start');
     [idx, val] = find(event == -1);
-    setEvents(acq, false, idx/fs, 'General', '', '', 'End');
+    setEvents(acq, false, (idx-1)/fs, 'General', '', '', 'End');
     
     % save c3d file
     btkWriteAcquisition(acq, fname);
