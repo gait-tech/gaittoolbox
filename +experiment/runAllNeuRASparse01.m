@@ -54,10 +54,24 @@ for nsI = 1:length(nsList)
 %                        'sigmaQAcc', 1e1);
 %         end
 %     end
-        
+    
+
+
+    for mI = [0]
+        for cI = [0 355]
+            for sdI = {'av03'}
+                setups{end+1} = struct('est', 'ekfv3', ...
+                           'accData', 'w__v', 'oriData', 'w__v', 'accDataNoise', 0, ...
+                           'initSrc', 'w__v', 'stepDetection', sdI, ...
+                           'applyMeas', mI, 'applyCstr', cI, 'P', 0.5, ...
+                           'sigmaQAcc', 1e1);
+            end
+        end
+    end
+    
     for mI = [76]
         for cI = [355]
-            for sdI = {'av03'}
+            for sdI = {'av01', 'av03'}
                 setups{end+1} = struct('est', 'ekfv3', ...
                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
                            'initSrc', 'w__v', 'stepDetection', sdI, ...
