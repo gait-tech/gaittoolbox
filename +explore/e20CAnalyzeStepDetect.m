@@ -6,7 +6,7 @@ expDir = sprintf('%s/explore-v2', dir);
 stepDir = sprintf('%s/step-detect', dir);
 outDir = sprintf('%s/step-detect-c3d', dir);
 ns = "NS2";
-algo = "NS2+Aw__sOw__sIw__v+Sav02+M76+C355";
+algo = "NS2+Aw__sOw__sIw__v+Sav01+M76+C355";
 outEdit = sprintf('%s/edit-v3.csv', dir);
 
 velThreshold = 0.1;
