@@ -5,9 +5,10 @@ dir = 'neura-sparse01';
 expDir = sprintf('%s/explore-v2', dir);
 stepDir = sprintf('%s/step-detect', dir);
 % outDir = sprintf('%s/step-detect-c3d', dir);
-outDir = 'C:\Users\z5151460\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Step Detection Fix\step-detect-v3-fixed-c3d';
+outDir = 'C:\Users\z5151460\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - Step Fix - 01 Mar 2019\step-detect-v3-fixed-c3d';
 ns = "NS2";
 algo = "NS2+Aw__sOw__sIw__v+Sav03+M76+C355";
+% algo = "NS2+Aw__sOw__sIw__x+Sav03+M76+C355";
 velThreshold = 0.1;
 
 dataList = readtable(sprintf('%s/data-list-v2.csv', dir));
@@ -17,10 +18,9 @@ options = struct('Pelvis', '00B40B91', ...
     'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
 dataN = size(dataList, 1);
 
-% for i = 1:dataN
-for i = [98 107 135]
+for i = 1:dataN
     n = table2struct(dataList(i, :));
-
+    
     name = sprintf("%s-%s", n.subj, n.act);
     imuStepFName = sprintf("%s-imuStepDetect.csv", name);
     revStepFName = sprintf("%s-revStepDetect.csv", name);

@@ -4,6 +4,8 @@ dir = sprintf('%s/explore-v2', dir0);
 ns = 'NS2';
 clear results;
 rIdx = 1;
+% results = table2struct(results);
+% rIdx = 757;
 
 %% file list vicon vs xsens comparison
 dataList = readtable(sprintf('%s/data-list-v2.csv', dir0));
@@ -22,14 +24,14 @@ for i = 1:dataN
     estBodyRel = estBody.changeRefFrame('MIDPEL');
     estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
     csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
-    results0 = estBody2.diffRMSE(csActBody2);
+    results0 = estBody2.diffRMSEandMean(csActBody2);
         
     results0.name = name;
     results0.label = sprintf("%s+viconvsxsens", ns);
     results0.runtime = 0;
     results(rIdx) = results0;
     rIdx = rIdx + 1;
-    display(sprintf("%s/%s-%s", dir, name, results0.label));
+    fprintf("%s/%s-%s\n", dir, name, results0.label);
 end
 
 %% folder .mat rerun
@@ -60,7 +62,7 @@ for i = 1:size(dataList, 1)
     estBodyRel = estBody.changeRefFrame('MIDPEL');
     estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
     csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
-    results0 = estBody2.diffRMSE(csActBody2);
+    results0 = estBody2.diffRMSEandMean(csActBody2);
         
     results0.name = name;
     results0.label = sprintf("%s+A%sO%sI%s+Sav01+M%02d+C%03d", ...
