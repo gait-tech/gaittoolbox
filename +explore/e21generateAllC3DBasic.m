@@ -4,10 +4,10 @@
 dir = 'neura-sparse01';
 expDir = sprintf('%s/explore-v2', dir);
 stepDir = sprintf('%s/step-detect', dir);
-% outDir = sprintf('%s/step-detect-c3d', dir);
-outDir = 'C:\Users\z5151460\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - Step Fix - 01 Mar 2019\step-detect-v3-fixed-c3d';
+outDir = sprintf('explore_output', dir);
+% outDir = 'C:\Users\z5151460\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - Step Fix - 01 Mar 2019\step-detect-v3-fixed-c3d';
 ns = "NS2";
-algo = "NS2+Aw__sOw__sIw__v+Sav03+M76+C355";
+algo = "NS2+Aw__sOw__sIw__v+Sav03+M202+C355";
 % algo = "NS2+Aw__sOw__sIw__x+Sav03+M76+C355";
 velThreshold = 0.1;
 
@@ -18,7 +18,7 @@ options = struct('Pelvis', '00B40B91', ...
     'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
 dataN = size(dataList, 1);
 
-for i = 1:dataN
+for i = [1 5 15]
     n = table2struct(dataList(i, :));
     
     name = sprintf("%s-%s", n.subj, n.act);
@@ -65,6 +65,10 @@ for i = 1:dataN
     sensors.PELVVelRef = vel.MIDPEL;
     sensors.LANKVelRef = vel.LTIO;
     sensors.RANKVelRef = vel.RTIO;
+    uwbdist = estBody.calcMPLARAdist();
+    sensors.MPLARAdist = [uwbdist.MPLA uwbdist.MPRA uwbdist.LARA];
+    uwbdistRef = vb.calcMPLARAdist();
+    sensors.MPLARAdistRef = [uwbdistRef.MPLA uwbdistRef.MPRA uwbdistRef.LARA];
     
     if strcmp(cs.stepDetection, 'av01')
         bIsStatLA = imuStep.stepL(idx);

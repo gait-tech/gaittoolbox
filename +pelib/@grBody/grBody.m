@@ -174,6 +174,7 @@ classdef grBody < matlab.mixin.Copyable
         out = calcJointAcc(obj, pts);
         out = calcDOri(obj, ref);
         out = calcDPos(obj, ref);
+        out = calcMPLARAdist(obj);
         
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);

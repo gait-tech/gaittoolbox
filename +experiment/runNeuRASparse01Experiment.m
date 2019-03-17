@@ -88,7 +88,7 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         end
     end
 
-    uwbMeasSigma = 0.0;
+    uwbMeasSigma = 0.1; %m standard deviation
     
     allIdx = {};
     qOri = {};
@@ -184,6 +184,12 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         umBuf.left_tibia_right_tibia = vecnorm((W__viconBody.RTIO-W__viconBody.LTIO), 2, 2) ...
             + normrnd(0, uwbMeasSigma, [nSamples, 1]);
         umBuf.left_tibia_right_tibia = umBuf.left_tibia_right_tibia(sIdx:eIdx,:);
+        umBuf.LLeg = vecnorm((W__viconBody.LFEP-W__viconBody.LTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.LLeg = umBuf.LLeg(sIdx:eIdx,:);
+        umBuf.RLeg = vecnorm((W__viconBody.RFEP-W__viconBody.RTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.RLeg = umBuf.RLeg(sIdx:eIdx,:);
         uwbMeas.w__v = umBuf;
     
         % debug purposes
@@ -282,6 +288,12 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         umBuf.left_tibia_right_tibia = vecnorm((V__viconBody.RTIO-V__viconBody.LTIO), 2, 2) ...
             + normrnd(0, uwbMeasSigma, [nSamples, 1]);
         umBuf.left_tibia_right_tibia = umBuf.left_tibia_right_tibia(sIdx:eIdx,:);
+        umBuf.LLeg = vecnorm((V__viconBody.LFEP-V__viconBody.LTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.LLeg = umBuf.LLeg(sIdx:eIdx,:);
+        umBuf.RLeg = vecnorm((V__viconBody.RFEP-V__viconBody.RTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.RLeg = umBuf.RLeg(sIdx:eIdx,:);
         uwbMeas.v__v = umBuf;
         
         % debug purposes
@@ -368,6 +380,12 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         umBuf.left_tibia_right_tibia = vecnorm((W__xsensBody.RTIO-W__xsensBody.LTIO), 2, 2) ...
             + normrnd(0, uwbMeasSigma, [nSamples, 1]);
         umBuf.left_tibia_right_tibia = umBuf.left_tibia_right_tibia(sIdx:eIdx,:);
+        umBuf.LLeg = vecnorm((W__xsensBody.LFEP-W__xsensBody.LTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.LLeg = umBuf.LLeg(sIdx:eIdx,:);
+        umBuf.RLeg = vecnorm((W__xsensBody.RFEP-W__xsensBody.RTIO), 2, 2) ...
+            + normrnd(0, uwbMeasSigma, [nSamples, 1]);
+        umBuf.RLeg = umBuf.RLeg(sIdx:eIdx,:);
         uwbMeas.w__x = umBuf;
         
         % debug purposes
@@ -517,8 +535,9 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
                     uwbMeas.(cs.initSrc), v3Options);
                 
                 idx1EndIdx = find(any(isnan(x_pos_v2), 2), 1);
-                if isempty(idx1EndIdx), idx1 = idx0; 
-                else, 
+                if isempty(idx1EndIdx)
+                    idx1 = idx0; 
+                else 
                     idx1 = idx0(1):idx0(idx1EndIdx-1); 
                     csActBody = csActBody.getSubset(idx1);
                     csActBodyRel = csActBodyRel.getSubset(idx1);

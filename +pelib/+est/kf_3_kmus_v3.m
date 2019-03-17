@@ -46,46 +46,40 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %   uwb_mea    - a structure containing the range measurements (m) between
 %   options   - struct containing the ff. settings:
 %       applyMeas - turn on/off zero velocity update. boolean
-%           001: standard zupt
-%           002: standard zupt + floor assumption
-%           003: standard zupt + floor assumption + reset at both foot
-%           004: standard zupt + floor assumption + series reset at both foot
-%           005: standard zupt + floor assumption + zero first floor foot
-%           006: standard zupt + floor assumption + pelvis z pos assumption
-%           007: standard zupt + floor assumption + pelvis z pos assumption + 
+%           X=0: normal measurement update
+%           X=1: add 3 point dist
+%           X=2: add calc knee angle from uwb dist
+%           X01: standard zupt
+%           X02: standard zupt + floor assumption
+%           X03: standard zupt + floor assumption + reset at both foot
+%           X04: standard zupt + floor assumption + series reset at both foot
+%           X05: standard zupt + floor assumption + zero first floor foot
+%           X06: standard zupt + floor assumption + pelvis z pos assumption
+%           X07: standard zupt + floor assumption + pelvis z pos assumption + 
 %                zero first floor foot
-%           008: standard zupt + floor assumption + reset first floor foot
-%           021: standard zupt + floor assumption + estimate projection (W=P^-1) assuming perfect orientation
-%           031: standard zupt + floor assumption + recenter at left foot step
+%           X08: standard zupt + floor assumption + reset first floor foot
+%           X21: standard zupt + floor assumption + estimate projection (W=P^-1) assuming perfect orientation
+%           X31: standard zupt + floor assumption + recenter at left foot step
 %                + one big cov update
-%           032: standard zupt + floor assumption + limit pos max covariance
+%           X32: standard zupt + floor assumption + limit pos max covariance
 %                + one big cov update
-%           033: standard zupt + floor assumption + recenter at left foot step
+%           X33: standard zupt + floor assumption + recenter at left foot step
 %                + limit pos max covariance + one big cov update
-%           041: standard zupt + floor assumption + recenter at left foot step
+%           X41: standard zupt + floor assumption + recenter at left foot step
 %                + series cov update
-%           042: standard zupt + floor assumption + limit pos max covariance
+%           X42: standard zupt + floor assumption + limit pos max covariance
 %                + series cov update
-%           043: standard zupt + floor assumption + recenter at left foot step
+%           X43: standard zupt + floor assumption + recenter at left foot step
 %                + limit pos max covariance + series cov update
-%           050-057: standard zupt + floor assumption during step & below floor + 
-%           060-067: standard zupt + floor assumption during step + 
-%           070-077: standard zupt + floor assumption during step 
+%           X50-X57: standard zupt + floor assumption during step & below floor + 
+%           X60-X67: standard zupt + floor assumption during step + 
+%           X70-X77: standard zupt + floor assumption during step 
 %                    + limit pos max covariance with one big cov update
-%           080-087: standard zupt + floor assumption during step + below floor zupt
+%           X80-X87: standard zupt + floor assumption during step + below floor zupt
 %                    + limit pos max covariance with one big cov update
 %                    1st bit (+1): pelvis = ankle speed
 %                    2nd bit (+2): pelvis = ankle XY pos
 %                    3rd bit (+4): pelvis = initial pelvis z pos
-%           101: 3 point dist + standard zupt
-%           102: 3 point dist + standard zupt + floor assumption
-%           103: 3 point dist + standard zupt + floor assumption + reset at both foot
-%           104: 3 point dist + standard zupt + floor assumption + series reset at both foot
-%           105: 3 point dist + standard zupt + floor assumption + zero first floor foot
-%           106: 3 point dist + standard zupt + floor assumption + pelvis z pos assumption
-%           107: 3 point dist + standard zupt + floor assumption + pelvis z pos assumption + 
-%                zero first floor foot
-%           121: 3 point dist + standard zupt + floor assumption + estimate projection (W=P^-1) assuming perfect orientation
 %       applyCstr - turn on/off constraints.
 %           001: estimate projection (W=P^-1) assuming perfect orientation
 %           002: estimate projection (W=I) assuming perfect orientation
@@ -275,6 +269,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                + adj knee that only increases + knee ineq + no P updates
 %                W=3: Use all 30 states
 %                W=4: Use only 12 states (pelv, lank, rank position)
+%                W=5: uwb meas + use all 30 states
 %                X=1: foot step (z pos) = floor (step detect only)
 %                X=2: foot step (z pos) = floor (step detect only)
 %                     + static foot step (x,y pos)
@@ -297,7 +292,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         'sigmaRPosRALimit', 1e2, 'sigmaRPosLARecenter', 1e-3, ...
         'sigmaRVelMPLARA', 1e1, 'sigmaRPosMPLARA', 1e1, ...
         'sigmaCPos', 1e-2, ...
-        'sigmaUwbMPLA', 0.2, 'sigmaUwbMPRA', 0.2, 'sigmaUwbLARA', 0.1, ...
+        'sigmaUwbMPLA', 1e1, 'sigmaUwbMPRA', 1e1, 'sigmaUwbLARA', 1e1, ...
+        'sigmaUwbLLeg', 1e0, 'sigmaUwbRLeg', 1e0, ...
         'sigmaZuptMP', 1e-1, 'sigmaZuptLA', 1e-1, 'sigmaZuptRA', 1e-1, ...
         'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
         'alphaRKmin', 0, 'alphaRKmax', pi*8/9, ...
@@ -418,7 +414,10 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     % local variable assignment for readability
     u_k = [gfrAccMP, gfrAccLA, gfrAccRA]';
     y_k = [qMP, qLA, qRA]';
-    
+    uwbMPLARA = [uwb_mea.left_tibia_mid_pelvis,...
+                 uwb_mea.mid_pelvis_right_tibia,...
+                 uwb_mea.left_tibia_right_tibia];
+                 
     % allocate memory to store apriori and aposteriori state estimates, xhat,
     % and error covariances in the state estimate, P_pri, P_pos
     xhat_pri = nan(nSamples, nStates);
@@ -454,6 +453,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
     
     modHundredApplyMeas = mod(fOpt.applyMeas, 100);
+    divHundredApplyMeas = idivide(int32(fOpt.applyMeas), 100, 'floor');
     applyCstrW = idivide(int32(fOpt.applyCstr), 100, 'floor');
     
     % applyMeas update orientation initialization
@@ -661,7 +661,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         end
     end
     
-    if fOpt.applyMeas >= 100 && fOpt.applyMeas < 200
+    if divHundredApplyMeas == 1
         idxM3Dist = nMeasure+1:nMeasure+3;
         nMeasure = nMeasure + 3;
 
@@ -672,9 +672,6 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         %  uwb_MP_LA_RA =  ['mid-pelvis to left ankle',
         %                   'mid-pelvis to right ankle',
         %                   'left ankle to right ankle'];
-        uwb_MP_LA_RA = [uwb_mea.left_tibia_mid_pelvis,...
-                        uwb_mea.mid_pelvis_right_tibia,...
-                        uwb_mea.left_tibia_right_tibia];
 
         H(end+1:end+3, :) = zeros(3, nStates);
         
@@ -687,6 +684,22 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         Rdiag(end+1:end+3) = [(fOpt.sigmaUwbMPLA)^2 ...
                               (fOpt.sigmaUwbMPRA)^2 ...
                               (fOpt.sigmaUwbLARA)^2];
+        R = diag(Rdiag);
+    elseif divHundredApplyMeas == 2
+        idxMKneeAnglefromDist = nMeasure+1:nMeasure+6;
+        nMeasure = nMeasure + 6;
+        H(end+1:end+6, :) = zeros(6, nStates);
+        
+        H(idxMKneeAnglefromDist(1:3),idxPosMP) = -eye(3, 3);
+        H(idxMKneeAnglefromDist(1:3),idxPosLA) = eye(3, 3);
+        H(idxMKneeAnglefromDist(4:6),idxPosMP) = -eye(3, 3);
+        H(idxMKneeAnglefromDist(4:6),idxPosRA) = eye(3, 3);
+        
+        y_k(end+1:end+6, :) = zeros(6, nSamples);
+        
+        Rdiag = diag(R);
+        Rdiag(end+1:end+6) = repelem([(fOpt.sigmaUwbLLeg)^2 ...
+                              (fOpt.sigmaUwbRLeg)^2], 3);
         R = diag(Rdiag);
     end
     
@@ -943,47 +956,43 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             end
         end
         
-        if fOpt.applyMeas >= 100 && fOpt.applyMeas < 200
-            idx(end+1:end+3) = [idxM3Dist];
+        if divHundredApplyMeas == 1 %apply uwb
+            idx(end+1:end+3) = idxM3Dist;
             
-            diff_MP_LA = x_min(idxPosMP)'-x_min(idxPosLA)';
-            diff_MP_RA = x_min(idxPosMP)'-x_min(idxPosRA)';
-            diff_LA_RA = x_min(idxPosLA)'-x_min(idxPosRA)';
+            diffMPLA = x_min(idxPosMP)'-x_min(idxPosLA)';
+            diffMPRA = x_min(idxPosMP)'-x_min(idxPosRA)';
+            diffLARA = x_min(idxPosLA)'-x_min(idxPosRA)';
             % the observation model
-            h_uwb_est = [vecnorm(diff_MP_LA, 2, 2);
-                         vecnorm(diff_MP_RA, 2, 2);
-                         vecnorm(diff_LA_RA, 2, 2)];
+            hUwbEst = [vecnorm(diffMPLA, 2, 2);
+                         vecnorm(diffMPRA, 2, 2);
+                         vecnorm(diffLARA, 2, 2)];
 
             Huwb = zeros(3, nStates);
             % Jacobian of observation model with respect to elements of the state
             % estimate xhat, the order of these matrix elements MUST be preserved
-            Huwb(1,1) = diff_MP_LA(1)/h_uwb_est(1);
-            Huwb(1,2) = diff_MP_LA(2)/h_uwb_est(1);
-            Huwb(1,3) = diff_MP_LA(3)/h_uwb_est(1);
-            Huwb(1,7) = -diff_MP_LA(1)/h_uwb_est(1);
-            Huwb(1,8) = -diff_MP_LA(2)/h_uwb_est(1);
-            Huwb(1,9) = -diff_MP_LA(3)/h_uwb_est(1);    
-
-            Huwb(2,1)  =  diff_MP_RA(1)/h_uwb_est(2);
-            Huwb(2,2)  =  diff_MP_RA(2)/h_uwb_est(2);
-            Huwb(2,3)  =  diff_MP_RA(3)/h_uwb_est(2);
-            Huwb(2,13) = -diff_MP_RA(1)/h_uwb_est(2);
-            Huwb(2,14) = -diff_MP_RA(2)/h_uwb_est(2);
-            Huwb(2,15) = -diff_MP_RA(3)/h_uwb_est(2);
-
-            Huwb(3,7)  =  diff_LA_RA(1)/h_uwb_est(3);
-            Huwb(3,8)  =  diff_LA_RA(2)/h_uwb_est(3);
-            Huwb(3,9)  =  diff_LA_RA(3)/h_uwb_est(3);
-            Huwb(3,13) = -diff_LA_RA(1)/h_uwb_est(3);
-            Huwb(3,14) = -diff_LA_RA(2)/h_uwb_est(3);
-            Huwb(3,15) = -diff_LA_RA(3)/h_uwb_est(3);
-            
+            Huwb(1,idxPosMP) = diffMPLA./hUwbEst(1);
+            Huwb(1,idxPosLA) = -diffMPLA./hUwbEst(1);
+            Huwb(2,idxPosMP)  =  diffMPRA./hUwbEst(2);
+            Huwb(2,idxPosRA) = -diffMPRA./hUwbEst(2);
+            Huwb(3,idxPosLA)  =  diffLARA./hUwbEst(3);
+            Huwb(3,idxPosRA) = -diffLARA./hUwbEst(3);           
             H(idxM3Dist, :) = Huwb;
             
             % calculate the measurement residual, i.e., the difference between the
             % predicted measurements from the observation model, h(xhat), and the
             % measurements obtained directly from the UWB sensors.
-            y_k(idxM3Dist, n) = uwb_MP_LA_RA(n,:)' - h_uwb_est + Huwb * x_min;
+            y_k(idxM3Dist, n) = uwbMPLARA(n,:)' - hUwbEst + Huwb * x_min;
+        elseif divHundredApplyMeas == 2
+            idx(end+1:end+6) = idxMKneeAnglefromDist;
+            
+            LTIB_CS = quat2rotm(y_k(idxMOriLA, n)');
+            RTIB_CS = quat2rotm(y_k(idxMOriRA, n)');
+            PELV_CS = quat2rotm(y_k(idxMOriMP, n)');
+            
+            y_k(idxMKneeAnglefromDist, n) = solveKneeAngleFromDist(...
+                PELV_CS, LTIB_CS, RTIB_CS, ...
+                dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, ...
+                uwb_mea.LLeg(n), uwb_mea.RLeg(n));
         end
        
         res = y_k(idx, n) - H(idx, :) * x_min;
@@ -1048,41 +1057,41 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
     %% ---- Kalman Filter Update Step using UWB measurements ---- 
     % this correction step should be done last
         if fOpt.applyUwb
-            diff_MP_LA = x_min1(idxPosMP)' - x_min1(idxPosLA)';
-            diff_MP_RA = x_min1(idxPosMP)' - x_min1(idxPosRA)';
-            diff_LA_RA = x_min1(idxPosLA)' - x_min1(idxPosRA)';
+            diffMPLA = x_min1(idxPosMP)' - x_min1(idxPosLA)';
+            diffMPRA = x_min1(idxPosMP)' - x_min1(idxPosRA)';
+            diffLARA = x_min1(idxPosLA)' - x_min1(idxPosRA)';
             % the observation model
-            h_uwb_est = [vecnormalize( diff_MP_LA );
-                         vecnormalize( diff_MP_RA );
-                         vecnormalize( diff_LA_RA );];
+            hUwbEst = [vecnormalize( diffMPLA );
+                         vecnormalize( diffMPRA );
+                         vecnormalize( diffLARA );];
             % calculate the measurement residual, i.e., the difference between the
             % predicted measurements from the observation model, h(xhat), and the
             % measurements obtained directly from the UWB sensors.
-            y_innovation = uwb_MP_LA_RA(n,:)' - h_uwb_est;
+            y_innovation = uwbMPLARA(n,:)' - hUwbEst;
 
             H_uwb = zeros(3, nStates);
             % Jacobian of observation model with respect to elements of the state
             % estimate xhat, the order of these matrix elements MUST be preserved
-            H_uwb(1,1) = diff_MP_LA(1)/h_uwb_est(1);
-            H_uwb(1,2) = diff_MP_LA(2)/h_uwb_est(1);
-            H_uwb(1,3) = diff_MP_LA(3)/h_uwb_est(1);
-            H_uwb(1,7) = -diff_MP_LA(1)/h_uwb_est(1);
-            H_uwb(1,8) = -diff_MP_LA(2)/h_uwb_est(1);
-            H_uwb(1,9) = -diff_MP_LA(3)/h_uwb_est(1);    
+            H_uwb(1,1) = diffMPLA(1)/hUwbEst(1);
+            H_uwb(1,2) = diffMPLA(2)/hUwbEst(1);
+            H_uwb(1,3) = diffMPLA(3)/hUwbEst(1);
+            H_uwb(1,7) = -diffMPLA(1)/hUwbEst(1);
+            H_uwb(1,8) = -diffMPLA(2)/hUwbEst(1);
+            H_uwb(1,9) = -diffMPLA(3)/hUwbEst(1);    
 
-            H_uwb(2,1)  =  diff_MP_RA(1)/h_uwb_est(2);
-            H_uwb(2,2)  =  diff_MP_RA(2)/h_uwb_est(2);
-            H_uwb(2,3)  =  diff_MP_RA(3)/h_uwb_est(2);
-            H_uwb(2,13) = -diff_MP_RA(1)/h_uwb_est(2);
-            H_uwb(2,14) = -diff_MP_RA(2)/h_uwb_est(2);
-            H_uwb(2,15) = -diff_MP_RA(3)/h_uwb_est(2);
+            H_uwb(2,1)  =  diffMPRA(1)/hUwbEst(2);
+            H_uwb(2,2)  =  diffMPRA(2)/hUwbEst(2);
+            H_uwb(2,3)  =  diffMPRA(3)/hUwbEst(2);
+            H_uwb(2,13) = -diffMPRA(1)/hUwbEst(2);
+            H_uwb(2,14) = -diffMPRA(2)/hUwbEst(2);
+            H_uwb(2,15) = -diffMPRA(3)/hUwbEst(2);
 
-            H_uwb(3,7)  =  diff_LA_RA(1)/h_uwb_est(3);
-            H_uwb(3,8)  =  diff_LA_RA(2)/h_uwb_est(3);
-            H_uwb(3,9)  =  diff_LA_RA(3)/h_uwb_est(3);
-            H_uwb(3,13) = -diff_LA_RA(1)/h_uwb_est(3);
-            H_uwb(3,14) = -diff_LA_RA(2)/h_uwb_est(3);
-            H_uwb(3,15) = -diff_LA_RA(3)/h_uwb_est(3);    
+            H_uwb(3,7)  =  diffLARA(1)/hUwbEst(3);
+            H_uwb(3,8)  =  diffLARA(2)/hUwbEst(3);
+            H_uwb(3,9)  =  diffLARA(3)/hUwbEst(3);
+            H_uwb(3,13) = -diffLARA(1)/hUwbEst(3);
+            H_uwb(3,14) = -diffLARA(2)/hUwbEst(3);
+            H_uwb(3,15) = -diffLARA(3)/hUwbEst(3);    
             % Calculate the covariance in the measurement residual
             S    = ((H_uwb * P_min1) * H_uwb') + R_uwb; % scalar
             % Calculate the kalman gain
@@ -1517,13 +1526,13 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
             if ~(fOpt.applyCstr >= 161 && fOpt.applyCstr <= 168)
                 P_tilde = P_plus;
             end
-        elseif (applyCstrW >= 3 && applyCstrW <= 4)
+        elseif (applyCstrW >= 3 && applyCstrW <= 5)
             applyCstrX = mod(idivide(int32(fOpt.applyCstr), 10, 'floor'), 10);
             applyCstrModTen = mod(fOpt.applyCstr, 10);
             
             sckfAlpha = fOpt.sckfAlpha;
             sckfThreshold = fOpt.sckfThreshold;
-            if applyCstrW == 3
+            if applyCstrW == 3 || applyCstrW == 5
                 x_tilde = x_plus;
                 P_tilde = P_plus;
                 
@@ -1531,6 +1540,12 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 idxCPosLA = idxPosLA;
                 idxCPosRA = idxPosRA;
                 I_N2 = I_N;
+                
+                if applyCstrW == 3
+                    DbaseRowN = 4;
+                else
+                    DbaseRowN = 7;
+                end
             else
                 % applyCstrW == 4
                 idx = [idxPosMP idxPosLA idxPosRA];
@@ -1541,6 +1556,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 idxCPosLA = 4:6;
                 idxCPosRA = 7:9;
                 I_N2 = eye(length(x_tilde), length(x_tilde));
+                
+                DbaseRowN = 4;
             end
             
             % preprocessing for knee angle inequality
@@ -1580,7 +1597,9 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 g_drfem = norm(RFEM_z, 2);
                 
                 % D matrix construction: femur length constraint and knee hinge joint
-                D = zeros(4, length(x_tilde));
+                D = zeros(DbaseRowN, length(x_tilde));
+                res = zeros(DbaseRowN, 1);
+                sigmaCstr = zeros(DbaseRowN, 1);
                 D(1, idxCPosMP) = LFEM_z'/g_dlfem;
                 D(1, idxCPosLA) = -LFEM_z'/g_dlfem;
                 D(2, idxCPosMP) = RFEM_z'/g_drfem;
@@ -1589,13 +1608,37 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 D(3, idxCPosLA) = -LTIB_CS(:,2)';
                 D(4, idxCPosMP) = RTIB_CS(:,2)';
                 D(4, idxCPosRA) = -RTIB_CS(:,2)';
+                
+                res(1, 1) = dLFemur - g_dlfem;
+                res(2, 1) = dRFemur - g_drfem;
+                res(3, 1) = (-dPelvis/2*PELV_CS(:,2) + ...
+                    dLTibia*LTIB_CS(:,3))'*LTIB_CS(:,2) - D(3,:)*x_tilde;
+                res(4, 1) = (dPelvis/2*PELV_CS(:,2) + ...
+                    dRTibia*RTIB_CS(:,3))'*RTIB_CS(:,2) - D(4,:)*x_tilde;
+                        
+                if applyCstrW == 5 % apply uwb at cstr update
+                    diffMPLA = x_tilde(idxPosMP)'-x_tilde(idxPosLA)';
+                    diffMPRA = x_tilde(idxPosMP)'-x_tilde(idxPosRA)';
+                    diffLARA = x_tilde(idxPosLA)'-x_tilde(idxPosRA)';
+                    % the observation model
+                    hUwbEst = [vecnorm(diffMPLA, 2, 2);
+                                 vecnorm(diffMPRA, 2, 2);
+                                 vecnorm(diffLARA, 2, 2)];
+            
+                    D(5, idxCPosMP) = diffMPLA./hUwbEst(1);
+                    D(5, idxCPosLA) = -diffMPLA./hUwbEst(1);
+                    D(6, idxCPosMP) = diffMPRA./hUwbEst(2);
+                    D(6, idxCPosRA) = -diffMPRA./hUwbEst(2);
+                    D(7, idxCPosLA) = diffLARA./hUwbEst(3);
+                    D(7, idxCPosRA) = -diffLARA./hUwbEst(3);
 
-                res = [dLFemur - g_dlfem; ...
-                       dRFemur - g_drfem; ...
-                      (-dPelvis/2*PELV_CS(:,2) + dLTibia*LTIB_CS(:,3))'*LTIB_CS(:,2) ...
-                            - D(3,:)*x_tilde; ...
-                      (dPelvis/2*PELV_CS(:,2) + dRTibia*RTIB_CS(:,3))'*RTIB_CS(:,2) ...
-                            - D(4,:)*x_tilde];
+                    res(5:7, 1) = uwbMPLARA(n,:)' - hUwbEst;
+                    sigmaCstr(5, 1) = fOpt.sigmaUwbMPLA;
+                    sigmaCstr(6, 1) = fOpt.sigmaUwbMPRA;
+                    sigmaCstr(7, 1) = fOpt.sigmaUwbLARA;
+                end
+                
+
                   
                 % add knee inequality constraint via active set
                 alpha_lk = atan2(-dot(LFEM_z, LTIB_CS(:,3)), ...
@@ -1608,12 +1651,14 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                     D(end, idxCPosLA) = -tmpLKmin';
                     res(end+1, 1) = (-dPelvis/2*PELV_CS(:,2) + dLTibia*LTIB_CS(:,3))'*tmpLKmin ...
                         - D(end, :)*x_tilde;
+                    sigmaCstr(end+1, 1) = 0;
                 elseif alpha_lk > alphalimit.lkmax
                     D(end+1, :) = zeros(1, length(x_tilde));
                     D(end, idxCPosMP) = tmpLKmax';
                     D(end, idxCPosLA) = -tmpLKmax';
                     res(end+1, 1) = (-dPelvis/2*PELV_CS(:,2) + dLTibia*LTIB_CS(:,3))'*tmpLKmax ...
                         - D(end, :)*x_tilde;
+                    sigmaCstr(end+1, 1) = 0;
                 end
                     
                 if alpha_rk < alphalimit.rkmin
@@ -1622,12 +1667,14 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                     D(end, idxCPosRA) = -tmpRKmin';
                     res(end+1, 1) = (dPelvis/2*PELV_CS(:,2) + dRTibia*RTIB_CS(:,3))'*tmpRKmin ...
                         - D(end, :)*x_tilde;
+                    sigmaCstr(end+1, 1) = 0;
                 elseif alpha_rk > alphalimit.rkmax
                     D(end+1, :) = zeros(1, length(x_tilde));
                     D(end, idxCPosMP) = tmpRKmax';
                     D(end, idxCPosRA) = -tmpRKmax';
                     res(end+1, 1) = (dPelvis/2*PELV_CS(:,2) + dRTibia*RTIB_CS(:,3))'*tmpRKmax ...
                         - D(end, :)*x_tilde;
+                    sigmaCstr(end+1, 1) = 0;
                 end
                 
                 % add flat floor constraint
@@ -1636,10 +1683,12 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                         D(end+1, :) = zeros(1, length(x_tilde));
                         D(end, idxCPosLA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
+                        sigmaCstr(end+1, 1) = 0;
                     elseif refSide == 'R'
                         D(end+1, :) = zeros(1, length(x_tilde));
                         D(end, idxCPosRA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
+                        sigmaCstr(end+1, 1) = 0;
                     end
                 elseif (applyCstrX >= 7 && applyCstrX <= 9)
 %                     stepCstrCount = 0;
@@ -1648,6 +1697,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                         D(end+1, :) = zeros(1, length(x_tilde));
                         D(end, idxCPosLA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
+                        sigmaCstr(end+1, 1) = 0;
 %                         stepCstrCount = stepCstrCount + 1;
 %                     end
 %                     if bIsStatRA(n) || x_tilde(idxCPosRA(3), 1) < floorZ
@@ -1655,6 +1705,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                         D(end+1, :) = zeros(1, length(x_tilde));
                         D(end, idxCPosRA(3)) = 1;
                         res(end+1, 1) = floorZ - D(end, :)*x_tilde;
+                        sigmaCstr(end+1, 1) = 0;
 %                         stepCstrCount = stepCstrCount + 1;
                     end
 %                     if stepCstrCount == 2
@@ -1675,11 +1726,13 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                         D(end+1:end+2, :) = zeros(2, length(x_tilde));
                         D(end-1:end, idxCPosLA(1:2)) = eye(2,2);
                         res(end+1:end+2, 1) = x_plus(idxCPosLA(1:2), 1) - x_tilde(idxCPosLA(1:2), 1);
+                        sigmaCstr(end+1:end+2, 1) = 0;
 %                     elseif bIsStatRA(n)
                     elseif refSide == 'R'
                         D(end+1:end+2, :) = zeros(2, length(x_tilde));
                         D(end-1:end, idxCPosRA(1:2)) = eye(2,2);
                         res(end+1:end+2, 1) = x_plus(idxCPosRA(1:2), 1) - x_tilde(idxCPosRA(1:2), 1);
+                        sigmaCstr(end+1:end+2, 1) = 0;
                     end
                 end
                 
@@ -1703,7 +1756,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 Ri = sckfAlpha*D*P_tilde*D'*exp(-i);
                 Si_denom = diag(D * P_tilde* D');
                 Si = max(D.^2 .* diag(P_tilde)', [], 2) ./ Si_denom;
-                Si_ignoreindex = isnan(Si) | (Si_denom < 1e-10);
+                Si_ignoreindex = (Si_denom < sigmaCstr) | isnan(Si) | (Si_denom < 1e-10);
                 Si(Si_ignoreindex) = sckfThreshold+1;
                 if sum(Si < sckfThreshold) == 0
                     break
@@ -1735,7 +1788,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
                 dx = Kk*(res);
                 x_tilde = x_tilde + dx;
             end
-            if applyCstrW == 3
+            if applyCstrW == 3 || applyCstrW == 5
                 P_tilde = P_plus;
             else % applyCstrW == 4
                 x_tilde2 = x_tilde;
@@ -2002,6 +2055,29 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         debug_dat.qRTH(n, :) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
 %         end
     end
+end
+
+function d = solveKneeAngleFromDist(PELV_CS, LTIB_CS, RTIB_CS, ...
+                            dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, ...
+                            dLUwbDist, dRUwbDist)
+    lbuf = (dLTibia^2+dLFemur^2-dLUwbDist^2)/(2*dLTibia*dLFemur);
+    rbuf = (dRTibia^2+dRFemur^2-dRUwbDist^2)/(2*dRTibia*dRFemur);
+    lbuf = min(max(lbuf, -1), 1);
+    rbuf = min(max(rbuf, -1), 1);
+    
+    % calculate alpha_lk and alpha_rk
+    alpha_lk = pi - acos(lbuf);
+    alpha_rk = pi - acos(rbuf);
+
+    % setup the constraint equations
+    d = [ (dPelvis/2*PELV_CS(:,2) ...
+             -dLFemur*cos(alpha_lk)*LTIB_CS(:,3) ...
+             +dLFemur*sin(alpha_lk)*LTIB_CS(:,1) ...
+             -dLTibia*LTIB_CS(:,3)) ; ...
+            (-dPelvis/2*PELV_CS(:,2)+ ...
+             -dRFemur*cos(alpha_rk)*RTIB_CS(:,3) ...
+             +dRFemur*sin(alpha_rk)*RTIB_CS(:,1) ...
+             -dRTibia*RTIB_CS(:,3)) ];
 end
 
 function d = solve_linhjc_d(pMP, pLA, pRA, PELV_CS, LTIB_CS, RTIB_CS, ...
