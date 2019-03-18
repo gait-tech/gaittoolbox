@@ -58,6 +58,10 @@ classdef grBody < matlab.mixin.Copyable
     
     methods (Static)
         theta = calcJointAngles(prox, dist);
+        dist = calcDistR(prox, angles, seq);
+        out = generateBodyFromJointAngles(posMP, qOriMP, ...
+                        anglesLT, anglesRT, angleLK, angleRK, ...
+                        dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, seq);
     end
     
     methods (Hidden)
@@ -129,22 +133,26 @@ classdef grBody < matlab.mixin.Copyable
 
         function theta = calcJointAnglesLHip(obj, idx)
             if nargin <= 1, idx = 1:size(obj.qRPV, 1); end
-            theta = pelib.grBody.calcJointAngles(obj.qRPV(idx, :), obj.qLTH(idx, :)) .* [-1 -1 -1];
+            theta = pelib.grBody.calcJointAngles(obj.qRPV(idx, :), obj.qLTH(idx, :));
+            theta = theta(:, [2 1 3]) .* [-1 -1 -1];
         end
         
         function theta = calcJointAnglesRHip(obj, idx)
             if nargin <= 1, idx = 1:size(obj.qRPV, 1); end
-            theta = pelib.grBody.calcJointAngles(obj.qRPV(idx, :), obj.qRTH(idx, :)) .* [1 -1 1];
+            theta = pelib.grBody.calcJointAngles(obj.qRPV(idx, :), obj.qRTH(idx, :));
+            theta = theta(:, [2 1 3]) .* [1 -1 1];
         end
 
         function theta = calcJointAnglesLKnee(obj, idx)
             if nargin <= 1, idx = 1:size(obj.qLTH, 1); end
-            theta = pelib.grBody.calcJointAngles(obj.qLTH(idx, :), obj.qLSK(idx, :)) .* [-1 1 -1];
+            theta = pelib.grBody.calcJointAngles(obj.qLTH(idx, :), obj.qLSK(idx, :));
+            theta = theta(:, [2 1 3]) .* [-1 1 -1];
         end
         
         function theta = calcJointAnglesRKnee(obj, idx)
             if nargin <= 1, idx = 1:size(obj.qRTH, 1); end
             theta = pelib.grBody.calcJointAngles(obj.qRTH(idx, :), obj.qRSK(idx, :));
+            theta = theta(:, [2 1 3]);
         end
         
         function d = getPelvisLength(obj, idx)

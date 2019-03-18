@@ -133,14 +133,14 @@ for mI = [2]
         results0.name = sprintf('Ideal+M%02d+C%03d', mI, cI);
         results0.runtime = cputime-t0;
         results(resultsIdx) = results0;
-        display(sprintf("Index %3d: %s Running time: %.4f", ...
-                        resultsIdx, results0.name, cputime-t0));
+        fprintf("Index %3d: %s (%.3f) Running time: %.4f\n", ...
+                        resultsIdx, results0.name, results0.posMeanRMSE, cputime-t0);
         
         %% Almost zero position error
-        if cI==5 || cI == 75
-            assert(results0.posMeanRMSE < 0.02)
+        if cI==4 || cI==204
+            assert(results0.posMeanRMSE < 0.2)
         else
-            assert(results0.posMeanRMSE < 0.01)
+            assert(results0.posMeanRMSE < 0.02)
         end
         
         %% Check thigh and shank length
