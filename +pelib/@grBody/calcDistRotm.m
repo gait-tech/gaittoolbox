@@ -1,6 +1,7 @@
 % ======================================================================
-%> @brief Calculate the (relative) joint angle between 2 body segments
-%>
+%> @brief Calculate the distal segment orientation rotation matrix
+%> @author Luke Sy (UNSW GSBME)
+%> @date 20 Mar 2019
 %>
 %> @param prox quaternion orientation (n x 4) of the proximal segment
 %> @param angles joint angles in seq order
@@ -8,7 +9,7 @@
 %>
 %> @retval dist quaternion orientation (n x 4) of the distal segment
 % ======================================================================
-function dist = calcDistR(prox, angles, seq)
+function dist = calcDistRotm(prox, angles, seq)
     if nargin <= 2
         seq = 'YXZ';
     end

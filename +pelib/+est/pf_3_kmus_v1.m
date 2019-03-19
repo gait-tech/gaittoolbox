@@ -40,18 +40,20 @@
 %>   dLTibia   - left tibia length
 %>   uwb_mea    - a structure containing the range measurements (m) between
 %>   options   - struct containing the ff. settings:
-function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v3(x0, P0, ...
+function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v1(x0, P0, ...
     gfrAccMP, bIsStatMP, qMP, ...
     gfrAccLA, bIsStatLA, qLA, ...
     gfrAccRA, bIsStatRA, qRA, ...
     dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, uwb_mea, options)
 
     %% default configurations
-    fOpt = struct('fs', 60, 'applyMeas', false, 'applyUwb', false, ...
-        'applyAccBias', false, 'applyCstr', 0, ...
-        'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
+    fOpt = struct('fs', 60, 'applyMeas', 1, 'applyUwb', false, ...
+        'applyAccBias', false, 'applyPred', 1, ...
+        'sigmaQAccMP', 1, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
         'sigmaQOriMP', 1e3, 'sigmaQOriLA', 1e3, 'sigmaQOriRA', 1e3, ...
         'sigmaROriMP', 1e-3, 'sigmaROriLA', 1e-3, 'sigmaROriRA', 1e-3, ...
+        'sigmaROriLSK', 1e-2, 'sigmaROriRSK', 1e-2, ...
+        'sigmaRAccLA', 1e1, 'sigmaRAccRA', 1e1, ...
         'sigmaRPosLA', 1e-2, 'sigmaRPosRA', 1e-2, 'sigmaRPosZMP', 1e-1, ...
         'sigmaRPosMPLimit', 1e2, 'sigmaRPosLALimit', 1e2, ...
         'sigmaRPosRALimit', 1e2, 'sigmaRPosLARecenter', 1e-3, ...
@@ -104,8 +106,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v3(x0, P0, ...
     sigmaQAccMP = repelem((fOpt.sigmaQAccMP)^2, 3);
     % Initialise process noise covariance
     if islogical(P0) && ~P0
-        Q = G * diag(sigmaQAccMP) * G';   
-        P0 = Q;
+        P0 = G * diag(sigmaQAccMP) * G';
     elseif isscalar(P0)
         P0 = P0*I_N;
     end
@@ -122,12 +123,19 @@ function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v3(x0, P0, ...
     validateattributes(qRA, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 4});
     
     % local variable assignment for readability
-    u_k = [gfrAccMP, gfrAccLA, gfrAccRA]';
+    % gfrAccMP, gfrAccLA, gfrAccRA;
     y_k = [qMP, qLA, qRA]';
     uwbMPLARA = [uwb_mea.left_tibia_mid_pelvis,...
                  uwb_mea.mid_pelvis_right_tibia,...
                  uwb_mea.left_tibia_right_tibia];
-                 
+    dBody = struct('RPV', dPelvis, 'LTH', dLFemur, 'RTH', dRFemur, ...
+                   'LSK', dLTibia, 'RSK', dRTibia);
+    body0 = pelib.grBody.generateBodyFromJointAngles(x0(1:3,1)', ...
+            x0(7:10,1)', x0(11:13,1)', x0(14:16,1)', ...
+            [0 x0(17,1) 0], [0 x0(18,1) 0], ...
+            dBody.RPV, dBody.LTH, dBody.RTH, dBody.LSK, dBody.RSK);
+    zFloor = mean([body0.LTIO(1,3), body0.RTIO(1,3)]);
+    
     % allocate memory to store apriori and aposteriori state estimates, xhat,
     % and error covariances in the state estimate, P_pri, P_pos
     xhat_pri = nan(nSamples, nStates);
@@ -136,7 +144,31 @@ function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v3(x0, P0, ...
     xhat_pos = nan(nSamples, nStates);
     P_pos    = nan(nStates, nStates, nSamples);
     
-    pf = particleFilter(@stateTransitionFcn001, @measLikelihoodFcn001);
+    applyPred = fOpt.applyPred;
+    applyMeas = fOpt.applyMeas;
+    switch fOpt.applyPred
+        case 1
+            stateTransitionFcn = @stateTransitionFcn001;
+            Q = G * diag(sigmaQAccMP) * G' + diag([zeros(10, 1); deg2rad(1)*ones(8,1)]);
+        case 2
+            stateTransitionFcn = @stateTransitionFcn002;
+            sigma = struct('accMP', fOpt.sigmaQAccMP, ...
+                           'oriLK', deg2rad(0.1), 'oriRK', deg2rad(0.1));
+    end
+    
+    if (applyMeas >= 1 && applyMeas <= 7)
+        measLikelihoodFcn = @measLikelihoodFcn001;
+%         R = diag([1e-2*ones(14,1); (fOpt.sigmaQAccLA)^2*ones(3,1); ...
+%               (fOpt.sigmaQAccRA)^2*ones(3,1)]);
+        R = diag([(fOpt.sigmaROriLSK).^2*ones(3,1); ...
+                  (fOpt.sigmaROriRSK).^2*ones(3,1);
+                  (fOpt.sigmaZuptLA).^2*ones(3,1); (fOpt.sigmaRPosLA).^2; ...
+                  (fOpt.sigmaZuptRA).^2*ones(3,1); (fOpt.sigmaRPosRA).^2; ...
+                  (fOpt.sigmaRAccLA).^2*ones(3,1)
+                  (fOpt.sigmaRAccRA).^2*ones(3,1)]);
+    end
+    
+    pf = particleFilter(stateTransitionFcn, measLikelihoodFcn);
     pf.StateEstimationMethod = 'mean';
     pf.ResamplingMethod = 'systematic';
     nParticles = 1000;
@@ -144,20 +176,42 @@ function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v3(x0, P0, ...
 
     for n = 1:nSamples
         % Predict next position. Resample particles if necessary.
-        [xhat_pri(n,:), P_pri(:,:,n)] = predict(pf, fs, ...
-                                gfrAccMP(n, :)', qMP(n, :)', Q);
+        switch fOpt.applyPred
+            case 1
+                [xhat_pri(n,:), P_pri(:,:,n)] = predict(pf, fs, Q, ...
+                                        gfrAccMP(n, :)', qMP(n, :)');
+            case 2
+                qOri = struct('qRPV', qMP(n, :), ...
+                              'qLSK', qLA(n, :), 'qRSK', qRA(n, :));
+                [xhat_pri(n,:), P_pri(:,:,n)] = predict(pf, fs, sigma, ...
+                                        gfrAccMP(n, :)', qOri);
+        end
         % Generate dot measurement with random noise. This is
         % equivalent to the observation step.
 %         measurement(i,:) = dot(i,:) + noise*(rand([1 2])-noise/2);
-        measurement = 0;
         % Correct position based on the given measurement to get best estimation.
         % Actual dot position is not used. Store corrected position in data array.
-        [xhat_pos(n,:), P_pos(:,:,n)] = correct(pf, measurement);
+        if (applyMeas >= 1 && applyMeas <= 7)
+%             gfrAcc = struct('MP', gfrAccMP(n, :), 'LA', gfrAccLA(n, :), ...
+%                         'RA', gfrAccRA(n, :));
+            step = [bIsStatLA(n, 1) bIsStatRA(n, 1)];
+            if n-1 >= 1, past1Particles = xhat_pos(n-1,:)';
+            else, past1Particles = x0; end
+            if n-2 >= 1, past2Particles = xhat_pos(n-2,:)';
+            else, past2Particles = x0; end
+        
+            meas = [qLA(n, :) qRA(n, :) gfrAccLA(n, :) gfrAccRA(n,:)];
+            [xhat_pos(n,:), P_pos(:,:,n)] = correct(pf, meas, fs, R, applyMeas, ...
+                    dBody, step, zFloor, past1Particles, past2Particles);
+        end
     end
 end
 
 function predParticles = stateTransitionFcn001(prevParticles, ...
-                                            fs, gfrAccMP, qMP, procNoise)
+                                            fs, Q, gfrAccMP, qMP)
+    % starting point: MP pos, vel and ori
+    % varies: MP pos, vel; Hip and knee joint angles
+    
     [nStates, nParticles] = size(prevParticles);  
     idxPosMP = 1:3; idxVelMP = 4:6; idxOriMP = 7:10;
     idxPosVelMP = 1:6;
@@ -175,34 +229,149 @@ function predParticles = stateTransitionFcn001(prevParticles, ...
     predParticles(idxPosVelMP, :) = F*prevParticles(1:6, :) + G*gfrAccMP;
     predParticles(idxOriMP, :) = repelem(qMP, 1, nParticles);
 
-    predParticles = predParticles + procNoise * randn(nStates, nParticles);
+    predParticles = predParticles + Q * randn(nStates, nParticles);
+    
+    %% knee constraint (no hyperextension)
+    predParticles(17:18, :) = max(predParticles(17:18, :), 0);
 end
 
-function likelihood = measLikelihoodFcn001(predParticles, meas, varargin)
-    numberOfMeasurements = 1; % Expected number of measurements
+function predParticles = stateTransitionFcn002(prevParticles, ...
+                                            fs, sigma, gfrAccMP, qOri)
+    % starting point: MP pos, vel; RPV LSK RSK ori
+    % varies: MP pos, vel; Knee joint angles
+    
+    [nStates, nParticles] = size(prevParticles);  
+    idxPosMP = 1:3; idxVelMP = 4:6; idxOriRPV = 7:10;
+    idxPosVelMP = 1:6; idxOriLT = 11:13; idxOriRT = 14:16;
+    idxOriLK = 17; idxOriRK = 18; idxOriLRK = 17:18;
+    seq = [2 1 3];
+    
+    dt = 1.0/fs; % [s] Sample time
+    dt2 = 0.5*dt*dt;      % local variable for readability
+    
+    F = eye(6, 6);
+    F(idxPosMP, idxVelMP) = dt.*eye(3);   
+    G = zeros(6, 3);
+    G(idxPosMP, :) = dt2.*eye(3);
+    G(idxVelMP, :) = dt .*eye(3);
 
-    % Validate the measurement
-    validateattributes(meas, {'double'}, {'vector', 'numel', numberOfMeasurements}, ...
-        'vdpMeasurementLikelihoodFcn', 'measurement');
+    predParticles = prevParticles;
+    predParticles(idxPosVelMP, :) = F*prevParticles(1:6, :) + ...
+                G*(gfrAccMP + sigma.accMP*randn(3, nParticles));
+    predParticles(idxOriRPV, :) = repelem(qOri.qRPV', 1, nParticles);
+    predParticles(idxOriLK, :) = predParticles(idxOriLK, :) + ...
+                + sigma.oriLK*randn(1, nParticles);
+    predParticles(idxOriRK, :) = predParticles(idxOriRK, :) + ...
+                + sigma.oriRK*randn(1, nParticles);        
+    % knee constraint (no hyperextension)
+    predParticles(idxOriLRK, :) = max(predParticles(17:18, :), 0);
+    
+    % solve hip angles from knee angle and tibia orientation
+    zN = zeros(nParticles, 1);
+    LKneeAngle = [zN, predParticles(idxOriLK, :)', zN].*[-1 1 -1];
+    RKneeAngle = [zN, predParticles(idxOriRK, :)', zN];
+    qLTH  = pelib.grBody.calcProxRotm(qOri.qLSK, LKneeAngle(:,seq));
+    qRTH  = pelib.grBody.calcProxRotm(qOri.qRSK, RKneeAngle(:,seq));
+    LHipAngles = pelib.grBody.calcJointAngles(predParticles(idxOriRPV, :)', qLTH);
+    RHipAngles = pelib.grBody.calcJointAngles(predParticles(idxOriRPV, :)', qRTH);
+    predParticles(idxOriLT,:) = (LHipAngles(:,seq).*[-1 -1 -1])';
+    predParticles(idxOriRT,:) = (RHipAngles(:,seq).*[ 1 -1  1])';    
+end
 
-    % Assume that measurements are subject to Gaussian distributed noise with
-    % variance 0.016
-    % Specify noise as covariance matrix
-    measurementNoise = 0.016 * eye(numberOfMeasurements);
+function likelihood = measLikelihoodFcn001(predParticles, meas, fs, R, ...
+        applyMeas, d, step, zFloor, past1Particles, past2Particles)
+    %% initialization
+    bodyList = {};
+    [nStates, nParticles] = size(predParticles);  
+    particleList = {predParticles, past1Particles, past2Particles};
+    
+    for i=1:3
+        p = particleList{i}';
+        zN = zeros(size(p, 1), 1);
+        
+        bodyList{i} = pelib.grBody.generateBodyFromJointAngles(p(:,1:3), ...
+            p(:,7:10), p(:,11:13), p(:,14:16), [zN p(:,17) zN], [zN p(:,18) zN], ...
+            d.RPV, d.LTH, d.RTH, d.LSK, d.RSK);
+    end
+    seq = 'YXZ';
+    dt = 1.0/fs; dt2 = dt^2;
+    idxMOri = 1:8; idxROri = 1:6;
+    idxRLStep = 7:10;
+    idxRRStep = 11:14;
+    idxMAccLA = 9:11; idxRAccLA = 15:17;
+    idxMAccRA = 12:14; idxRAccRA = 18:20;
+    modTenApplyMeas = mod(applyMeas, 10);
+    
+    %% LTIB and RTIB orientation
+    nMeas = 0;
+    if bitand(modTenApplyMeas, 1)
+        nMeas = nMeas + 6; % Expected number of measurements
+    end
+    if bitand(modTenApplyMeas, 2)
+        if step(1), nMeas = nMeas + 4; end % left  step detection
+        if step(2), nMeas = nMeas + 4; end % right step detection
+    end
+    if bitand(modTenApplyMeas, 4)
+        nMeas = nMeas + 6; 
+    end
+    
+    idxR = zeros(nMeas, 1);
+    tempIdxR = 1;
+    
+    %% qLSK and qRSK
+    if bitand(modTenApplyMeas, 1)
+        idxR(tempIdxR:tempIdxR+5) = idxROri;
+        tempIdxR = tempIdxR+6;
+        [d1, d2, d3] = quat2angle(quatmultiply(bodyList{1}.qLSK, quatconj(meas(:,idxMOri(1:4)))), seq);
+        [d4, d5, d6] = quat2angle(quatmultiply(bodyList{1}.qRSK, quatconj(meas(:,idxMOri(5:8)))), seq);
+        diffOri = [d1, d2, d3, d4, d5, d6]';
+    else
+        diffOri = [];
+    end
+    
+    %% ZUPT and floor assumption
+    if bitand(modTenApplyMeas, 2) && step(1)
+        diffLStep = [(bodyList{1}.LTIO-bodyList{2}.LTIO)'./dt; ...
+                     bodyList{1}.LTIO(:,3)'-zFloor];
+        idxR(tempIdxR:tempIdxR+3) = idxRLStep;
+        tempIdxR = tempIdxR+4;
+    else
+        diffLStep = [];
+    end
+    if bitand(modTenApplyMeas, 2) && step(2)
+        diffRStep = [(bodyList{1}.RTIO-bodyList{2}.RTIO)'./dt; ...
+                     bodyList{1}.RTIO(:,3)'-zFloor];
+        idxR(tempIdxR:tempIdxR+3) = idxRRStep;
+        tempIdxR = tempIdxR+4;
+    else
+        diffRStep = []; 
+    end
 
-    % The measurement contains the first state variable. Get the first state of
-    % all particles
-    predictedMeasurement = predParticles(1,:);
-
-    % Calculate error between predicted and actual measurement
-    measurementError = bsxfun(@minus, predictedMeasurement, meas(:)');
-
+    %% Acceleration
+    % adding acceleration breaks the already non converging solution
+    if bitand(modTenApplyMeas, 4)
+        predAccLA = (bodyList{1}.LTIO-2*bodyList{2}.LTIO+bodyList{3}.LTIO)/dt2;
+        predAccRA = (bodyList{1}.RTIO-2*bodyList{2}.RTIO+bodyList{3}.RTIO)/dt2;
+        diffAcc = [(predAccLA - meas(:,idxMAccLA)) (predAccRA - meas(:,idxMAccRA))]';
+        idxR(tempIdxR:tempIdxR+2) = idxRAccLA;
+        idxR(tempIdxR+3:tempIdxR+5) = idxRAccRA;
+        tempIdxR = tempIdxR+6;
+    else
+        diffAcc = [];
+    end
+    
+    %% culmination
+    measError = [diffOri; diffLStep; diffRStep; diffAcc];
+    R2 = R(idxR,idxR);
     % Use measurement noise and take inner product
-    measurementErrorProd = dot(measurementError, measurementNoise \ measurementError, 1);
+    measErrorProd = dot(measError, R2 \ measError, 1);
 
-    measurementErrorProd = zeros(1000, 1);
     % Convert error norms into likelihood measure. 
     % Evaluate the PDF of the multivariate normal distribution. A measurement
     % error of 0 results in the highest possible likelihood.
-    likelihood = 1/sqrt((2*pi).^numberOfMeasurements * det(measurementNoise)) * exp(-0.5 * measurementErrorProd);
+    if size(measError, 2) == 0
+        likelihood = zeros(1, nParticles);
+    else
+        likelihood  = 1/sqrt((2*pi).^nMeas * det(R2)) * exp(-0.5 * measErrorProd);
+    end
 end

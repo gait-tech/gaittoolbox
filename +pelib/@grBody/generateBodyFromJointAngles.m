@@ -33,10 +33,10 @@ function out = generateBodyFromJointAngles(posMP, qOriMP, ...
     anglesLT = anglesLT .* [-1 -1 -1];
     anglesRT = anglesRT .* [1 -1 1];
     angleLK = angleLK .* [-1 1 -1];
-    out.qLTH = pelib.grBody.calcDistR(out.qRPV, anglesLT(:, seq2), seq);
-    out.qRTH = pelib.grBody.calcDistR(out.qRPV, anglesRT(:, seq2), seq);
-    out.qLSK = pelib.grBody.calcDistR(out.qLTH, angleLK(:, seq2), seq);
-    out.qRSK = pelib.grBody.calcDistR(out.qRTH, angleRK(:, seq2), seq);
+    out.qLTH = pelib.grBody.calcDistRotm(out.qRPV, anglesLT(:, seq2), seq);
+    out.qRTH = pelib.grBody.calcDistRotm(out.qRPV, anglesRT(:, seq2), seq);
+    out.qLSK = pelib.grBody.calcDistRotm(out.qLTH, angleLK(:, seq2), seq);
+    out.qRSK = pelib.grBody.calcDistRotm(out.qRTH, angleRK(:, seq2), seq);
     
     PELV_CS = quat2rotm(out.qRPV); PELV_Y = squeeze(PELV_CS(:,2,:))';
     out.LFEP = out.MIDPEL + dPelvis/2*PELV_Y;

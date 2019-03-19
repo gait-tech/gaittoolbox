@@ -58,7 +58,8 @@ classdef grBody < matlab.mixin.Copyable
     
     methods (Static)
         theta = calcJointAngles(prox, dist);
-        dist = calcDistR(prox, angles, seq);
+        dist = calcDistRotm(prox, angles, seq);
+        prox = calcProxRotm(dist, angles, seq);
         out = generateBodyFromJointAngles(posMP, qOriMP, ...
                         anglesLT, anglesRT, angleLK, angleRK, ...
                         dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, seq);
