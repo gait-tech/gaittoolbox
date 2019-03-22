@@ -7,8 +7,8 @@ stepDir = sprintf('%s/step-detect', dir);
 outDir = sprintf('explore_output', dir);
 % outDir = 'C:\Users\z5151460\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - Step Fix - 01 Mar 2019\step-detect-v3-fixed-c3d';
 ns = "NS2";
-algo = "NS2+pfv1+Aw__sOw__sIw__v+Sav03+P001+M001";
-% algo = "NS2+Aw__sOw__sIw__x+Sav03+M76+C355";
+% algo = "NS2+pfv1+Aw__sOw__sIw__v+Sav03+P001+M001";
+algo = "NS2+Aw__sOw__sIw__v+Sav03+M302+C000";
 velThreshold = 0.1;
 
 dataList = readtable(sprintf('%s/data-list-v2.csv', dir));
@@ -18,7 +18,7 @@ options = struct('Pelvis', '00B40B91', ...
     'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
 dataN = size(dataList, 1);
 
-for i = 15 % [1 5 15]
+for i = [1 5 7 15]
     n = table2struct(dataList(i, :));
     
     name = sprintf("%s-%s", n.subj, n.act);

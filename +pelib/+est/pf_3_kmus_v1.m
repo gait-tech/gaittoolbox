@@ -38,23 +38,25 @@
 %>   dLFemur   - left femur length
 %>   dRTibia   - right tibia length
 %>   dLTibia   - left tibia length
-%>   uwb_mea    - a structure containing the range measurements (m) between
+%>   uwb_mea   - a structure containing the range measurements (m) between
+%>   vel0      - struct of MP, LA, RA containing initial velocity of joints
 %>   options   - struct containing the ff. settings:
 function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v1(x0, P0, ...
     gfrAccMP, bIsStatMP, qMP, ...
     gfrAccLA, bIsStatLA, qLA, ...
     gfrAccRA, bIsStatRA, qRA, ...
-    dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, uwb_mea, options)
+    dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, uwb_mea, vel0, options)
 
     %% default configurations
     fOpt = struct('fs', 60, 'applyMeas', 1, 'applyUwb', false, ...
         'applyAccBias', false, 'applyPred', 1, ...
-        'sigmaQAccMP', 1, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
+        'sigmaQAccMP', 0.1, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
         'sigmaQOriMP', 1e3, 'sigmaQOriLA', 1e3, 'sigmaQOriRA', 1e3, ...
         'sigmaROriMP', 1e-3, 'sigmaROriLA', 1e-3, 'sigmaROriRA', 1e-3, ...
         'sigmaROriLSK', 1e-2, 'sigmaROriRSK', 1e-2, ...
         'sigmaRAccLA', 1e1, 'sigmaRAccRA', 1e1, ...
-        'sigmaRPosLA', 1e-2, 'sigmaRPosRA', 1e-2, 'sigmaRPosZMP', 1e-1, ...
+        'sigmaRPosLA', 1e0, 'sigmaRPosRA', 1e0, 'sigmaRPosZMP', 1e-1, ...
+        'sigmaRVelLA', 1e-1, 'sigmaRVelRA', 1e-1, 'sigmaRVelMP', 1e1, ...
         'sigmaRPosMPLimit', 1e2, 'sigmaRPosLALimit', 1e2, ...
         'sigmaRPosRALimit', 1e2, 'sigmaRPosLARecenter', 1e-3, ...
         'sigmaRVelMPLARA', 1e1, 'sigmaRPosMPLARA', 1e1, ...
@@ -146,6 +148,9 @@ function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v1(x0, P0, ...
     
     applyPred = fOpt.applyPred;
     applyMeas = fOpt.applyMeas;
+    digit2ApplyMeas = mod(idivide(int32(applyMeas), 10, 'floor'), 10);
+    modTenApplyMeas = mod(applyMeas, 10);
+    
     switch fOpt.applyPred
         case 1
             stateTransitionFcn = @stateTransitionFcn001;
@@ -153,10 +158,10 @@ function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v1(x0, P0, ...
         case 2
             stateTransitionFcn = @stateTransitionFcn002;
             sigma = struct('accMP', fOpt.sigmaQAccMP, ...
-                           'oriLK', deg2rad(0.1), 'oriRK', deg2rad(0.1));
+                           'oriLK', deg2rad(0.5), 'oriRK', deg2rad(0.5));
     end
     
-    if (applyMeas >= 1 && applyMeas <= 7)
+    if digit2ApplyMeas == 0
         measLikelihoodFcn = @measLikelihoodFcn001;
 %         R = diag([1e-2*ones(14,1); (fOpt.sigmaQAccLA)^2*ones(3,1); ...
 %               (fOpt.sigmaQAccRA)^2*ones(3,1)]);
@@ -166,16 +171,55 @@ function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v1(x0, P0, ...
                   (fOpt.sigmaZuptRA).^2*ones(3,1); (fOpt.sigmaRPosRA).^2; ...
                   (fOpt.sigmaRAccLA).^2*ones(3,1)
                   (fOpt.sigmaRAccRA).^2*ones(3,1)]);
+    elseif digit2ApplyMeas == 1
+        measLikelihoodFcn = @measLikelihoodFcn010;
+        R = diag([(fOpt.sigmaRVelLA).^2*ones(3,1); ...
+                  (fOpt.sigmaRVelRA).^2*ones(3,1);
+                  (fOpt.sigmaRPosLA).^2; (fOpt.sigmaRPosRA).^2; ...
+                  (fOpt.sigmaRVelMP).^2*ones(3,1)]);
+              
+        idxVelLA = 01:03; % column idx corresponding to the left ankle velocity
+        idxVelRA = 04:06; % column idx corresponding to the right ankle velocity
+        kfNStates = 6;
+        
+        F = eye(kfNStates, kfNStates);        
+        G = zeros(kfNStates,6);        
+        G(idxVelLA, 1:3) = dt .*eye(3);
+        G(idxVelRA, 4:6) = dt .*eye(3);
+        kfQ = G*diag(repelem([(fOpt.sigmaQAccLA)^2 (fOpt.sigmaQAccRA)^2], 3))*G';
+        u_k = [gfrAccLA, gfrAccRA]';
+        
+        idxMVelLA = 1:3;
+        idxMVelRA = 4:6;
+        kfNMeasure = 6;
+        
+        H = zeros(kfNMeasure, kfNStates);
+        H(idxMVelLA, idxVelLA) = eye(3);
+        H(idxMVelRA, idxVelRA) = eye(3);
+        Rdiag = repelem([(fOpt.sigmaZuptLA)^2 (fOpt.sigmaZuptRA)^2], 3);
+        kfR = diag(Rdiag);       
+        y_k = zeros(kfNMeasure, nSamples);
+        
+        kfI_N = eye(kfNStates,kfNStates);
+        kfxPri = zeros(kfNStates,1);
+        kfxPos = [vel0.LA vel0.RA]';
+        kfPPri = kfI_N;
+        kfPPos = 1*kfI_N;
+        
+        kfxListPri = nan(nSamples, kfNStates);
+        kfPListPri = nan(kfNStates, kfNStates, nSamples);
+        kfxListPos = nan(nSamples, kfNStates);
+        kfPListPos = nan(kfNStates, kfNStates, nSamples);
     end
     
     pf = particleFilter(stateTransitionFcn, measLikelihoodFcn);
     pf.StateEstimationMethod = 'mean';
     pf.ResamplingMethod = 'systematic';
-    nParticles = 1000;
+    nParticles = 10000;
     initialize(pf, nParticles, x0, P0);
 
     for n = 1:nSamples
-        % Predict next position. Resample particles if necessary.
+        %% Predict next position. Resample particles if necessary.
         switch fOpt.applyPred
             case 1
                 [xhat_pri(n,:), P_pri(:,:,n)] = predict(pf, fs, Q, ...
@@ -189,11 +233,9 @@ function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v1(x0, P0, ...
         % Generate dot measurement with random noise. This is
         % equivalent to the observation step.
 %         measurement(i,:) = dot(i,:) + noise*(rand([1 2])-noise/2);
-        % Correct position based on the given measurement to get best estimation.
+        %% Correct position based on the given measurement to get best estimation.
         % Actual dot position is not used. Store corrected position in data array.
-        if (applyMeas >= 1 && applyMeas <= 7)
-%             gfrAcc = struct('MP', gfrAccMP(n, :), 'LA', gfrAccLA(n, :), ...
-%                         'RA', gfrAccRA(n, :));
+        if digit2ApplyMeas == 0
             step = [bIsStatLA(n, 1) bIsStatRA(n, 1)];
             if n-1 >= 1, past1Particles = xhat_pos(n-1,:)';
             else, past1Particles = x0; end
@@ -203,6 +245,51 @@ function [ xhat_pri, xhat_pos, debug_dat ] = pf_3_kmus_v1(x0, P0, ...
             meas = [qLA(n, :) qRA(n, :) gfrAccLA(n, :) gfrAccRA(n,:)];
             [xhat_pos(n,:), P_pos(:,:,n)] = correct(pf, meas, fs, R, applyMeas, ...
                     dBody, step, zFloor, past1Particles, past2Particles);
+        elseif digit2ApplyMeas == 1
+            if n-1 >= 1, past1Particles = xhat_pos(n-1,:)';
+            else, past1Particles = x0; end
+            
+            kfxPri = F * kfxPos + G * u_k(:,n) ;
+            kfPPri = F * kfPPos * F' + kfQ;
+            
+            nIdx = 0;
+            if bIsStatLA(n, 1), nIdx = nIdx + 3; end
+            if bIsStatRA(n, 1), nIdx = nIdx + 3; end
+            idx = zeros(nIdx, 1); tmpIdxR = 1;
+            
+            if bIsStatLA(n, 1)
+                idx(tmpIdxR:tmpIdxR+2) = idxMVelLA;
+                tmpIdxR = tmpIdxR+3;
+            end
+            if bIsStatRA(n, 1)
+                idx(tmpIdxR:tmpIdxR+2) = idxMVelRA;
+                tmpIdxR = tmpIdxR+3;
+            end
+            
+            res = y_k(idx, n) - H(idx, :) * kfxPri;
+            K = kfPPri * H(idx, :)' /(H(idx, :) * kfPPri * H(idx,:)' + kfR(idx, idx));
+            kfxPos = kfxPri + K * res;
+            kfPPos = (kfI_N - K * H(idx, :)) * kfPPri;
+            
+            kfxListPri(n,:) = kfxPri;
+            kfPListPri(:,:,n) = kfPPri;
+            kfxListPos(n,:) = kfxPos;
+            kfPListPos(:,:,n) = kfPPri;
+        
+            meas = struct();
+            if bitand(modTenApplyMeas, 1)
+                meas.velLA = kfxPos(idxVelLA,:)';
+                meas.velRA = kfxPos(idxVelRA,:)';
+            end
+            if bitand(modTenApplyMeas, 2)
+                meas.posZLA = zFloor; meas.posZRA = zFloor;
+            end
+            if bitand(modTenApplyMeas, 4)
+                meas.velMP = 0;
+            end
+            
+            [xhat_pos(n,:), P_pos(:,:,n)] = correct(pf, meas, fs, R, ...
+                    applyMeas, dBody, past1Particles);
         end
     end
 end
@@ -238,6 +325,49 @@ end
 function predParticles = stateTransitionFcn002(prevParticles, ...
                                             fs, sigma, gfrAccMP, qOri)
     % starting point: MP pos, vel; RPV LSK RSK ori
+    % varies: MP pos, vel; Knee joint angles
+    
+    [nStates, nParticles] = size(prevParticles);  
+    idxPosMP = 1:3; idxVelMP = 4:6; idxOriRPV = 7:10;
+    idxPosVelMP = 1:6; idxOriLT = 11:13; idxOriRT = 14:16;
+    idxOriLK = 17; idxOriRK = 18; idxOriLRK = 17:18;
+    seq = [2 1 3];
+    
+    dt = 1.0/fs; % [s] Sample time
+    dt2 = 0.5*dt*dt;      % local variable for readability
+    
+    F = eye(6, 6);
+    F(idxPosMP, idxVelMP) = dt.*eye(3);   
+    G = zeros(6, 3);
+    G(idxPosMP, :) = dt2.*eye(3);
+    G(idxVelMP, :) = dt .*eye(3);
+
+    predParticles = prevParticles;
+    predParticles(idxPosVelMP, :) = F*prevParticles(1:6, :) + ...
+                G*(gfrAccMP + sigma.accMP*randn(3, nParticles));
+    predParticles(idxOriRPV, :) = repelem(qOri.qRPV', 1, nParticles);
+    predParticles(idxOriLK, :) = predParticles(idxOriLK, :) + ...
+                + sigma.oriLK*randn(1, nParticles);
+    predParticles(idxOriRK, :) = predParticles(idxOriRK, :) + ...
+                + sigma.oriRK*randn(1, nParticles);        
+    % knee constraint (no hyperextension)
+    predParticles(idxOriLRK, :) = max(predParticles(17:18, :), 0);
+    
+    % solve hip angles from knee angle and tibia orientation
+    zN = zeros(nParticles, 1);
+    LKneeAngle = [zN, predParticles(idxOriLK, :)', zN].*[-1 1 -1];
+    RKneeAngle = [zN, predParticles(idxOriRK, :)', zN];
+    qLTH  = pelib.grBody.calcProxRotm(qOri.qLSK, LKneeAngle(:,seq));
+    qRTH  = pelib.grBody.calcProxRotm(qOri.qRSK, RKneeAngle(:,seq));
+    LHipAngles = pelib.grBody.calcJointAngles(predParticles(idxOriRPV, :)', qLTH);
+    RHipAngles = pelib.grBody.calcJointAngles(predParticles(idxOriRPV, :)', qRTH);
+    predParticles(idxOriLT,:) = (LHipAngles(:,seq).*[-1 -1 -1])';
+    predParticles(idxOriRT,:) = (RHipAngles(:,seq).*[ 1 -1  1])';    
+end
+
+function predParticles = stateTransitionFcn003(prevParticles, ...
+                                            fs, sigma, gfrAcc, qOri)
+    % starting point: MP, LA, RA pos, vel; RPV LSK RSK ori
     % varies: MP pos, vel; Knee joint angles
     
     [nStates, nParticles] = size(prevParticles);  
@@ -362,6 +492,80 @@ function likelihood = measLikelihoodFcn001(predParticles, meas, fs, R, ...
     
     %% culmination
     measError = [diffOri; diffLStep; diffRStep; diffAcc];
+    R2 = R(idxR,idxR);
+    % Use measurement noise and take inner product
+    measErrorProd = dot(measError, R2 \ measError, 1);
+
+    % Convert error norms into likelihood measure. 
+    % Evaluate the PDF of the multivariate normal distribution. A measurement
+    % error of 0 results in the highest possible likelihood.
+    if size(measError, 2) == 0
+        likelihood = zeros(1, nParticles);
+    else
+        likelihood  = 1/sqrt((2*pi).^nMeas * det(R2)) * exp(-0.5 * measErrorProd);
+    end
+end
+
+function likelihood = measLikelihoodFcn010(predParticles, meas, fs, R, ...
+        applyMeas, d, past1Particles)
+    %% initialization
+    [nStates, nParticles] = size(predParticles);  
+
+    bodyList = {};
+    particleList = {predParticles, past1Particles};
+    for i=1:2
+        p = particleList{i}';
+        zN = zeros(size(p, 1), 1);
+        
+        bodyList{i} = pelib.grBody.generateBodyFromJointAngles(p(:,1:3), ...
+            p(:,7:10), p(:,11:13), p(:,14:16), [zN p(:,17) zN], [zN p(:,18) zN], ...
+            d.RPV, d.LTH, d.RTH, d.LSK, d.RSK);
+    end
+    
+    seq = 'YXZ';
+    dt = 1.0/fs; dt2 = dt^2;
+    idxMVelLA = 1:3;    idxMVelRA = 4:6;
+    idxMPosZLA = 7;      idxMPosZRA = 8;
+    idxMVelMP = 9:11;
+    modTenApplyMeas = mod(applyMeas, 10);
+    nMeas = 0;
+    if bitand(modTenApplyMeas, 1), nMeas = nMeas + 6; end
+    if bitand(modTenApplyMeas, 2), nMeas = nMeas + 2; end
+    if bitand(modTenApplyMeas, 4), nMeas = nMeas + 3; end
+    idxR = zeros(nMeas, 1);
+    tempIdxR = 1;
+    
+    %% LA and RA velocity
+    if bitand(modTenApplyMeas, 1)
+        diffVelAnk = [((bodyList{1}.LTIO-bodyList{2}.LTIO)./dt - meas.velLA)'; ...
+                      ((bodyList{1}.RTIO-bodyList{2}.RTIO)./dt - meas.velRA)' ];
+        idxR(tempIdxR:tempIdxR+5) = [idxMVelLA idxMVelRA];
+        tempIdxR = tempIdxR+6;
+    else
+        diffVelAnk = [];
+    end
+    
+    %% Flat floor assumption
+    if bitand(modTenApplyMeas, 2)
+        diffFloor = [(bodyList{1}.LTIO(:,3) - meas.posZLA)'; ...
+                     (bodyList{1}.RTIO(:,3) - meas.posZRA)' ];
+        idxR(tempIdxR:tempIdxR+1) = [idxMPosZLA idxMPosZRA];
+        tempIdxR = tempIdxR+2;
+    else
+        diffFloor = [];
+    end
+    
+    %% MP velocity
+    if bitand(modTenApplyMeas, 4)
+        diffVelMP = ((bodyList{1}.MIDPEL-bodyList{2}.MIDPEL)./dt - meas.velMP)';
+        idxR(tempIdxR) = idxMVelMP;
+%         tempIdxR = tempIdxR+1;
+    else
+        diffVelMP = [];
+    end
+    
+    %% Stitching everything together
+    measError = [diffVelAnk; diffFloor; diffVelMP];
     R2 = R(idxR,idxR);
     % Use measurement noise and take inner product
     measErrorProd = dot(measError, R2 \ measError, 1);

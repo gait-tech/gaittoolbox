@@ -131,6 +131,36 @@ assert(all(all(rad2deg(RHipAngle-RHipAngle2) < THRESHOLD)));
 assert(all(all(rad2deg(LKneeAngle-LKneeAngle2) < THRESHOLD)));
 assert(all(all(rad2deg(RKneeAngle-RKneeAngle2) < THRESHOLD)));
 
+%% Test calcKneeAnglesFromMPLARADist
+load('+unittest/grBodyData/NS2-S01-Trial-Walk-1-NS2+Aw__sOw__sIw__v+Sav03+M76+C355.mat');
+for i=1:estBody.nSamples
+    LKneeAngle = estBody.calcJointAnglesLKnee(i);
+    RKneeAngle = estBody.calcJointAnglesRKnee(i);
+    LKneeAngle = rad2deg(LKneeAngle(2));
+    RKneeAngle = rad2deg(RKneeAngle(2));
+    
+    PELV_CS = quat2rotm(estBody.qRPV(i,:));
+    LTIB_CS = quat2rotm(estBody.qLSK(i,:));
+    RTIB_CS = quat2rotm(estBody.qRSK(i,:));
+    dPelvis = norm(estBody.RFEP(i,:) - estBody.LFEP(i,:));
+    dLFemur = norm(estBody.LFEP(i,:) - estBody.LFEO(i,:));
+    dRFemur = norm(estBody.RFEP(i,:) - estBody.RFEO(i,:));
+    dLTibia = norm(estBody.LFEO(i,:) - estBody.LTIO(i,:));
+    dRTibia = norm(estBody.RFEO(i,:) - estBody.RTIO(i,:));
+    dMPLADist = norm(estBody.MIDPEL(i,:) - estBody.LTIO(i,:));
+    dMPRADist = norm(estBody.MIDPEL(i,:) - estBody.RTIO(i,:));
+    [alphaLK, alphaRK] = pelib.grBody.calcKneeAnglesFromMPLARADist(...
+                                PELV_CS, LTIB_CS, RTIB_CS, ...
+                                dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, ...
+                                dMPLADist, dMPRADist);
+    LKneeAngle2 = rad2deg(alphaLK);
+    RKneeAngle2 = rad2deg(alphaRK);
+
+    THRESHOLD = 1e-2;
+    assert(all(any(LKneeAngle-LKneeAngle2 < THRESHOLD)));
+    assert(all(any(RKneeAngle-RKneeAngle2 < THRESHOLD)));
+end
+
 %% Test generateBodyFromJointAngles
 dataV = mocapdb.ViconBody.loadViconMat('+unittest/grBodyData/S03-Trial-002.mat');
 vb = dataV.togrBody(1:dataV.nSamples, {});
