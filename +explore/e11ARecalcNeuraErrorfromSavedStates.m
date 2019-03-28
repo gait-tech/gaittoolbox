@@ -2,7 +2,7 @@
 dir0 = 'neura-sparse01';
 dir = sprintf('%s/explore-v2', dir0);
 ns = 'NS2';
-outDir = 'C:/Users/z5151460/OneDrive - UNSW/Thesis - Sparse Mocap/Aim 1/Analysis - 20190312 - ckf results';
+outDir = 'C:/Users/lukeyoga730/OneDrive - UNSW/Thesis - Sparse Mocap/Aim 1/Analysis - 20190312 - ckf results';
 clear results;
 rIdx = 1;
 % results = table2struct(results);
@@ -12,7 +12,7 @@ rIdx = 1;
 dataList = readtable(sprintf('%s/data-list-v2.csv', dir0));
 dataN = size(dataList, 1);
 
-for i = 53% 1:dataN
+for i = 15% 1:dataN
     n = table2struct(dataList(i, :));
     name = sprintf("%s-%s-%s", ns, n.subj, n.act);
     load(sprintf("%s/%s-debug.mat", dir, name));
@@ -26,8 +26,7 @@ for i = 53% 1:dataN
     
     csActBody = W__viconBody.getSubset(viconIdx0);
     estBody = W__xsensBody.getSubset(xsensIdx0);
-    
-    
+       
     csActBodyRel = csActBody.changeRefFrame('MIDPEL');
     estBodyRel = estBody.changeRefFrame('MIDPEL');
     estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
@@ -41,7 +40,7 @@ for i = 53% 1:dataN
     rIdx = rIdx + 1;
     fprintf("%s/%s-%s\n", dir, name, results0.label);
     
-    targetname = sprintf('%s/%s-%s-viconvsxsens', outDir, ns, name);
+    targetname = sprintf('%s/%s-viconvsxsens', outDir, name);
     estBody.exportc3d(sprintf('%s.c3d', targetname), struct(), csActBody);
 end
 
