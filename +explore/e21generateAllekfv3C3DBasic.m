@@ -5,7 +5,7 @@ dir = 'neura-sparse01';
 expDir = sprintf('%s/explore-v2', dir);
 stepDir = sprintf('%s/step-detect', dir);
 % outDir = sprintf('explore_output', dir);
-outDir = 'C:\Users\lukeyoga730\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - 20190312 - ckf results';
+outDir = 'C:\Users\z5151460\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - 20190312 - ckf results';
 ns = "NS2";
 % algo = "NS2+pfv1+Aw__sOw__sIw__v+Sav03+P001+M001";
 algo = "";
@@ -18,7 +18,7 @@ options = struct('Pelvis', '00B40B91', ...
     'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
 dataN = size(dataList, 1);
 
-for algoB = {"NS2+Aw__vOw__vIw__v+Sav03+M00+C355", "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"}
+for algoB = {"NS2+Aw__vOw__vIw__v+Sav03+M00+C000"}% "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"}
     algo = algoB{1};
     for i = 1:dataN
         n = table2struct(dataList(i, :));
@@ -52,17 +52,20 @@ for algoB = {"NS2+Aw__vOw__vIw__v+Sav03+M00+C355", "NS2+Aw__sOw__sIw__v+Sav03+M7
             eLabel = cs.accData;
         end
         idx = allIdx.(cs.initSrc);
-
+        idx = idx(1:estBody.nSamples);
+        estBody = estBody.getSubset(1:estBody.nSamples);
+        vb = vb.getSubset(1:estBody.nSamples);
+        
         sensors = struct();
-        sensors.PELVFreeAcc = gfrAcc.(eLabel).MP;
-        sensors.LANKFreeAcc = gfrAcc.(eLabel).LA;
-        sensors.RANKFreeAcc = gfrAcc.(eLabel).RA;
-        sensors.PELVFreeAccRef = gfrAcc.(aLabel).MP;
-        sensors.LANKFreeAccRef = gfrAcc.(aLabel).LA;
-        sensors.RANKFreeAccRef = gfrAcc.(aLabel).RA;
-        sensors.PELVVel = estState(:, 4:6);
-        sensors.LANKVel = estState(:, 14:16);
-        sensors.RANKVel = estState(:, 24:26);
+        sensors.PELVFreeAcc = gfrAcc.(eLabel).MP(1:estBody.nSamples,:);
+        sensors.LANKFreeAcc = gfrAcc.(eLabel).LA(1:estBody.nSamples,:);
+        sensors.RANKFreeAcc = gfrAcc.(eLabel).RA(1:estBody.nSamples,:);
+        sensors.PELVFreeAccRef = gfrAcc.(aLabel).MP(1:estBody.nSamples,:);
+        sensors.LANKFreeAccRef = gfrAcc.(aLabel).LA(1:estBody.nSamples,:);
+        sensors.RANKFreeAccRef = gfrAcc.(aLabel).RA(1:estBody.nSamples,:);
+        sensors.PELVVel = estState(1:estBody.nSamples, 4:6);
+        sensors.LANKVel = estState(1:estBody.nSamples, 14:16);
+        sensors.RANKVel = estState(1:estBody.nSamples, 24:26);
         vel = vb.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
         sensors.PELVVelRef = vel.MIDPEL;
         sensors.LANKVelRef = vel.LTIO;

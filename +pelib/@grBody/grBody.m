@@ -191,7 +191,7 @@ classdef grBody < matlab.mixin.Copyable
         
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);
-        out = diffRMSEandMean(obj1, obj2, seq);
+        out = diffRMSEandMean(obj1, obj2);
         out = toWorldFrame(obj, pos, ori);
         out = changePosUnit(obj, newUnit, update);
         out = getSubset(obj, idx);
