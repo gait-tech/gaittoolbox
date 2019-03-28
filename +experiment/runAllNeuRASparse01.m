@@ -108,26 +108,26 @@ for nsI = 1:length(nsList)
             else
                 data.dataX = [];
             end
-%             if strcmp(n.subj, 'S03')
-%                 nSamples = min(data.dataV.nSamples, data.dataX.nSamples);
-%                 data.dataV = data.dataV.getSubset(1:nSamples);
-%                 data.dataX = data.dataX.getSubset(1:nSamples);
-%                 
-%                 qXsensV2W = rotm2quat([0 0 1; 1 0 0; 0 1 0]);
-%                 dataXtmp = data.dataX.toWorldFrame(qXsensV2W);
-%                 data.dataV.qLTH = dataXtmp.qLeftUpLeg;
-%                 data.dataV.qLSK = dataXtmp.qLeftLeg;
-% %                 data.dataV.qLTH = quatmultiply(axang2quat([0 0 1 deg2rad(-50)]), data.dataV.qLTH);
-% %                 data.dataV.qLSK = quatmultiply(axang2quat([0 0 1 deg2rad(-50)]), data.dataV.qLSK);
-%                 dLTH = vecnorm(data.dataV.LFEO-data.dataV.LFEP, 2, 2);
-%                 dLSK = vecnorm(data.dataV.LFEO-data.dataV.LTIO, 2, 2);
-%                 LTHz = quat2rotm(data.dataV.qLTH); 
-%                 LTHz = squeeze(LTHz(:,3,:))';
-%                 LSKz = quat2rotm(data.dataV.qLSK); 
-%                 LSKz = squeeze(LSKz(:,3,:))';
-%                 data.dataV.LFEO = data.dataV.LFEP - dLTH.*LTHz;
-%                 data.dataV.LTIO = data.dataV.LFEO - dLSK.*LSKz;
-%             end
+            if strcmp(n.subj, 'S03')
+                nSamples = min(data.dataV.nSamples, data.dataX.nSamples);
+                data.dataV = data.dataV.getSubset(1:nSamples);
+                data.dataX = data.dataX.getSubset(1:nSamples);
+                
+                qXsensV2W = rotm2quat([0 0 1; 1 0 0; 0 1 0]);
+                dataXtmp = data.dataX.toWorldFrame(qXsensV2W);
+                data.dataV.qLTH = dataXtmp.qLeftUpLeg;
+                data.dataV.qLSK = dataXtmp.qLeftLeg;
+%                 data.dataV.qLTH = quatmultiply(axang2quat([0 0 1 deg2rad(-50)]), data.dataV.qLTH);
+%                 data.dataV.qLSK = quatmultiply(axang2quat([0 0 1 deg2rad(-50)]), data.dataV.qLSK);
+                dLTH = vecnorm(data.dataV.LFEO-data.dataV.LFEP, 2, 2);
+                dLSK = vecnorm(data.dataV.LFEO-data.dataV.LTIO, 2, 2);
+                LTHz = quat2rotm(data.dataV.qLTH); 
+                LTHz = squeeze(LTHz(:,3,:))';
+                LSKz = quat2rotm(data.dataV.qLSK); 
+                LSKz = squeeze(LSKz(:,3,:))';
+                data.dataV.LFEO = data.dataV.LFEP - dLTH.*LTHz;
+                data.dataV.LTIO = data.dataV.LFEO - dLSK.*LSKz;
+            end
             
             data.dataS = mocapdb.XsensBody.loadMTExport(data.fnameS, options);
             data.dataS.fs = 100;
