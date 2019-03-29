@@ -4,8 +4,8 @@
 dir = 'neura-sparse01';
 expDir = sprintf('%s/explore-v2', dir);
 stepDir = sprintf('%s/step-detect', dir);
-% outDir = sprintf('explore_output', dir);
-outDir = 'C:\Users\lukeyoga730\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - 20190312 - ckf results';
+outDir = sprintf('explore_output', dir);
+% outDir = 'C:\Users\lukeyoga730\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - 20190312 - ckf results';
 ns = "NS2";
 % algo = "NS2+pfv1+Aw__sOw__sIw__v+Sav03+P001+M001";
 algo = "";
