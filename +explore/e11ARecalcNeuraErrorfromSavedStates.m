@@ -2,17 +2,17 @@
 dir0 = 'neura-sparse01';
 dir = sprintf('%s/explore-v2', dir0);
 ns = 'NS2';
-outDir = 'C:/Users/lukeyoga730/OneDrive - UNSW/Thesis - Sparse Mocap/Aim 1/Analysis - 20190312 - ckf results';
-clear results;
-rIdx = 1;
+outDir = 'C:/Users/z5151460/OneDrive - UNSW/Thesis - Sparse Mocap/Aim 1/Analysis - 20190312 - ckf results';
+% clear results;
+rIdx = 1135;
+% rIdx = size(results, 1) + 1;
 % results = table2struct(results);
-% rIdx = 757;
 
 %% file list vicon vs xsens comparison
 dataList = readtable(sprintf('%s/data-list-v2.csv', dir0));
 dataN = size(dataList, 1);
 
-for i = 15% 1:dataN
+for i = 1:dataN
     n = table2struct(dataList(i, :));
     name = sprintf("%s-%s-%s", ns, n.subj, n.act);
     load(sprintf("%s/%s-debug.mat", dir, name));
@@ -83,8 +83,8 @@ end
 %     fprintf("%4d/%4d %s/%s-%s\n", i, size(dataList, 1), dir, name, results0.label);
 % end
 % 
-% results = struct2table(results);
-% save(sprintf("%s/results.mat", dir), 'results')
+results = struct2table(results);
+save(sprintf("%s/results.mat", dir), 'results')
 
 function label = getLabel(ns, setup)
     if setup.accData == 'v'
