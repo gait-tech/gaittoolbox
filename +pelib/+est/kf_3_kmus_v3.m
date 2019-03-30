@@ -9,7 +9,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 % In this state space model, the position and velocity of each kinematic
 % measurement unit (KMU) is estimated in 3D space by combining the
 % information from each KMU in a kalman filter. NOTE: pay special attention 
-% to units:
+% to units:;
 % position (meters)
 % velocity (m/s)
 % acceleration (m/2^2)
