@@ -27,7 +27,13 @@ options = struct('Pelvis', '00B40B91', ...
 
 results = table();
 
-nsList = {"NS2"};
+nsList = {'NS2'};
+nsIdx = 2;
+for i=[0.01:0.01:0.1 0.12:0.02:0.3]
+    nsList{nsIdx} = sprintf('NS2d%0.2f', i);
+    nsIdx = nsIdx + 1;
+end
+
 for nsI = 1:length(nsList)
     ns = nsList{nsI};
     
@@ -48,8 +54,22 @@ for nsI = 1:length(nsList)
 %                'initSrc', 'w__v', 'stepDetection', 'av03', ...
 %                'applyPred', 2, 'applyMeas', 13, ...
 %                'P', false, 'sigmaQAcc', 1e1);
-    for mI = [2 76 102 302]
-        for cI = [0 1 351 355]
+    if strcmp(ns, 'NS2')
+        mIList = [302, 376];
+        cIList = [0 1 351 355];
+        
+        setups{end+1} = struct('est', 'ekfv3', ...
+                           'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
+                           'initSrc', 'w__v', 'stepDetection', 'av03', ...
+                           'applyMeas', 76, 'applyCstr', 355, 'P', 0.5, ...
+                           'sigmaQAcc', 1e1);
+    else
+        mIList = [302];
+        cIList = [351];
+    end
+    
+    for mI = mIList
+        for cI = cIList
             for sdI = {'av03'} % {'av01', 'av03'}
                 setups{end+1} = struct('est', 'ekfv3', ...
                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
@@ -71,14 +91,14 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-    for i = 1:18
+    for i = 1:dataN
         n = table2struct(dataList(i, :));
 
         name = sprintf("%s-%s-%s", ns, n.subj, n.act);
         dataPath = sprintf('%s/mat/%s.mat', dir, name);
-%         if exist(dataPath, 'file')
-%             load(dataPath, 'data');
-%         else
+        if exist(dataPath, 'file')
+            load(dataPath, 'data');
+        else
             data = struct('name', name, ...
                 'fnameV', sprintf('%s/vicon/%s-%s.mat', dir, n.subj, n.act), ...
                 'fnameX', sprintf('%s/xsens/%s-%s.bvh', dir, n.subj, n.act), ...
@@ -127,7 +147,7 @@ for nsI = 1:length(nsList)
             data.calibV2W = rotm2quat(mocapdb.loadPendulumCompassMat( ...
                  sprintf('%s/calib/%s-Calib-V2W-Pendulum.mat', dir, n.subj), ...
                  sprintf('%s/calib/%s-Calib-V2W-Compass.mat', dir, n.subj))' );
-            if ns == "NS1"
+            if strcmp(ns(1:3), 'NS1')
                 if exist(data.calibFnameSensorYawFixWorldFrame, 'file')
                     data.calibYawFix = mocapdb.XsensBody.loadCalibCSV(data.calibFnameSensorYawFixWorldFrame);
                 else
@@ -144,7 +164,7 @@ for nsI = 1:length(nsList)
                     data.calibYawFix = dataS.calcCalibAnkleSensorW2PelvisWFromROM(viconCalibSB, DEGRANGE);
                     data.calibYawFix.saveCalibCSV(data.calibFnameSensorYawFixWorldFrame);
                 end
-            else %ns == "NS2"
+            else %strcmp(ns(1:3), 'NS2')
                 W__dataV = data.dataV.toWorldFrame(data.calibV2W);
                 W__dataV.changePosUnit('m', true);
                 data.calibYawFix = data.dataS.calcCalibAnkleSensorW2PelvisWFromVicon(W__dataV);
@@ -202,12 +222,17 @@ for nsI = 1:length(nsList)
             data.revStepDetect = readtable(data.fnameRevStepDetect);
             
             save(dataPath, 'data');
-%         end
+        end
 
+        uwbDistSigma = 0.0;
+        if strcmp(ns(1:3), 'NS2') && (size(ns, 2) > 3)
+            uwbDistSigma = str2double(ns(5:end)); 
+        end
+            
         fprintf("Data %3d/%3d: %s\n", i, dataN, data.name);
         r = experiment.runNeuRASparse01Experiment(data.dataS, ...
                 data.dataV, data.calibV2W, data.calibYawFix, data.calibW2V, ...
-                data.dataX, data.revStepDetect, ...
+                data.dataX, data.revStepDetect, uwbDistSigma, ...
                 data.name, setups, expDir, n.startFrame, n.endFrame, data.bias);
         results = [results; struct2table(r)];
     end

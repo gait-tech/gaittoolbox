@@ -1,10 +1,10 @@
 % motion list
 list = {
     % vicon result investigation
-      struct('file', 'S03-Trial-Walk-2', ...
-             'algo1', "NS1+Aw__sOw__sIw__v+Sav01+M77+C455", ...
-             'algo2', "NS1+Aw__sOw__sIw__v+Sav01+M77+C355", ...
-             'name', "NS1+Aw__sOw__sIw__v+Sav01+M77+C455vs355"), ...
+      struct('file', 'S01-Trial-HighKneeJog-1', ...
+             'algo1', "NS2+Aw__sOw__sIw__v+Sav03+M302+C001", ...
+             'algo2', "NS2+Aw__sOw__sIw__v+Sav03+M302+C351", ...
+             'name', "NS2+Aw__sOw__sIw__v+Sav03+M302+C001vs351"), ...
 %       struct('file', 'S02-Trial-Walk-2', ...
 %              'algo1', "NS1+Aw__sOw__sIw__v+Sav01+M76+C355", ...
 %              'algo2', "NS1+Aw__sOw__sIw__v+Sav01+M76+C375", ...
@@ -14,15 +14,15 @@ list = {
 %              'algo2', "NS1+Aw__sOw__sIw__v+Sav01+M76+C353", ...
 %              'name', "NS1+Aw__sOw__sIw__v+Sav01+M76+C355vs353"), ...
 };
-
+ns = "NS2";
 for lIdx=1:length(list)
     dataSfname = sprintf('neura-sparse01/imu/%s', list{lIdx}.file);
-    load(sprintf('neura-sparse01/explore-v2/neura-%s-debug.mat', list{lIdx}.file));
+    load(sprintf('neura-sparse01/explore-v2/%s-%s-debug.mat', ns, list{lIdx}.file));
     
-    targetname = sprintf('explore_output/neura-%s-%s', list{lIdx}.file, list{lIdx}.name);
+    targetname = sprintf('explore_output/%s-%s-%s', ns, list{lIdx}.file, list{lIdx}.name);
     
     %% algorithm 1
-    load(sprintf('neura-sparse01/explore-v2/neura-%s-%s.mat', list{lIdx}.file, list{lIdx}.algo1));
+    load(sprintf('neura-sparse01/explore-v2/%s-%s-%s.mat', ns, list{lIdx}.file, list{lIdx}.algo1));
     
     if cs.initSrc == 'w__v'
         aLabel = 'w__v';
@@ -181,7 +181,7 @@ for lIdx=1:length(list)
     sensorsDebug.RANKVel(2:3:n2, :) = estState2.zuptState(:, 24:26);
     
     %% algorithm 2
-    load(sprintf('neura-sparse01/explore-v2/neura-%s-%s.mat', list{lIdx}.file, list{lIdx}.algo2));
+    load(sprintf('neura-sparse01/explore-v2/%s-%s-%s.mat', ns, list{lIdx}.file, list{lIdx}.algo2));
     estBody2 = estBody.copy();
     estBody2Rel = estBody2.changeRefFrame('MIDPEL');
     estBody2S2S = estBody2Rel.toWorldFrame(vb.MIDPEL+[0.5 0 0], estBody2.qRPV);

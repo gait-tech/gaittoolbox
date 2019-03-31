@@ -4,8 +4,8 @@
 dir = 'neura-sparse01';
 expDir = sprintf('%s/explore-v2', dir);
 stepDir = sprintf('%s/step-detect', dir);
-outDir = sprintf('explore_output', dir);
-% outDir = 'C:\Users\lukeyoga730\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - 20190312 - ckf results';
+% outDir = sprintf('explore_output', dir);
+outDir = 'C:\Users\z5151460\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - 20190331 - uwb sim explore\c3d';
 ns = "NS2";
 % algo = "NS2+pfv1+Aw__sOw__sIw__v+Sav03+P001+M001";
 algo = "";
@@ -18,9 +18,10 @@ options = struct('Pelvis', '00B40B91', ...
     'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
 dataN = size(dataList, 1);
 
-for algoB = {"NS2+Aw__sOw__sIw__v+Sav03+M76+C355"}% "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"}
+for algoB = {"NS2+Aw__sOw__sIw__v+Sav03+M302+C351", "NS2+Aw__sOw__sIw__v+Sav03+M302+C355", ...
+             "NS2+Aw__sOw__sIw__v+Sav03+M302+C000", "NS2+Aw__sOw__sIw__v+Sav03+M302+C001"}
     algo = algoB{1};
-    for i = 53
+    for i = 1:18
         n = table2struct(dataList(i, :));
 
         name = sprintf("%s-%s", n.subj, n.act);

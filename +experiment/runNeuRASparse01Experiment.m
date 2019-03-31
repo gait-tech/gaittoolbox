@@ -42,6 +42,7 @@
 %>                 to vicon frame. Includes yaw realignment calibration.
 %> @param dataX loaded mocapdb.BVHBody 
 %> @param revStepDetect manually reviewed table if stepL and stepR was detected
+%> @param uwbMeasSigma standard dev of uwb gaussian noise in m
 %> @param name name of the experiment
 %> @param setups list of experiment parameters (struct) to be run. see details above
 %> @param savedir filepath to save .mat output/debug files (optional)
@@ -51,7 +52,7 @@
 % ======================================================================
 function results = runNeuRASparse01Experiment(dataS, dataV, ...
                         calibV2W, calibYawFix, calibW2V, ...
-                        dataX, revStepDetect, ...
+                        dataX, revStepDetect, uwbMeasSigma, ...
                         name, setups, savedir, startFrame, endFrame, bias)
     %% Inputs and Input Check
     validateattributes(dataS, {'mocapdb.XsensBody'}, {});
@@ -60,10 +61,11 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
     validateattributes(calibW2V, {'mocapdb.XsensBody', 'numeric'}, {});
     validateattributes(dataX, {'mocapdb.BVHBody', 'numeric'}, {});
     
-    if nargin <= 7, savedir = ''; end
-    if nargin <= 8 || startFrame < 0, startFrame = 100; end
-    if nargin <= 9 || endFrame < 0, endFrame = inf; end
-    if nargin <= 10
+    if nargin <= 7, uwbMeasSigma = 0.0; end
+    if nargin <= 10, savedir = ''; end
+    if nargin <= 11 || startFrame < 0, startFrame = 100; end
+    if nargin <= 12 || endFrame < 0, endFrame = inf; end
+    if nargin <= 13
         bias = struct('w__v', zeros(1, 3), 'v__v', zeros(1, 3), ...
                       'w__x', zeros(1, 3));
     end
@@ -89,7 +91,7 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         end
     end
 
-    uwbMeasSigma = 0.1; %m standard deviation
+%     uwbMeasSigma = 0.1; %m standard deviation
     
     allIdx = {};
     qOri = {};
