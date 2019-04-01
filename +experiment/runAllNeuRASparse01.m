@@ -54,19 +54,23 @@ for nsI = 1:length(nsList)
 %                'initSrc', 'w__v', 'stepDetection', 'av03', ...
 %                'applyPred', 2, 'applyMeas', 13, ...
 %                'P', false, 'sigmaQAcc', 1e1);
-    if strcmp(ns, 'NS2')
-        mIList = [302, 376];
-        cIList = [0 1 351 355];
-        
-        setups{end+1} = struct('est', 'ekfv3', ...
-                           'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
-                           'initSrc', 'w__v', 'stepDetection', 'av03', ...
-                           'applyMeas', 76, 'applyCstr', 355, 'P', 0.5, ...
-                           'sigmaQAcc', 1e1);
-    else
+%     if strcmp(ns, 'NS2')
+%         mIList = [302, 376];
+%         cIList = [0 1 351 355];
+%         setups{end+1} = struct('est', 'ekfv3', ...
+%                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
+%                            'initSrc', 'w__v', 'stepDetection', 'av03', ...
+%                            'applyMeas', 2, 'applyCstr', 355, 'P', 0.5, ...
+%                            'sigmaQAcc', 1e1);
+%         setups{end+1} = struct('est', 'ekfv3', ...
+%                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
+%                            'initSrc', 'w__v', 'stepDetection', 'av03', ...
+%                            'applyMeas', 76, 'applyCstr', 355, 'P', 0.5, ...
+%                            'sigmaQAcc', 1e1);
+%     else
         mIList = [302];
         cIList = [351];
-    end
+%     end
     
     for mI = mIList
         for cI = cIList
@@ -95,7 +99,7 @@ for nsI = 1:length(nsList)
         n = table2struct(dataList(i, :));
 
         name = sprintf("%s-%s-%s", ns, n.subj, n.act);
-        dataPath = sprintf('%s/mat/%s.mat', dir, name);
+        dataPath = sprintf('%s/mat/%s-%s-%s.mat', dir, ns(1:3), n.subj, n.act);
         if exist(dataPath, 'file')
             load(dataPath, 'data');
         else
@@ -118,6 +122,7 @@ for nsI = 1:length(nsList)
             else
                 data.dataX = [];
             end
+            
             if strcmp(n.subj, 'S03')
                 nSamples = min(data.dataV.nSamples, data.dataX.nSamples);
                 data.dataV = data.dataV.getSubset(1:nSamples);
@@ -126,10 +131,11 @@ for nsI = 1:length(nsList)
                 qXsensV2W = rotm2quat([0 0 1; 1 0 0; 0 1 0]);
                 dataXtmp = data.dataX.toWorldFrame(qXsensV2W);
                 data.dataV.qLTH = dataXtmp.qLeftUpLeg;
-                qOffset = quatmultiply(dataXtmp.qLeftLeg(1111,:), ...
-                                quatconj(data.dataV.qLSK(1111,:)));
-%                 data.dataV.qLSK = dataXtmp.qLeftLeg;
-                data.dataV.qLSK = quatmultiply(qOffset, data.dataV.qLSK);
+                data.dataV.qLSK = dataXtmp.qLeftLeg;
+%                 sIdx = max(1, n.startFrame);
+%                 qOffset = quatmultiply(dataXtmp.qLeftLeg(sIdx,:), ...
+%                                 quatconj(data.dataV.qLSK(sIdx,:)));
+%                 data.dataV.qLSK = quatmultiply(qOffset, data.dataV.qLSK);
 %                 data.dataV.qLTH = quatmultiply(axang2quat([0 0 1 deg2rad(-50)]), data.dataV.qLTH);
 %                 data.dataV.qLSK = quatmultiply(axang2quat([0 0 1 deg2rad(-50)]), data.dataV.qLSK);
                 dLTH = vecnorm(data.dataV.LFEO-data.dataV.LFEP, 2, 2);
@@ -228,7 +234,8 @@ for nsI = 1:length(nsList)
         if strcmp(ns(1:3), 'NS2') && (size(ns, 2) > 3)
             uwbDistSigma = str2double(ns(5:end)); 
         end
-            
+        data.name = name;
+        
         fprintf("Data %3d/%3d: %s\n", i, dataN, data.name);
         r = experiment.runNeuRASparse01Experiment(data.dataS, ...
                 data.dataV, data.calibV2W, data.calibYawFix, data.calibW2V, ...
