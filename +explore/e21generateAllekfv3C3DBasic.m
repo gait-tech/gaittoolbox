@@ -18,12 +18,13 @@ options = struct('Pelvis', '00B40B91', ...
     'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
 dataN = size(dataList, 1);
 
-for algoB = {"NS2+Aw__sOw__sIw__v+Sav03+M302+C351", "NS2+Aw__sOw__sIw__v+Sav03+M302+C355", ...
-             "NS2+Aw__sOw__sIw__v+Sav03+M302+C000", "NS2+Aw__sOw__sIw__v+Sav03+M302+C001"}
+for algoB = {"NS2d0.01+Aw__sOw__sIw__v+Sav03+M302+C351"}
     algo = algoB{1};
     for i = 1:18
         n = table2struct(dataList(i, :));
-
+        
+        algoList = split(algo,'+');
+        ns = algoList{1};
         name = sprintf("%s-%s", n.subj, n.act);
         imuStepFName = sprintf("%s-imuStepDetect.csv", name);
         revStepFName = sprintf("%s-revStepDetect.csv", name);
@@ -92,7 +93,7 @@ for algoB = {"NS2+Aw__sOw__sIw__v+Sav03+M302+C351", "NS2+Aw__sOw__sIw__v+Sav03+M
 
         estBody.exportc3d(sprintf('%s.c3d', targetname), sensors, ...
                           vb, bIsStatLA, bIsStatRA, struct(), 1);
-        fprintf("Data %3d/%3d: %s\n", i, dataN, name);
+        fprintf("Data %3d/%3d: %s\n", i, dataN, targetname);
     end
 end
 
