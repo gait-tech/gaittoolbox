@@ -2114,6 +2114,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
         debug_dat.qRTH(n, :) = rotm2quat([RFEM_x RFEM_y RFEM_z]);
 %         end
     end
+    debug_dat.y_k = y_k';
 end
 
 function d = solveKneeAngleFromDist(PELV_CS, LTIB_CS, RTIB_CS, ...

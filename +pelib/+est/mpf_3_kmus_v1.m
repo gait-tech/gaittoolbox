@@ -49,7 +49,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
 
     %% Check that all accelerometer measurements are equal dimensions
     validateattributes(x0, {'numeric'}, ...
-                       {'2d', 'ncols', 1, 'nrows', 14});
+                       {'2d', 'ncols', 1, 'nrows', 14+18});
                    
     [nSamples, ~] = size(gfrAccMP);
     validateattributes(gfrAccMP, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 3});
@@ -93,8 +93,10 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
     m = struct();
     m.nxn = 14;                    % Nonlinear state dimension
     m.nxl = 18;                    % Linear state dimension
-    m.nx = m.nx + m.nxn;           % State dimension
+    m.nx = m.nxl + m.nxn;           % State dimension
     m.ny = 6+8;                    % Measurement dimension
+    
+    I_N = eye(m.nx, m.nx);
     
     m.fn = zeros(m.nxn, 1);
     m.fl = zeros(m.nxl, 1);
@@ -113,19 +115,29 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
     m.Gl(idxPosRA, 7:9) = dt2.*eye(3);
     m.Gl(idxVelRA, 7:9) = dt .*eye(3);
     
-    m.x0 = x0;             % Initial state
-    m.P0 = P0;          % Covariance for the initial state
     % Process noise covariance
     Qn = diag([ repelem([(fOpt.sigmaQOriMP)^2 (fOpt.sigmaQOriLA)^2 ...
                          (fOpt.sigmaQOriRA)^2], 4) ...
                 (fOpt.sigmaQOriLK)^2 (fOpt.sigmaQOriRK)^2 ]);
     Ql = m.Gl*diag(repelem([(fOpt.sigmaQAccMP)^2 (fOpt.sigmaQAccLA)^2 ...
                             (fOpt.sigmaQAccRA)^2], 3))*m.Gl';
-    m.Q = [Ql zeros(n.nxl, n.nxn); ...
-           zeros(n.nxn, n.nxl) Qn];
+    m.Q = [Ql zeros(m.nxl, m.nxn); ...
+           zeros(m.nxn, m.nxl) Qn];
     m.R  =  [repelem((fOpt.sigmaZuptLA)^2, 3) fOpt.sigmaRPosLA ...
              repelem((fOpt.sigmaZuptRA)^2, 3) fOpt.sigmaRPosRA];
-         
+    
+    m.x0 = x0;             % Initial state
+    % Covariance for the initial state
+    if islogical(P0) && ~P0
+        m.P0 = m.Q;
+    elseif isscalar(P0)
+        m.P0 = P0*I_N;
+        idx = [idxOriMP, idxOriLA, idxOriRA]+18;
+        m.P0(idx,idx) = 0;
+    else
+        m.P0 = P0;
+    end
+    
     % Define model to be used in the MPF, see eq. (18-19).
     m.h  = zeros(m.ny,1);           % Measurement model
     m.C  = zeros(m.ny,m.nxl);
@@ -142,9 +154,9 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
     debug_dat = {};
     
     % local variable assignment for readability
-    ul_k = [gfrAccMP, gfrAccLA, gfrAccRA];
-    un_k = [qMP, qLA, qRA];
-    step = [bIsStatLA(:,1) bIsStatRA(:,1)];
+    ul_k = [gfrAccMP, gfrAccLA, gfrAccRA]';
+    un_k = [qMP, qLA, qRA]';
+    step = [bIsStatLA(:,1) bIsStatRA(:,1)]';
 %     y_k = []';
     uwbMPLARA = [uwb_mea.left_tibia_mid_pelvis,...
                  uwb_mea.mid_pelvis_right_tibia,...
@@ -185,8 +197,11 @@ function g = mpf(m,ul_k,un_k,step,N)
     % (1) Initialize
     idxxl = 1:m.nxl;
     idxxn = m.nxl+1:m.nx;
-    xnp = repmat(m.x0(idxxn),1,NrPart) + ...
-        chol(m.P0(idxxn,idxxn))*randn(m.nxn,NrPart);  % Nonlinear states
+    idxxnB = m.nxl+[idxOriLK, idxOriRK];
+    
+    xnp = repmat(m.x0(idxxn),1,NrPart);
+    xnp([idxOriLK, idxOriRK], :) = xnp([idxOriLK, idxOriRK], :) + ...
+        chol(m.P0(idxxnB,idxxnB))*randn(length(idxxnB), NrPart);  % Nonlinear states
     xlp = repmat(m.x0(idxxl),1,NrPart);      % Conditionally linear Gaussian states
     Pl  = m.P0(idxxl,idxxl);
     Pp  = repmat(Pl,[1,1,NrPart]);             % Initial covariance matrix

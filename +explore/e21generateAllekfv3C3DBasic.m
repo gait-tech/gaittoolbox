@@ -93,7 +93,7 @@ for algoB = {"NS2d0.01+Aw__sOw__sIw__v+Sav03+M302+C351"}
 
         estBody.exportc3d(sprintf('%s.c3d', targetname), sensors, ...
                           vb, bIsStatLA, bIsStatRA, struct(), 1);
-        fprintf("Data %3d/%3d: %s\n", i, dataN, targetname);
+        fprintf("Data %3d/%3d: %s-%s-%s\n", i, dataN, ns, name, algo);
     end
 end
 
