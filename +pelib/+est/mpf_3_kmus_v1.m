@@ -123,9 +123,10 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
                             (fOpt.sigmaQAccRA)^2], 3))*m.Gl';
     m.Q = [Ql zeros(m.nxl, m.nxn); ...
            zeros(m.nxn, m.nxl) Qn];
-    m.R  =  [repelem((fOpt.sigmaZuptLA)^2, 3) fOpt.sigmaRPosLA ...
+    m.R  =  [repelem(0, 6) ...
+             repelem((fOpt.sigmaZuptLA)^2, 3) fOpt.sigmaRPosLA ...
              repelem((fOpt.sigmaZuptRA)^2, 3) fOpt.sigmaRPosRA];
-    
+    m.R = diag(m.R);
     m.x0 = x0;             % Initial state
     % Covariance for the initial state
     if islogical(P0) && ~P0
@@ -209,7 +210,7 @@ function g = mpf(m,ul_k,un_k,step,N)
     Pf  = zeros(size(Pp));                     % Allocate room for the filtered quantities
     q   = zeros(1,NrPart);
     for t=1:Tfinal
-        idxN = 8;
+        idxN = 6;
         if step(1,t), idxN = idxN+4; end % left  step detect
         if step(2,t), idxN = idxN+4; end % right step detect
         idx = 1:idxN;
@@ -232,7 +233,7 @@ function g = mpf(m,ul_k,un_k,step,N)
         Qn = m.Q(idxxn,idxxn);
         Ql = m.Q(idxxl,idxxl);
         yhat = C2*xlp;
-        e    = yNow(idx) - yhat;
+        e    = yNow(idx)' - yhat;
         % (2) Compute the importance weights according to eq. (25a)
         for i=1:NrPart
           M = C2*Pp(:,:,i)*C2' + R2;
@@ -242,7 +243,7 @@ function g = mpf(m,ul_k,un_k,step,N)
         if(sum(q)>1e-12)                % Divergence check
           q       = q/sum(q);           % Normalize the importance weights
           xf(idxxn,t) = sum(q.*xnp,2);      % Compute estimate for the nonlinear states
-          index   = sysresample(q);     % (3) Resample
+          index   = pelib.est.sysresample(q);     % (3) Resample
           xnp     = xnp(:,index);       % Resampled nonlinear particles
           xlp     = xlp(:,index);       % Resampled linear particles
           Pp      = Pp(:,:,index);      % Resampled covariance matrices
@@ -259,7 +260,7 @@ function g = mpf(m,ul_k,un_k,step,N)
         for i = 1:NrPart
           M         = C2*Pp(:,:,i)*C2' + R2;    % Eq. (22c)
           K         = Pp(:,:,i)*C2'/M;       % Eq. (22d)
-          yhat      = C2*xlp;
+          yhat      = C2*xlp(:,i);
           yNow      = [calcLinearHJCd(xlp(idxOriMP,i), ...
                                xlp(idxOriLA,i), xlp(idxOriRA,i), ...
                                xlp(idxOriLK,i), xlp(idxOriRK,i), ...
@@ -272,7 +273,7 @@ function g = mpf(m,ul_k,un_k,step,N)
         % (4b) PF prediction according to Eq. (25b)
         xnf = xnp;
         for i = 1:NrPart
-          xnp(i) = m.An*xnf(i) + m.Gn*un_k(:,t) + Qn*randn(m.nxn,1);
+          xnp(:,i) = m.An*xnf(:,i) + m.Gn*un_k(:,t) + Qn*randn(m.nxn,1);
         end
         % (4c) KF TU
         for i = 1:NrPart
@@ -288,16 +289,27 @@ function g = mpf(m,ul_k,un_k,step,N)
 end
 
 function d = calcLinearHJCd(qRPV, qLSK, qRSK, alphaLK, alphaRK, dBody)
+    n = length(alphaLK);
+    if size(qRPV, 2) == n, qRPV = qRPV'; end
+    if size(qLSK, 2) == n, qLSK = qLSK'; end
+    if size(qRSK, 2) == n, qRSK = qRSK'; end
+    
     PELV_CS = quat2rotm(qRPV);
+    PELVy = squeeze(PELV_CS(:,2,:));
     LTIB_CS = quat2rotm(qLSK);
+    LTIBx = squeeze(LTIB_CS(:,1,:));
+    LTIBz = squeeze(LTIB_CS(:,3,:));
     RTIB_CS = quat2rotm(qRSK);
+    RTIBx = squeeze(RTIB_CS(:,1,:));
+    RTIBz = squeeze(RTIB_CS(:,3,:));
+    
     % setup the constraint equations               
-    d = [ (dBody.RPV/2*PELV_CS(:,2) ...
-             -dBody.LTH*cos(alphaLK)*LTIB_CS(:,3) ...
-             +dBody.LTH*sin(alphaLK)*LTIB_CS(:,1) ...
-             -dBody.LSK*LTIB_CS(:,3)) ; ...
-            (-dBody.RPV/2*PELV_CS(:,2)+ ...
-             -dBody.RTH*cos(alphaRK)*RTIB_CS(:,3) ...
-             +dBody.RTH*sin(alphaRK)*RTIB_CS(:,1) ...
-             -dBody.RSK*RTIB_CS(:,3)) ];
+    d = [ (dBody.RPV/2*PELVy ...
+             -dBody.LTH*cos(alphaLK).*LTIBz ...
+             +dBody.LTH*sin(alphaLK).*LTIBx ...
+             -dBody.LSK*LTIBz) ; ...
+          (-dBody.RPV/2*PELVy+ ...
+             -dBody.RTH*cos(alphaRK).*RTIBz ...
+             +dBody.RTH*sin(alphaRK).*RTIBx ...
+             -dBody.RSK*RTIBz) ];
 end
