@@ -41,7 +41,7 @@
 %>   uwb_mea   - a structure containing the range measurements (m) between
 %>   vel0      - struct of MP, LA, RA containing initial velocity of joints
 %>   options   - struct containing the ff. settings:
-function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
+function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v1(x0, P0, ...
     gfrAccMP, bIsStatMP, qMP, ...
     gfrAccLA, bIsStatLA, qLA, ...
     gfrAccRA, bIsStatRA, qRA, ...
@@ -63,9 +63,9 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
     fOpt = struct('fs', 60, 'applyMeas', 1, 'applyUwb', false, ...
         'applyAccBias', false, 'applyPred', 1, ...
         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
-        'sigmaQOriMP', 0, 'sigmaQOriLA', 0, 'sigmaQOriRA', 0, ...
+        'sigmaQOriMP', 1e-4, 'sigmaQOriLA', 1e-4, 'sigmaQOriRA', 1e-4, ...
         'sigmaQOriLK', deg2rad(1), 'sigmaQOriRK', deg2rad(1), ...
-        'sigmaRPosLA', 1e0, 'sigmaRPosRA', 1e0, 'sigmaRPosZMP', 1e-1, ...
+        'sigmaRPosLA', 1e-2, 'sigmaRPosRA', 1e-2, 'sigmaRPosZMP', 1e-1, ...
         'sigmaZuptMP', 1e-1, 'sigmaZuptLA', 1e-1, 'sigmaZuptRA', 1e-1, ...
         'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
         'alphaRKmin', 0, 'alphaRKmax', pi*8/9);
@@ -81,8 +81,10 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
     %% Initialization and defining the model
     idxPosMP =  1: 3; idxVelMP =  4: 6; idxPosLA =  7: 9;
     idxVelLA = 10:12; idxPosRA = 13:15; idxVelRA = 16:18;
-    idxOriMP =  1: 4; idxOriLA =  5: 8; idxOriRA =  9:12;
-    idxOriLK = 13; idxOriRK = 14;
+    idxLN = 18;
+    idxOriMP = (1: 4)+idxLN; idxOriLA = ( 5: 8)+idxLN; 
+    idxOriRA = (9:12)+idxLN;
+    idxOriLK = 13+idxLN; idxOriRK = 14+idxLN;
     idxMMPtoLA = 1:3; idxMMPtoRA = 4:6;
     idxMVelLA = 7:9; idxMPosZLA = 10;
     idxMVelRA = 11:13; idxMPosZRA = 14;
@@ -100,13 +102,12 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
     
     m.fn = zeros(m.nxn, 1);
     m.fl = zeros(m.nxl, 1);
-    m.An = zeros(m.nxn, m.nxn);
-    m.An(idxOriLK:idxOriRK,idxOriLK:idxOriRK) = eye(2,2);
+    m.An = zeros(m.nxn, m.nxl);
     m.Al = eye(m.nxl, m.nxl);
     m.Al(idxPosMP,idxVelMP) = dt.*eye(3); % mid pelvis
     m.Al(idxPosLA,idxVelLA) = dt.*eye(3); % left ankle
     m.Al(idxPosRA,idxVelRA) = dt.*eye(3); % right ankle
-    m.Gn = eye(m.nxn,12); 
+    m.Gn = eye(m.nxn,m.nxn); 
     m.Gl = zeros(m.nxl,9);
     m.Gl(idxPosMP, 1:3) = dt2.*eye(3);
     m.Gl(idxVelMP, 1:3) = dt .*eye(3);
@@ -133,7 +134,7 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
         m.P0 = m.Q;
     elseif isscalar(P0)
         m.P0 = P0*I_N;
-        idx = [idxOriMP, idxOriLA, idxOriRA]+18;
+        idx = [idxOriMP, idxOriLA, idxOriRA];
         m.P0(idx,idx) = 0;
     else
         m.P0 = P0;
@@ -163,22 +164,35 @@ function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v2(x0, P0, ...
                  uwb_mea.mid_pelvis_right_tibia,...
                  uwb_mea.left_tibia_right_tibia];
 
-    N = 1000;
+    N = 100;
     g = mpf(m, ul_k, un_k, step, N)
     
     % allocate memory to store apriori and aposteriori state estimates, xhat,
     % and error covariances in the state estimate, P_pri, P_pos
-    xhat_pri = nan(nSamples, nStates);
-    P_pri    = nan(nStates, nStates, nSamples);
-
-    xhat_pos = nan(nSamples, nStates);
-    P_pos    = nan(nStates, nStates, nSamples);
+    xhat_pri = nan(nSamples, m.nx);
+    xhat_pos = g.xf';
     
     applyPred = fOpt.applyPred;
     applyMeas = fOpt.applyMeas;
     digit2ApplyMeas = mod(idivide(int32(applyMeas), 10, 'floor'), 10);
     modTenApplyMeas = mod(applyMeas, 10);
     
+    LTIB_CS = quat2rotm(xhat_pos(:,idxOriLA));
+    RTIB_CS = quat2rotm(xhat_pos(:,idxOriRA));
+    PELV_CS = quat2rotm(xhat_pos(:,idxOriMP));
+    
+    LTIBz = squeeze(LTIB_CS(:,3,:))';
+    RTIBz = squeeze(RTIB_CS(:,3,:))';
+    PELVy = squeeze(PELV_CS(:,2,:))';
+    debug_dat.LFEO = xhat_pos(:,idxPosLA) + dLTibia * LTIBz;
+    debug_dat.RFEO = xhat_pos(:,idxPosRA) + dRTibia * RTIBz;
+    debug_dat.LFEP = xhat_pos(:,idxPosMP) + dPelvis/2 * PELVy;
+    debug_dat.RFEP = xhat_pos(:,idxPosMP) - dPelvis/2 * PELVy;
+    zN = zeros(nSamples, 1);
+    debug_dat.qLTH = pelib.grBody.calcProxRotm(xhat_pos(:,idxOriLA), ...
+                                              [xhat_pos(:,idxOriLK) zN zN]);
+    debug_dat.qRTH = pelib.grBody.calcProxRotm(xhat_pos(:,idxOriRA), ...
+                                              [xhat_pos(:,idxOriRK) zN zN]);
 end
 
 function g = mpf(m,ul_k,un_k,step,N)
@@ -213,27 +227,28 @@ function g = mpf(m,ul_k,un_k,step,N)
         idxN = 6;
         if step(1,t), idxN = idxN+4; end % left  step detect
         if step(2,t), idxN = idxN+4; end % right step detect
-        idx = 1:idxN;
-        tmpiIdx = 7;
+        idxC = 1:6;
+        idxM = zeros(idxN-6,1);
+        tmpiIdx = 1;
         if step(1,t) % left step detect
-            idx(tmpiIdx:tmpiIdx+3) = [idxMVelLA idxMPosZLA];
+            idxM(tmpiIdx:tmpiIdx+3) = [idxMVelLA idxMPosZLA];
             tmpiIdx = tmpiIdx + 4;
         end 
         if step(2,t) % right step detect
-            idx(tmpiIdx:tmpiIdx+3) = [idxMVelRA idxMPosZRA];
+            idxM(tmpiIdx:tmpiIdx+3) = [idxMVelRA idxMPosZRA];
             tmpiIdx = tmpiIdx + 4;
         end
-        yNow = [calcLinearHJCd(xlp(idxOriMP,:), ...
-                               xlp(idxOriLA,:), xlp(idxOriRA,:), ...
-                               xlp(idxOriLK,:), xlp(idxOriRK,:), ...
+        yNow = [calcLinearHJCd(xnp(idxOriMP,:), ...
+                               xnp(idxOriLA,:), xnp(idxOriRA,:), ...
+                               xnp(idxOriLK,:), xnp(idxOriRK,:), ...
                                m.dBody); ...
                 zeros(3,NrPart); repelem(m.zFloor,1,NrPart); ...
                 zeros(3,NrPart); repelem(m.zFloor,1,NrPart) ];
-        C2 = m.C(idx,:); R2 = m.R(idx,idx);
+        C2 = m.C(idxC,:); R2 = m.R(idxC,idxC);
         Qn = m.Q(idxxn,idxxn);
         Ql = m.Q(idxxl,idxxl);
         yhat = C2*xlp;
-        e    = yNow(idx)' - yhat;
+        e    = yNow(idxC)' - yhat;
         % (2) Compute the importance weights according to eq. (25a)
         for i=1:NrPart
           M = C2*Pp(:,:,i)*C2' + R2;
@@ -252,34 +267,43 @@ function g = mpf(m,ul_k,un_k,step,N)
           info    = 0;
         else   % The filter has diverged
           info = 1;
-          xf   = zeros(m.n,Tfinal);
+          xf(:,t:end) = zeros(m.nx,Tfinal-t+1);
           disp(['Weights close to zero at t=',num2str(t),' !!!']);
-          return;
+          break;
         end
+        
         % (4a) KF MU
-        for i = 1:NrPart
-          M         = C2*Pp(:,:,i)*C2' + R2;    % Eq. (22c)
-          K         = Pp(:,:,i)*C2'/M;       % Eq. (22d)
-          yhat      = C2*xlp(:,i);
-          yNow      = [calcLinearHJCd(xlp(idxOriMP,i), ...
-                               xlp(idxOriLA,i), xlp(idxOriRA,i), ...
-                               xlp(idxOriLK,i), xlp(idxOriRK,i), ...
-                               m.dBody); ...
-                       zeros(3,1); m.zFloor; zeros(3,1); m.zFloor ];
-          xlf(:,i)  = xlp(:,i) + K*(yNow(idx,1) - yhat);  % Eq. (22a)
-          Pf(:,:,i) = Pp(:,:,i) - K*M*K';          % Eq. (22b)
+        xlf = xlp;
+        for idxCell = {idxM, idxC}
+            idx = idxCell{1};
+            C2 = m.C(idx,:);
+            R2 = m.R(idx,idx);
+            for i = 1:NrPart
+              M         = C2*Pp(:,:,i)*C2' + R2;    % Eq. (22c)
+              K         = Pp(:,:,i)*C2'/M;       % Eq. (22d)
+              yhat      = C2*xlf(:,i);
+              yNow      = [calcLinearHJCd(xnp(idxOriMP,i), ...
+                                   xnp(idxOriLA,i), xnp(idxOriRA,i), ...
+                                   xnp(idxOriLK,i), xnp(idxOriRK,i), ...
+                                   m.dBody); ...
+                           zeros(3,1); m.zFloor; zeros(3,1); m.zFloor ];
+              xlf(:,i)  = xlf(:,i) + K*(yNow(idx,1) - yhat);  % Eq. (22a)
+              if length(idx) == 0 || idx(1) ~= 1
+                  Pf(:,:,i) = Pp(:,:,i) - K*M*K';          % Eq. (22b)
+              end
+            end
         end
         xf(idxxl,t) = mean(xlf,2);    % Compute estimate for the linear states
         % (4b) PF prediction according to Eq. (25b)
         xnf = xnp;
         for i = 1:NrPart
-          xnp(:,i) = m.An*xnf(:,i) + m.Gn*un_k(:,t) + Qn*randn(m.nxn,1);
+          xnp(:,i) = m.An*xlf(:,i) + [un_k(:,t); xnf(end-1:end,i)] + Qn*randn(m.nxn,1);
         end
         % (4c) KF TU
         for i = 1:NrPart
           N         = m.An*Pf(:,:,i)*m.An' + Qn;             % Eq. (23c)
           L         = m.Al*Pf(:,:,i)*m.An'/N;                % Eq. (23d)
-          z         = xnp(i) - x.fn;                         % Eq. (24a)
+          z         = xnp(:,i) - m.fn;                         % Eq. (24a)
           xlp(:,i)  = m.Al*xlf(:,i) + m.Gl*ul_k(:,t) + L*(z - m.An*xlf(:,i)); % Eq. (23a)
           Pp(:,:,i) = m.Al*Pf(:,:,i)*m.Al' + Ql - L*N*L'; % Eq. (23b)
         end
