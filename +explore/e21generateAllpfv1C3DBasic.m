@@ -7,8 +7,7 @@ stepDir = sprintf('%s/step-detect', dir);
 outDir = sprintf('explore_output', dir);
 % outDir = 'C:\Users\z5151460\OneDrive - UNSW\Thesis - Sparse Mocap\Aim 1\Analysis - Step Fix - 01 Mar 2019\step-detect-v3-fixed-c3d';
 ns = "NS2";
-algoList = {"NS2+pfv1+Aw__vOw__vIw__v+Sav03+P002+M013", ...
-        "NS2+pfv1+Aw__sOw__sIw__v+Sav03+P002+M013" };
+algoList = {"NS2+mpfv1+Aw__vOw__vIw__v+Sav03+P001+M001"};
 velThreshold = 0.1;
 
 dataList = readtable(sprintf('%s/data-list-v2.csv', dir));
