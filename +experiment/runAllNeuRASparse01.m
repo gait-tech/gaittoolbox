@@ -29,7 +29,7 @@ results = table();
 
 nsList = {'NS2'};
 nsIdx = 1;
-for i=[0.00:0.01:0.1 0.12:0.02:0.3]
+for i=[0.00:0.01:0.03]%[0.00:0.01:0.1 0.12:0.02:0.3]
     nsList{nsIdx} = sprintf('NS2d%0.2f', i);
     nsIdx = nsIdx + 1;
 end
@@ -117,9 +117,11 @@ for nsI = 1:length(nsList)
            strcmp(n.act(7:end-2), "Static") || ...
            strcmp(n.act(7:end-2), "HighKneeJog")) && ...
            uwbDistSigma <= (0.03+1e-4)
-            setups{1}.sigmaUwbLeg = 1e-1;
+%             setups{1}.sigmaUwbLeg = 1e-1;
+            setups{1}.sigmaUwbLeg = 1e0;
         else
             setups{1}.sigmaUwbLeg = 1e0;
+            continue;
         end
         name = sprintf("%s-%s-%s", ns, n.subj, n.act);
         dataPath = sprintf('%s/mat/%s-%s-%s.mat', dir, ns(1:3), n.subj, n.act);

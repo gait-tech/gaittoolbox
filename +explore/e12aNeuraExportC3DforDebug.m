@@ -21,7 +21,8 @@ list = {
 %     struct('file', 'S04-Trial-JumpingJacks-2', 'algo', 'NS1+Aw__sOw__sIw__x+Sav01+M02+C176'), ...
 %     struct('file', 'S01-Trial-JumpingJacks-1', 'algo', 'NS1+Aw__sOw__sIw__x+Sav01+M02+C176'), ...
 %      % debug
-      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C351"), ...
+      struct('file', 'S07-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
+      struct('file', 'S07-Trial-Fivemin-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
 %       struct('file', 'S05-Trial-HighKneeJog-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
     % london demo
 %     struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M00+C000"), ...
@@ -89,6 +90,11 @@ for lIdx=1:length(list)
     estBodyRel = estBody.changeRefFrame('MIDPEL');
     viconBodyRel = vb.changeRefFrame('MIDPEL');
 
+    estBody2 = estBodyRel.toWorldFrame(vb.MIDPEL, estBody.qRPV);
+    viconBody2 = viconBodyRel.toWorldFrame(vb.MIDPEL, vb.qRPV);
+    dPos = estBody2.calcDPos(viconBody2);
+    dOri = estBody2.calcDOri(viconBody2);
+    
     d = norm(estBody.MIDPEL(1,:) - estBody.LFEP(1,:))*0.5;
 
     options = struct('Pelvis', '00B40B91', ...
@@ -114,6 +120,8 @@ for lIdx=1:length(list)
     sensors.PELVVelRef = vel.MIDPEL;
     sensors.LANKVelRef = vel.LTIO;
     sensors.RANKVelRef = vel.RTIO;
+    sensors.ePos = dPos;
+    sensors.eOri = dOri;
     
     % step detection
     fs = estBody.fs;

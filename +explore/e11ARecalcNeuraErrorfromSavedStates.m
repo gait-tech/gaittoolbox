@@ -9,40 +9,43 @@ rIdx = 1;
 % results = table2struct(results);
 
 %% file list vicon vs xsens comparison
-% dataList = readtable(sprintf('%s/data-list-v2.csv', dir0));
-% dataN = size(dataList, 1);
-% 
-% for i = 1:dataN
-%     n = table2struct(dataList(i, :));
-%     name = sprintf("%s-%s-%s", ns, n.subj, n.act);
-%     load(sprintf("%s/%s-debug.mat", dir, name));
-%     
-%     sIdx = max(allIdx.w__v(1), allIdx.w__x(1));
-%     eIdx = min(allIdx.w__v(end), allIdx.w__x(end));
-%     nSamples = eIdx - sIdx + 1;
-%     
-%     viconIdx0 = find(allIdx.w__v==sIdx,1):find(allIdx.w__v==eIdx,1);
-%     xsensIdx0 = find(allIdx.w__x==sIdx,1):find(allIdx.w__x==eIdx,1);
-%     
-%     csActBody = W__viconBody.getSubset(viconIdx0);
-%     estBody = W__xsensBody.getSubset(xsensIdx0);
-%        
-%     csActBodyRel = csActBody.changeRefFrame('MIDPEL');
-%     estBodyRel = estBody.changeRefFrame('MIDPEL');
-%     estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
-%     csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
-%     results0 = estBody2.diffRMSEandMean(csActBody2);
-%         
-%     results0.name = name;
-%     results0.label = sprintf("%s+viconvsxsens", ns);
-%     results0.runtime = 0;
-%     results(rIdx) = results0;
-%     rIdx = rIdx + 1;
-%     fprintf("%s/%s-%s\n", dir, name, results0.label);
-%     
+dataList = readtable(sprintf('%s/data-list-v2.csv', dir0));
+dataN = size(dataList, 1);
+
+for i = 1:dataN
+    n = table2struct(dataList(i, :));
+    name = sprintf("%s-%s-%s", ns, n.subj, n.act);
+    load(sprintf("%s/%s-debug.mat", dir, name));
+    
+    sIdx = max(allIdx.w__v(1), allIdx.w__x(1));
+    eIdx = min(allIdx.w__v(end), allIdx.w__x(end));
+    nSamples = eIdx - sIdx + 1;
+    
+    viconIdx0 = find(allIdx.w__v==sIdx,1):find(allIdx.w__v==eIdx,1);
+    xsensIdx0 = find(allIdx.w__x==sIdx,1):find(allIdx.w__x==eIdx,1);
+    
+    csActBody = W__viconBody.getSubset(viconIdx0);
+    estBody = W__xsensBody.getSubset(xsensIdx0);
+       
+    csActBodyRel = csActBody.changeRefFrame('MIDPEL');
+    estBodyRel = estBody.changeRefFrame('MIDPEL');
+    estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
+    csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
+    
+    results0a = estBody.diffRMSEandMean(csActBody);
+    results0 = estBody2.diffRMSEandMean(csActBody2);
+    
+    results0.dPosW = results0a.dPos;
+    results0.name = name;
+    results0.label = sprintf("%s+viconvsxsens", ns);
+    results0.runtime = 0;
+    results(rIdx) = results0;
+    rIdx = rIdx + 1;
+    fprintf("%s/%s-%s\n", dir, name, results0.label);
+    
 %     targetname = sprintf('%s/%s-viconvsxsens', outDir, name);
 %     estBody.exportc3d(sprintf('%s.c3d', targetname), struct(), csActBody);
-% end
+end
 
 %% folder .mat rerun
 dataList = ls(sprintf('%s/%s-*+C*.mat', dir, ns));
@@ -72,8 +75,11 @@ for i = 1:size(dataList, 1)
     estBodyRel = estBody.changeRefFrame('MIDPEL');
     estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
     csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
+    
+    results0a = estBody.diffRMSEandMean(csActBody);
     results0 = estBody2.diffRMSEandMean(csActBody2);
-        
+    
+    results0.dPosW = results0a.dPos;   
     results0.name = name;
     results0.label = sprintf("%s+A%sO%sI%s+S%s+M%02d+C%03d", ...
         ns, n.acc, n.ori, n.initSrc, n.step, str2num(n.meas), str2num(n.cstr));
