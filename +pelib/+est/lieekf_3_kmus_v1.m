@@ -40,13 +40,62 @@ function [ xhat_pri, xhat_pos, debug_dat ] = lieekf_3_kmus_v3(x0, P0, ...
     gfrAccLA, bIsStatLA, qLA, wLA, ...
     gfrAccRA, bIsStatRA, qRA, wRA, ...
     dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, uwb_mea, options)
-
+    [nSamples, ~] = size(gfrAccMP);
+    
     fOpt = struct('fs', 60);
     
-    xhat_pos.RPV
-    xhat_pos.LSK
-    xhat_pos.RSK
-    xhat_pos.x
+    dt = 1/(fOpt.fs);       % assume constant sampling interval
+    dt2 = 0.5*dt^2;
     
+    xhat_pos.RPV = zeros(4,4,nSamples);
+    xhat_pos.RPV(1:3,1:3,:) = quat2rotm(qMP); 
+    xhat_pos.RPV(4,4,:) = 1;
+    xhat_pos.LSK = zeros(4,4,nSamples);
+    xhat_pos.LSK(1:3,1:3,:) = quat2rotm(qLA); 
+    xhat_pos.LSK(4,4,:) = 1;
+    xhat_pos.RSK = zeros(4,4,nSamples);
+    xhat_pos.RSK(1:3,1:3,:) = quat2rotm(qRA); 
+    xhat_pos.RSK(4,4,:) = 1;
+
+    pRPV = x0(01:03)'; vRPV = x0(04:06)';
+    pLSK = x0(11:13)'; vLSK = x0(14:16)';
+    pRSK = x0(21:23)'; vRSK = x0(24:26)';
+    for n=1:nSamples
+        xhat_pos.RPV(1:3,4,n) = (pRPV + vRPV*dt + gfrAccMP(n,:)*dt2)';
+        xhat_pos.LSK(1:3,4,n) = (pLSK + vLSK*dt + gfrAccLA(n,:)*dt2)';
+        xhat_pos.RSK(1:3,4,n) = (pRSK + vRSK*dt + gfrAccRA(n,:)*dt2)';
+        
+        vRPV = vRPV + gfrAccMP(n,:)*dt;
+        vLSK = vLSK + gfrAccLA(n,:)*dt;
+        vRSK = vRSK + gfrAccRA(n,:)*dt;
+    end
+        
+    LTIBz = squeeze(xhat_pos.LSK(1:3,3,:))';
+    RTIBz = squeeze(xhat_pos.RSK(1:3,3,:))';
+    PELVy = squeeze(xhat_pos.RPV(1:3,2,:))';
+    debug_dat.LFEO = squeeze(xhat_pos.LSK(1:3,4,:))' + dLTibia * LTIBz;
+    debug_dat.RFEO = squeeze(xhat_pos.RSK(1:3,4,:))' + dRTibia * RTIBz;
+    debug_dat.LFEP = squeeze(xhat_pos.RPV(1:3,4,:))' + dPelvis/2 * PELVy;
+    debug_dat.RFEP = squeeze(xhat_pos.RPV(1:3,4,:))' - dPelvis/2 * PELVy;
     
+    R_LFEM = zeros(3,3,nSamples);
+    R_RFEM = zeros(3,3,nSamples);
+    
+    LFEM_z = (debug_dat.LFEP-debug_dat.LFEO)'; 
+    LFEM_y = squeeze(xhat_pos.LSK(1:3,2,:));
+    LFEM_x = cross(LFEM_y, LFEM_z);
+    R_LFEM(:,3,:) = LFEM_z ./ vecnorm(LFEM_z, 2, 1);
+    R_LFEM(:,2,:) = LFEM_y ./ vecnorm(LFEM_y, 2, 1);
+    R_LFEM(:,1,:) = LFEM_x ./ vecnorm(LFEM_x, 2, 1);
+    RFEM_z = (debug_dat.RFEP-debug_dat.RFEO)';
+    RFEM_y = squeeze(xhat_pos.RSK(1:3,2,:));
+    RFEM_x = cross(RFEM_y, RFEM_z);
+    R_RFEM(:,3,:) = RFEM_z ./ vecnorm(RFEM_z, 2, 1);
+    R_RFEM(:,2,:) = RFEM_y ./ vecnorm(RFEM_y, 2, 1);
+    R_RFEM(:,1,:) = RFEM_x ./ vecnorm(RFEM_x, 2, 1);
+    debug_dat.qLTH = rotm2quat(R_LFEM);
+    debug_dat.qRTH = rotm2quat(R_RFEM);
+    
+    xhat_pri = 0;
+    xhat_pos.x = zeros(nSamples, 1);
 end
