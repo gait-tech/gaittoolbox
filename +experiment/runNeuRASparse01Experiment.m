@@ -729,12 +729,14 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
             estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
             csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
     %         results(resultsIdx) = estBody.diffRMSE(csActBody);
+            results0a = estBody.diffRMSEandMean(csActBody);
             results0 = estBody2.diffRMSEandMean(csActBody2);
 %         catch
 %             runtime = cputime-t0;
 %             results0 = csActBodyRel.diffRMSEandMean(nan);
 %         end
         
+        results0.dPosW = results0a.dPos;   
         results0.name = name;
         results0.label = cs.label;
         results0.runtime = runtime;

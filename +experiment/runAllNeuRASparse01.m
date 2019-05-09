@@ -107,6 +107,22 @@ for nsI = 1:length(nsList)
 
     for i = 15
         n = table2struct(dataList(i, :));
+        
+        uwbDistSigma = 0.0;
+        if strcmp(ns(1:3), 'NS2') && (size(ns, 2) > 3)
+            uwbDistSigma = str2double(ns(5:end)); 
+        end
+        
+        if ~(strcmp(n.act(7:end-2), "SpeedSkater") || ...
+           strcmp(n.act(7:end-2), "Static") || ...
+           strcmp(n.act(7:end-2), "HighKneeJog")) && ...
+           uwbDistSigma <= (0.03+1e-4)
+%             setups{1}.sigmaUwbLeg = 1e-1;
+            setups{1}.sigmaUwbLeg = 1e0;
+        else
+            setups{1}.sigmaUwbLeg = 1e0;
+            continue;
+        end
 
         name = sprintf("%s-%s-%s", ns, n.subj, n.act);
         dataPath = sprintf('%s/mat/%s-%s-%s.mat', dir, ns(1:3), n.subj, n.act);
