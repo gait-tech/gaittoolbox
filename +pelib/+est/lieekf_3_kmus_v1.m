@@ -35,7 +35,7 @@
 %>   options   - struct containing the ff. settings:
 %>   + fs      - sampling frequency of the magnetic and inertial measurement units
 
-function [ xhat_pri, xhat_pos, debug_dat ] = lieekf_3_kmus_v3(x0, P0, ...
+function [ xhat_pri, xtilde, debug_dat ] = lieekf_3_kmus_v3(x0, P0, ...
     gfrAccMP, bIsStatMP, qMP, wMP, ...
     gfrAccLA, bIsStatLA, qLA, wLA, ...
     gfrAccRA, bIsStatRA, qRA, wRA, ...
@@ -43,59 +43,134 @@ function [ xhat_pri, xhat_pos, debug_dat ] = lieekf_3_kmus_v3(x0, P0, ...
     [nSamples, ~] = size(gfrAccMP);
     
     fOpt = struct('fs', 60);
+    optionFieldNames = fieldnames(options);
+    for i=1:length(optionFieldNames)
+        if ~isfield(fOpt, optionFieldNames{i})
+            error("Field %s is not a valid option", optionFieldNames{i});
+        end
+        fOpt.(optionFieldNames{i}) = options.(optionFieldNames{i});
+    end
     
+    % step = struct('RPV', bIsStatMP, 'LSK', bIsStatLA, 'RSK', bIsStatRA);
+    % qOri = struct('RPV', qMP, 'LSK', qLA, 'RSK', qRA);
+    % wOri = struct('RPV', wMP, 'LSK', wLA, 'RSK', wRA);
+    u = [gfrAccMP'; gfrAccLA'; gfrAccRA';
+         wMP'; wLA'; wRA'];
     dt = 1/(fOpt.fs);       % assume constant sampling interval
     dt2 = 0.5*dt^2;
     
-    xhat_pos.RPV = zeros(4,4,nSamples);
-    xhat_pos.RPV(1:3,1:3,:) = quat2rotm(qMP); 
-    xhat_pos.RPV(4,4,:) = 1;
-    xhat_pos.LSK = zeros(4,4,nSamples);
-    xhat_pos.LSK(1:3,1:3,:) = quat2rotm(qLA); 
-    xhat_pos.LSK(4,4,:) = 1;
-    xhat_pos.RSK = zeros(4,4,nSamples);
-    xhat_pos.RSK(1:3,1:3,:) = quat2rotm(qRA); 
-    xhat_pos.RSK(4,4,:) = 1;
+%     xhat_pos.W_RPV_T = zeros(4,4,nSamples);
+%     xhat_pos.W_LSK_T = zeros(4,4,nSamples);
+%     xhat_pos.W_RSK_T = zeros(4,4,nSamples);
+%     xhat_pos.W_RPV_T(1:3,1:3,:) = quat2rotm(qMP); 
+%     xhat_pos.W_RPV_T(4,4,:) = 1;
+%     xhat_pos.W_LSK_T(1:3,1:3,:) = quat2rotm(qLA); 
+%     xhat_pos.W_LSK_T(4,4,:) = 1;
+%     xhat_pos.W_RSK_T(1:3,1:3,:) = quat2rotm(qRA); 
+%     xhat_pos.W_RSK_T(4,4,:) = 1;
 
+    %% State initialization
+    xhat_pri = struct();
+    xhat_pos = struct();
+    xtilde = struct();
+    
+    state1List = {'W_RPV_T', 'W_LSK_T', 'W_RSK_T'};
+    state1ListN = length(state1List);
+    
+    for i=1:3
+        sname = state1List{i};
+        xhat_pri.(sname) = nan(4,4,nSamples+1);
+        xhat_pos.(sname) = nan(4,4,nSamples+1);
+        xtilde.(sname) = nan(4,4,nSamples+1);
+    end
+    xhat_pri.v = nan(18,nSamples+1);
+    xhat_pos.v = nan(18,nSamples+1);
+    xtilde.v = nan(18,nSamples+1);
+    
+    F = [eye(9,9) zeros(9,9);
+         zeros(9,18)];
+    G = [dt*eye(9,9) zeros(9,9);
+         zeros(9,9) eye(9,9)];
+     
+    %% Set n=1 states (initial state taken from input)
+    % se(3) pos and ori states
+    x0Offset = [0, 10, 20];
+    for i=1:state1ListN
+        sname = state1List{i};
+        offset = x0Offset(i);
+        
+        xtilde.(sname)(:,:,1) = zeros(4,4);
+        xtilde.(sname)(1:3,1:3,1) = quat2rotm(x0(offset+(7:10))');
+        xtilde.(sname)(1:3,4,1) = x0(offset+(1:3));
+        xtilde.(sname)(4,4,1) = 1;
+    end
+    % vel and ang. vel
+    xtilde.v(:,1) = [x0([4:6 14:16 24:26]); zeros(9,1)];
+    vList = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
+    
+    % Iteration
     pRPV = x0(01:03)'; vRPV = x0(04:06)';
     pLSK = x0(11:13)'; vLSK = x0(14:16)';
     pRSK = x0(21:23)'; vRSK = x0(24:26)';
-    for n=1:nSamples
-        xhat_pos.RPV(1:3,4,n) = (pRPV + vRPV*dt + gfrAccMP(n,:)*dt2)';
-        xhat_pos.LSK(1:3,4,n) = (pLSK + vLSK*dt + gfrAccLA(n,:)*dt2)';
-        xhat_pos.RSK(1:3,4,n) = (pRSK + vRSK*dt + gfrAccRA(n,:)*dt2)';
+    for n=2:(nSamples+1)
+        %% Prediction
+        for i=1:state1ListN
+            sname = state1List{i};
+            xhat_pri.(sname)(:,:,n) = xtilde.(sname)(:,:,n-1)*expm(liese3.caret(xtilde.v(vList{i},n-1)));
+        end
+        xhat_pri.v(:,n) = F*xtilde.v(:,n-1) + G*u(:,n-1);
         
-        vRPV = vRPV + gfrAccMP(n,:)*dt;
-        vLSK = vLSK + gfrAccLA(n,:)*dt;
-        vRSK = vRSK + gfrAccRA(n,:)*dt;
+%         pRPV = pRPV + vRPV*dt + gfrAccMP(n,:)*dt2;
+%         pLSK = pLSK + vLSK*dt + gfrAccLA(n,:)*dt2;
+%         pRSK = pRSK + vRSK*dt + gfrAccRA(n,:)*dt2;
+%         
+%         vRPV = vRPV + gfrAccMP(n,:)*dt;
+%         vLSK = vLSK + gfrAccLA(n,:)*dt;
+%         vRSK = vRSK + gfrAccRA(n,:)*dt;
+%         
+%         xhat_pos.W_RPV_T(1:3,4,n) = pRPV';
+%         xhat_pos.W_LSK_T(1:3,4,n) = pLSK';
+%         xhat_pos.W_RSK_T(1:3,4,n) = pRSK';
+        for i=1:state1ListN
+            sname = state1List{i};
+            xtilde.(sname)(:,:,n) = xhat_pri.(sname)(:,:,n);
+        end
+        xtilde.v(:,n) = xhat_pri.v(:,n);
     end
-        
-    LTIBz = squeeze(xhat_pos.LSK(1:3,3,:))';
-    RTIBz = squeeze(xhat_pos.RSK(1:3,3,:))';
-    PELVy = squeeze(xhat_pos.RPV(1:3,2,:))';
-    debug_dat.LFEO = squeeze(xhat_pos.LSK(1:3,4,:))' + dLTibia * LTIBz;
-    debug_dat.RFEO = squeeze(xhat_pos.RSK(1:3,4,:))' + dRTibia * RTIBz;
-    debug_dat.LFEP = squeeze(xhat_pos.RPV(1:3,4,:))' + dPelvis/2 * PELVy;
-    debug_dat.RFEP = squeeze(xhat_pos.RPV(1:3,4,:))' - dPelvis/2 * PELVy;
+    
+    for i=1:state1ListN
+        sname = state1List{i};
+        xhat_pri.(sname) = xhat_pri.(sname)(:,:,2:end);
+        xhat_pos.(sname) = xhat_pos.(sname)(:,:,2:end);
+        xtilde.(sname) = xtilde.(sname)(:,:,2:end);
+    end
+    xhat_pri.v = xhat_pri.v(:,2:end);
+    xhat_pos.v = xhat_pos.v(:,2:end);
+    xtilde.v = xtilde.v(:,2:end);
+    
+    LTIBz = squeeze(xtilde.W_LSK_T(1:3,3,:))';
+    RTIBz = squeeze(xtilde.W_RSK_T(1:3,3,:))';
+    PELVy = squeeze(xtilde.W_RPV_T(1:3,2,:))';
+    debug_dat.LFEO = squeeze(xtilde.W_LSK_T(1:3,4,:))' + dLTibia * LTIBz;
+    debug_dat.RFEO = squeeze(xtilde.W_RSK_T(1:3,4,:))' + dRTibia * RTIBz;
+    debug_dat.LFEP = squeeze(xtilde.W_RPV_T(1:3,4,:))' + dPelvis/2 * PELVy;
+    debug_dat.RFEP = squeeze(xtilde.W_RPV_T(1:3,4,:))' - dPelvis/2 * PELVy;
     
     R_LFEM = zeros(3,3,nSamples);
     R_RFEM = zeros(3,3,nSamples);
     
     LFEM_z = (debug_dat.LFEP-debug_dat.LFEO)'; 
-    LFEM_y = squeeze(xhat_pos.LSK(1:3,2,:));
+    LFEM_y = squeeze(xtilde.W_LSK_T(1:3,2,:));
     LFEM_x = cross(LFEM_y, LFEM_z);
     R_LFEM(:,3,:) = LFEM_z ./ vecnorm(LFEM_z, 2, 1);
     R_LFEM(:,2,:) = LFEM_y ./ vecnorm(LFEM_y, 2, 1);
     R_LFEM(:,1,:) = LFEM_x ./ vecnorm(LFEM_x, 2, 1);
     RFEM_z = (debug_dat.RFEP-debug_dat.RFEO)';
-    RFEM_y = squeeze(xhat_pos.RSK(1:3,2,:));
+    RFEM_y = squeeze(xtilde.W_RSK_T(1:3,2,:));
     RFEM_x = cross(RFEM_y, RFEM_z);
     R_RFEM(:,3,:) = RFEM_z ./ vecnorm(RFEM_z, 2, 1);
     R_RFEM(:,2,:) = RFEM_y ./ vecnorm(RFEM_y, 2, 1);
     R_RFEM(:,1,:) = RFEM_x ./ vecnorm(RFEM_x, 2, 1);
     debug_dat.qLTH = rotm2quat(R_LFEM);
     debug_dat.qRTH = rotm2quat(R_RFEM);
-    
-    xhat_pri = 0;
-    xhat_pos.x = zeros(nSamples, 1);
 end

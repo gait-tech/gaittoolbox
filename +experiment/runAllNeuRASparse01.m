@@ -223,33 +223,33 @@ for nsI = 1:length(nsList)
                 data.calibW2V.saveCalibCSV(data.calibFnameSensorW2V);
             end
 
-            if false
-                % calculate acc pelvis bias from sitting trial.
-                % pelvis bias results to crouch divergence so not using it for now.
-                % not 100% tested but it works very well for the static trial
-                dataS = mocapdb.XsensBody.loadMTExport(sprintf('%s/imu/%s-Trial-TUG-1', dir, n.subj), options);
-                dataS.fs = 100;               
-                dataV = mocapdb.ViconBody.loadViconMat(sprintf('%s/vicon/%s-Trial-TUG-1.mat', dir, n.subj));
-                dataX = mocapdb.BVHBody.loadXsensBVHFile(sprintf('%s/xsens/%s-Trial-TUG-1.bvh', dir, n.subj), "mm");
-                data.bias = experiment.calcNeuRAPelvisAccBias01(dataS, dataV, ...
-                                        data.calibV2W, data.calibW2V, dataX, ...
-                                        100, 1000);
-            elseif false
-                % calculate acc pelvis bias from vicon data. Use static trial.
-                % pelvis bias results to crouch divergence so not using it for now.
-                % not 100% tested but it works very well for the static trial
-                dataS = mocapdb.XsensBody.loadMTExport(sprintf('%s/imu/%s-Trial-Static-1', dir, n.subj), options);
-                dataS.fs = 100;               
-                dataV = mocapdb.ViconBody.loadViconMat(sprintf('%s/vicon/%s-Trial-Static-1.mat', dir, n.subj));
-                dataX = mocapdb.BVHBody.loadXsensBVHFile(sprintf('%s/xsens/%s-Trial-Static-1.bvh', dir, n.subj), "mm");
-                data.bias = experiment.calcNeuRAPelvisAccBias02(dataS, dataV, ...
-                                        data.calibV2W, data.calibW2V, dataX, ...
-                                        1, -1);
-                data.bias
-            else
+%             if false
+%                 % calculate acc pelvis bias from sitting trial.
+%                 % pelvis bias results to crouch divergence so not using it for now.
+%                 % not 100% tested but it works very well for the static trial
+%                 dataS = mocapdb.XsensBody.loadMTExport(sprintf('%s/imu/%s-Trial-TUG-1', dir, n.subj), options);
+%                 dataS.fs = 100;               
+%                 dataV = mocapdb.ViconBody.loadViconMat(sprintf('%s/vicon/%s-Trial-TUG-1.mat', dir, n.subj));
+%                 dataX = mocapdb.BVHBody.loadXsensBVHFile(sprintf('%s/xsens/%s-Trial-TUG-1.bvh', dir, n.subj), "mm");
+%                 data.bias = experiment.calcNeuRAPelvisAccBias01(dataS, dataV, ...
+%                                         data.calibV2W, data.calibW2V, dataX, ...
+%                                         100, 1000);
+%             elseif false
+%                 % calculate acc pelvis bias from vicon data. Use static trial.
+%                 % pelvis bias results to crouch divergence so not using it for now.
+%                 % not 100% tested but it works very well for the static trial
+%                 dataS = mocapdb.XsensBody.loadMTExport(sprintf('%s/imu/%s-Trial-Static-1', dir, n.subj), options);
+%                 dataS.fs = 100;               
+%                 dataV = mocapdb.ViconBody.loadViconMat(sprintf('%s/vicon/%s-Trial-Static-1.mat', dir, n.subj));
+%                 dataX = mocapdb.BVHBody.loadXsensBVHFile(sprintf('%s/xsens/%s-Trial-Static-1.bvh', dir, n.subj), "mm");
+%                 data.bias = experiment.calcNeuRAPelvisAccBias02(dataS, dataV, ...
+%                                         data.calibV2W, data.calibW2V, dataX, ...
+%                                         1, -1);
+%                 data.bias
+%             else
                 data.bias = struct('w__v', zeros(1, 3), 'v__v', zeros(1, 3), ...
                           'w__x', zeros(1, 3));
-            end
+%             end
             
             data.revStepDetect = readtable(data.fnameRevStepDetect);
             

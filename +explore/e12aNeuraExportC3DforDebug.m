@@ -21,9 +21,7 @@ list = {
 %     struct('file', 'S04-Trial-JumpingJacks-2', 'algo', 'NS1+Aw__sOw__sIw__x+Sav01+M02+C176'), ...
 %     struct('file', 'S01-Trial-JumpingJacks-1', 'algo', 'NS1+Aw__sOw__sIw__x+Sav01+M02+C176'), ...
 %      % debug
-      struct('file', 'S07-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
-      struct('file', 'S07-Trial-Fivemin-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
-%       struct('file', 'S05-Trial-HighKneeJog-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
+      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__vOw__vIw__v+Sav03+P001+M001"), ...
     % london demo
 %     struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M00+C000"), ...
 %     struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M02+C000"), ...
@@ -113,9 +111,6 @@ for lIdx=1:length(list)
     sensors.PELVFreeAccRef = gfrAcc.(aLabel).MP;
     sensors.LANKFreeAccRef = gfrAcc.(aLabel).LA;
     sensors.RANKFreeAccRef = gfrAcc.(aLabel).RA;
-    sensors.PELVVel = estState(:, 4:6);
-    sensors.LANKVel = estState(:, 14:16);
-    sensors.RANKVel = estState(:, 24:26);
     vel = vb.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
     sensors.PELVVelRef = vel.MIDPEL;
     sensors.LANKVelRef = vel.LTIO;
@@ -123,6 +118,13 @@ for lIdx=1:length(list)
     sensors.ePos = dPos;
     sensors.eOri = dOri;
     
+    if strcmp(cs.est, 'lieekfv1')
+        
+    else
+        sensors.PELVVel = estState(:, 4:6);
+        sensors.LANKVel = estState(:, 14:16);
+        sensors.RANKVel = estState(:, 24:26);
+    end
     % step detection
     fs = estBody.fs;
     VAR_WIN  = floor(fs*0.25); % NUM_SAMPLES
@@ -193,18 +195,26 @@ for lIdx=1:length(list)
     estBodyViconPelv = estBodyRel.toWorldFrame(vb.MIDPEL, vb.qRPV);
     estBodyViconPelv.exportc3d(sprintf('%s-Vicon.c3d', targetname), sensors, vb, bIsStatLA, bIsStatRA, eMarkers);
 
+    vb.exportc3d(sprintf('%s-Vicon.c3d', targetname));
+    
+    % skip debug c3d for lieekf
+    if strcmp(cs.est, 'lieekfv1')
+        continue
+    end
+    
+    %% Debug level c3d export
     estBodyDebug = estBody.copy();
     n2 = estBody.nSamples*3;
     estBodyDebug.MIDPEL = repelem(estBodyDebug.MIDPEL, 3, 1);
+    estBodyDebug.LTIO = repelem(estBodyDebug.LTIO, 3, 1);
+    estBodyDebug.RTIO = repelem(estBodyDebug.RTIO, 3, 1);
     estBodyDebug.MIDPEL(1:3:n2, :) = estState2.predState(:,1:3);
     estBodyDebug.MIDPEL(2:3:n2, :) = estState2.zuptState(:,1:3);
-    estBodyDebug.LTIO = repelem(estBodyDebug.LTIO, 3, 1);
     estBodyDebug.LTIO(1:3:n2, :) = estState2.predState(:,11:13);
     estBodyDebug.LTIO(2:3:n2, :) = estState2.zuptState(:,11:13);
-    estBodyDebug.RTIO = repelem(estBodyDebug.RTIO, 3, 1);
     estBodyDebug.RTIO(1:3:n2, :) = estState2.predState(:,21:23);
     estBodyDebug.RTIO(2:3:n2, :) = estState2.zuptState(:,21:23);
-
+    
     estBodyDebug.qRPV = repelem(estBodyDebug.qRPV, 3, 1);
     estBodyDebug.qLSK = repelem(estBodyDebug.qLSK, 3, 1);
     estBodyDebug.qRSK = repelem(estBodyDebug.qRSK, 3, 1);
@@ -275,7 +285,6 @@ for lIdx=1:length(list)
                            viconBodyDebug, bIsStatLADebug, bIsStatRADebug);
     estBodyDebugRel.exportc3d(sprintf('%s-RelDebug.c3d', targetname), sensorsDebug, ...
                               viconBodyDebugRel, bIsStatLADebug, bIsStatRADebug);
-    vb.exportc3d(sprintf('%s-Vicon.c3d', targetname));
 end
 
 function out = addAxis(q, p, qname)
