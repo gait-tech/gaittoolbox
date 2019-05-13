@@ -98,8 +98,10 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
     
     allIdx = {};
     qOri = {};
-    wOri = {};
     gfrAcc = {};
+    
+    wbodyOri = {};
+    bodyAcc = {};
     x0 = {};
     uwbMeas = {};
         
@@ -121,7 +123,7 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         
         viconCalibSB = W__dataS.calcCalibSB(W__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));       
         %% orientation and angular velocity
-        % orientation of body from sparse sensor
+        % Orientation of body in world frame as obtained from sparse sensor
         qPelvisEst0 = quatmultiply(W__dataS.Pelvis.ori, quatconj(viconCalibSB.Pelvis.ori));
         qLankleEst0 = quatmultiply(W__dataS.L_LowLeg.ori, quatconj(viconCalibSB.L_LowLeg.ori));
         qRankleEst0 = quatmultiply(W__dataS.R_LowLeg.ori, quatconj(viconCalibSB.R_LowLeg.ori));
@@ -130,27 +132,39 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         qOri.w__sv.RTIB = qRankleEst0(sIdx:eIdx, :);
         
         % https://math.stackexchange.com/questions/2282938/converting-from-quaternion-to-angular-velocity-then-back-to-quaternion
-        wOri.w__sv.PELV = quatrotate(quatconj(viconCalibSB.Pelvis.ori), W__dataS.Pelvis.gyr);
-        wOri.w__sv.PELV = wOri.w__sv.PELV(sIdx:eIdx, :);
-        wOri.w__sv.LTIB = quatrotate(quatconj(viconCalibSB.L_LowLeg.ori), W__dataS.L_LowLeg.gyr);
-        wOri.w__sv.LTIB = wOri.w__sv.LTIB(sIdx:eIdx, :);
-        wOri.w__sv.RTIB = quatrotate(quatconj(viconCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.gyr);
-        wOri.w__sv.RTIB = wOri.w__sv.RTIB(sIdx:eIdx, :);
+        % Angular velocity of body in body frame as obtained from sparse sensor
+        wbodyOri.w__sv.PELV = quatrotate(quatconj(viconCalibSB.Pelvis.ori), W__dataS.Pelvis.gyr);
+        wbodyOri.w__sv.PELV = wbodyOri.w__sv.PELV(sIdx:eIdx, :);
+        wbodyOri.w__sv.LTIB = quatrotate(quatconj(viconCalibSB.L_LowLeg.ori), W__dataS.L_LowLeg.gyr);
+        wbodyOri.w__sv.LTIB = wbodyOri.w__sv.LTIB(sIdx:eIdx, :);
+        wbodyOri.w__sv.RTIB = quatrotate(quatconj(viconCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.gyr);
+        wbodyOri.w__sv.RTIB = wbodyOri.w__sv.RTIB(sIdx:eIdx, :);
         
-        % orientation of body from vicosIdxn
+        % Orientation of body in world frame as obtained from vicon input
         qOri.w__v.PELV = W__dataV.qRPV(sIdx+1:eIdx+1, :);
         qOri.w__v.LTIB = W__dataV.qLSK(sIdx+1:eIdx+1, :);
         qOri.w__v.RTIB = W__dataV.qRSK(sIdx+1:eIdx+1, :);
         
+        % Angular velocity of body in body frame as obtained from vicon input
         wPelvis0 = quatmultiply(quatconj(W__dataV.qRPV(sIdx+1:eIdx+1, :)), ...
                                 W__dataV.qRPV([sIdx+2:eIdx+1 eIdx+1], :));
         wLankle0 = quatmultiply(quatconj(W__dataV.qLSK(sIdx+1:eIdx+1, :)), ...
                                 W__dataV.qLSK([sIdx+2:eIdx+1 eIdx+1], :));
         wRankle0 = quatmultiply(quatconj(W__dataV.qRSK(sIdx+1:eIdx+1, :)), ...
                                 W__dataV.qRSK([sIdx+2:eIdx+1 eIdx+1], :));
-        wOri.w__v.PELV = 2*wPelvis0(:,2:4)*fs;
-        wOri.w__v.LTIB = 2*wLankle0(:,2:4)*fs;
-        wOri.w__v.RTIB = 2*wRankle0(:,2:4)*fs;
+        % this check is important as quat rep is a 2-1 mapping (i.e., q=-q)
+        % I need angular velocity to be consistent (i.e., scalar part is
+        % always positive)
+        tmpIdx = wPelvis0(:,1)<0;
+        wPelvis0(tmpIdx,:) = -wPelvis0(tmpIdx,:);
+        tmpIdx = wLankle0(:,1)<0;
+        wLankle0(tmpIdx,:) = -wLankle0(tmpIdx,:);
+        tmpIdx = wRankle0(:,1)<0;
+        wRankle0(tmpIdx,:) = -wRankle0(tmpIdx,:);
+        
+        wbodyOri.w__v.PELV = 2*wPelvis0(:,2:4)*fs;
+        wbodyOri.w__v.LTIB = 2*wLankle0(:,2:4)*fs;
+        wbodyOri.w__v.RTIB = 2*wRankle0(:,2:4)*fs;
         
         %% position, velocity, acceleration
         W__viconBody = W__dataV.togrBody(1:nSamples, {'name', 'act', 'oriUnit', 'deg', ...
@@ -187,7 +201,7 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         gfrAcc.w__sv.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
                                 W__dataS.R_LowLeg.acc) - [0 0 9.81];
         gfrAcc.w__sv.RA = gfrAcc.w__sv.RA(sIdx:eIdx,:);
-
+        
         % gfrAcc from filtered sparse
         fc = 10;
         [lpf_b, lpf_a] = butter(6, fc/(fs/2));
@@ -195,6 +209,14 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         gfrAcc.w__sfv.LA = filter(lpf_b, lpf_a, gfrAcc.w__sv.LA);
         gfrAcc.w__sfv.RA = filter(lpf_b, lpf_a, gfrAcc.w__sv.RA);
     
+        %% body acceleration
+        for i={'w__sv', 'w__v'}
+            sname = i{1};
+            bodyAcc.(sname).MP = quatrotate(qOri.(sname).PELV, gfrAcc.(sname).MP);
+            bodyAcc.(sname).LA = quatrotate(qOri.(sname).LTIB, gfrAcc.(sname).LA);
+            bodyAcc.(sname).RA = quatrotate(qOri.(sname).RTIB, gfrAcc.(sname).RA);
+        end
+        
         % UWB measurements
         %  Simulate uwb measurement by generating pairwise combinations, using the
         %  origin of each bone segment as the root point
@@ -425,11 +447,13 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         if ~isempty(dataX)
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
                  'W__viconBody', 'V__viconBody', 'W__xsensBody', ...
-                 'gfrAcc', 'qOri', 'x0', 'uwbMeas', 'allIdx')
+                 'gfrAcc', 'qOri', 'bodyAcc', 'wbodyOri', ...
+                 'x0', 'uwbMeas', 'allIdx')
         else
             save(sprintf("%s/%s-debug.mat", savedir, name), ...
                  'W__viconBody', 'V__viconBody', ...
-                 'gfrAcc', 'qOri', 'x0', 'uwbMeas', 'allIdx')
+                 'gfrAcc', 'qOri', 'bodyAcc', 'wbodyOri', ...
+                 'x0', 'uwbMeas', 'allIdx')
         end
     end
             
@@ -448,19 +472,22 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         
         if cs.accData(end) == 'v'
             csGfrAcc = gfrAcc.(getVLabel(cs.accData, cs.accDataNoise));
+            csBodyAcc = bodyAcc.(getVLabel(cs.accData, cs.accDataNoise));
         elseif ( strcmp(cs.accData, 'w__s') || strcmp(cs.accData, 'v__s') || ...
            strcmp(cs.accData, 'w__sf') || strcmp(cs.accData, 'v__sf') )
             csGfrAcc = gfrAcc.(strcat(cs.accData, cs.initSrc(end)));
+            csBodyAcc = bodyAcc.(strcat(cs.accData, cs.initSrc(end)));
         else
             csGfrAcc = gfrAcc.(cs.accData);
+            csBodyAcc = bodyAcc.(cs.accData);
         end
         
         if strcmp(cs.oriData, 'w__s') || strcmp(cs.oriData, 'v__s')
             csQOri = qOri.(strcat(cs.oriData, cs.initSrc(end)));
-            csWOri = wOri.(strcat(cs.oriData, cs.initSrc(end)));
+            csBodyWOri = wbodyOri.(strcat(cs.oriData, cs.initSrc(end)));
         else
             csQOri = qOri.(cs.oriData);
-            csWOri = wOri.(cs.oriData);
+            csBodyWOri = wbodyOri.(cs.oriData);
         end
         
         if ( strcmp(cs.accData, 'w__s') || strcmp(cs.accData, 'v__s') || ...
@@ -685,9 +712,9 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
                 csx0(27:30) = csQOri.RTIB(1,:)';
                 [ x_pri_v2, x_pos_v2, t_dat_v2 ] = pelib.est.lieekf_3_kmus_v1( ...
                     csx0, cs.P, ...
-                    csGfrAcc.MP, bIsStatMP, csQOri.PELV, csWOri.PELV, ...
-                    csGfrAcc.LA, bIsStatLA, csQOri.LTIB, csWOri.LTIB, ...
-                    csGfrAcc.RA, bIsStatRA, csQOri.RTIB, csWOri.RTIB, ...
+                    csGfrAcc.MP, bIsStatMP, csQOri.PELV, csBodyWOri.PELV, ...
+                    csGfrAcc.LA, bIsStatLA, csQOri.LTIB, csBodyWOri.LTIB, ...
+                    csGfrAcc.RA, bIsStatRA, csQOri.RTIB, csBodyWOri.RTIB, ...
                     d_pelvis, d_lfemur, d_rfemur, d_ltibia, d_rtibia, ...
                     uwbMeas.(cs.initSrc), v3Options);
 

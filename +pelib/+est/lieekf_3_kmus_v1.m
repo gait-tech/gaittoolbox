@@ -7,9 +7,9 @@
 %> Inputs:
 %>   x0       - the initial state in the GFR
 %>   P0       - initial covariance
-%>   gfrAccMP - the acceleration of the mid-pelvis in the GFR
-%>   gfrAccLA - the acceleration of the left ankle in the GFR
-%>   gfrAccRA - the acceleration of the right ankle in the GFR
+%>   bodyAccMP - the acceleration of the mid-pelvis in the body frame
+%>   bodyAccLA - the acceleration of the left ankle in the body frame
+%>   bodyAccRA - the acceleration of the right ankle in the body frame
 %>   bIsStatMP  - a boolean vector, for whichever timepoints, n(i) are true,
 %>                i.e., bMoving_MP(i) == 1, a zero velocity update will be 
 %>                performed by using psuedo-zero velocity measurements 
@@ -22,9 +22,9 @@
 %>   qMP       - mid  pelvis orientation in the GFR (quaternion)
 %>   qLA       - left  ankle orientation in the GFR (quaternion)
 %>   qRA       - right ankle orientation in the GFR (quaternion)
-%>   wMP       - pelvis      angular velocity in the GFR
-%>   wLA       - left  shank angular velocity in the GFR
-%>   wRA       - right shank angular velocity in the GFR
+%>   wbodyMP   - pelvis      angular velocity in the body frame
+%>   wbodyLA   - left  shank angular velocity in the body frame
+%>   wbodyRA   - right shank angular velocity in the body frame
 %>   dPelvis   - pelvis width
 %>   dRFemur   - right femur length
 %>   dLFemur   - left femur length
@@ -36,11 +36,11 @@
 %>   + fs      - sampling frequency of the magnetic and inertial measurement units
 
 function [ xhat_pri, xtilde, debug_dat ] = lieekf_3_kmus_v3(x0, P0, ...
-    gfrAccMP, bIsStatMP, qMP, wMP, ...
-    gfrAccLA, bIsStatLA, qLA, wLA, ...
-    gfrAccRA, bIsStatRA, qRA, wRA, ...
+    bodyAccMP, bIsStatMP, qMP, wbodyMP, ...
+    bodyAccLA, bIsStatLA, qLA, wbodyLA, ...
+    bodyAccRA, bIsStatRA, qRA, wbodyRA, ...
     dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, uwb_mea, options)
-    [nSamples, ~] = size(gfrAccMP);
+    [nSamples, ~] = size(bodyAccMP);
     
     fOpt = struct('fs', 60);
     optionFieldNames = fieldnames(options);
@@ -52,10 +52,10 @@ function [ xhat_pri, xtilde, debug_dat ] = lieekf_3_kmus_v3(x0, P0, ...
     end
     
     % step = struct('RPV', bIsStatMP, 'LSK', bIsStatLA, 'RSK', bIsStatRA);
-    % qOri = struct('RPV', qMP, 'LSK', qLA, 'RSK', qRA);
+    qOri = struct('W_RPV_T', qMP, 'W_LSK_T', qLA, 'W_RSK_T', qRA);
     % wOri = struct('RPV', wMP, 'LSK', wLA, 'RSK', wRA);
-    u = [gfrAccMP'; gfrAccLA'; gfrAccRA';
-         wMP'; wLA'; wRA'];
+    u = [bodyAccMP'; bodyAccLA'; bodyAccRA';
+         wbodyMP'; wbodyLA'; wbodyRA'];
     dt = 1/(fOpt.fs);       % assume constant sampling interval
     dt2 = 0.5*dt^2;
     
@@ -87,9 +87,9 @@ function [ xhat_pri, xtilde, debug_dat ] = lieekf_3_kmus_v3(x0, P0, ...
     xhat_pos.v = nan(18,nSamples+1);
     xtilde.v = nan(18,nSamples+1);
     
-    F = [eye(9,9) zeros(9,9);
+    Fv = [eye(9,9) zeros(9,9);
          zeros(9,18)];
-    G = [dt*eye(9,9) zeros(9,9);
+    Gv = [dt*eye(9,9) zeros(9,9);
          zeros(9,9) eye(9,9)];
      
     %% Set n=1 states (initial state taken from input)
@@ -109,16 +109,18 @@ function [ xhat_pri, xtilde, debug_dat ] = lieekf_3_kmus_v3(x0, P0, ...
     vList = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
     
     % Iteration
-    pRPV = x0(01:03)'; vRPV = x0(04:06)';
-    pLSK = x0(11:13)'; vLSK = x0(14:16)';
-    pRSK = x0(21:23)'; vRSK = x0(24:26)';
+    xiMatDebug = zeros(4,4,nSamples);
     for n=2:(nSamples+1)
         %% Prediction
         for i=1:state1ListN
             sname = state1List{i};
-            xhat_pri.(sname)(:,:,n) = xtilde.(sname)(:,:,n-1)*expm(liese3.caret(xtilde.v(vList{i},n-1)));
+            xi = xtilde.v(vList{i},n-1);
+            xi(1:3) = quatrotate(qOri.(sname)(n-1,:), xi(1:3)')';
+            xiMatDebug(:,:,n-1) = expm(liese3.caret(xi*dt));
+            xhat_pri.(sname)(:,:,n) = xtilde.(sname)(:,:,n-1)*xiMatDebug(:,:,n-1);
+%             xhat_pri.(sname)(1:3,1:3,n) = quat2rotm(qOri.(sname)(n-1,:));
         end
-        xhat_pri.v(:,n) = F*xtilde.v(:,n-1) + G*u(:,n-1);
+        xhat_pri.v(:,n) = Fv*xtilde.v(:,n-1) + Gv*u(:,n-1);
         
 %         pRPV = pRPV + vRPV*dt + gfrAccMP(n,:)*dt2;
 %         pLSK = pLSK + vLSK*dt + gfrAccLA(n,:)*dt2;
