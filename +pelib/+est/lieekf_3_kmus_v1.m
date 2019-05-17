@@ -175,23 +175,23 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     xiMatDebug = zeros(4,4,nSamples);
     
     for k=2:(nSamples+1)
+        kPast = k-1;
         %% Prediction update
         F = zeros(stateN,stateN);
         for i=1:se3StateListN
             sname = se3StateList{i};
             bname = sname(end-2:end);
             
-            xi = xtilde.vec(se32vecIdxs{i},k-1);
+            xi = xtilde.vec(se32vecIdxs{i},kPast);
             % convert W_vel to B_vel
-            xi(1:3) = quatrotate(qOri.(bname)(k-1,:), xi(1:3)')';
+            xi(1:3) = quatrotate(qOri.(bname)(kPast,:), xi(1:3)')';
             bigxi = vec2tran(xi*dt);
-            bufIdx = (1:6)+(i-1)*6;
             F(idx.(sname),idx.(sname)) = tranAd(bigxi);
-            xhatPri.(sname)(:,:,k) = xtilde.(sname)(:,:,k-1)*bigxi;
+            xhatPri.(sname)(:,:,k) = xtilde.(sname)(:,:,kPast)*bigxi;
         end
         F(idx.vec,idx.vec) = Fvec;
-        xhatPri.vec(:,k) = Fvec*xtilde.vec(:,k-1) + Gvec*u(:,k-1);
-        PhatPri(:,:,k) = F*Ptilde(:,:,k-1)*F' + Q;
+        xhatPri.vec(:,k) = Fvec*xtilde.vec(:,kPast) + Gvec*u(:,kPast);
+        PhatPri(:,:,k) = F*Ptilde(:,:,kPast)*F' + Q;
         
         %% Measurement update
         H = {}; y = {}; R = {};
@@ -202,7 +202,7 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             sname = se3StateList{i};
             bname = sname(end-2:end);
             
-            if step.(bname)(k) % step detected
+            if step.(bname)(kPast) % step detected
                 % Hfloor_k = blah blah
 %                 Hzpos_k = zeros(1, stateN);
 %                 yzpos_k = y0.zpos.(sname);
@@ -220,42 +220,52 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             measN = measN + size(H.(sname), 1);
         end
         
-        if step.LSK(k)
+        if step.LSK(kPast)
             Hlzupt_k = H0.lzupt; ylzupt_k = y0.lzupt; Rlzupt_k = R0.lzupt;
         else
             Hlzupt_k = []; ylzupt_k = []; Rlzupt_k = [];
         end
-        if step.RSK(k)
+        if step.RSK(kPast)
             Hrzupt_k = H0.rzupt; yrzupt_k = y0.rzupt; Rrzupt_k = R0.rzupt;
         else
             Hrzupt_k = []; yrzupt_k = []; Rrzupt_k = [];
         end
         H.vec = [Hlzupt_k; Hrzupt_k];
-        y.vec = [ylzupt_k; yrzupt_k];
-        R.vec = [Rlzupt_k; Rrzupt_k];
-        yhat.vec = H.vec*xhatPri.vec(:,k);
-        measIdx.(sname) = (1:size(H.vec, 1)) + measN;
+        measIdx.vec = (1:size(H.vec, 1)) + measN;
         measN = measN + size(H.vec, 1);
 
-        H.comb = zeros(measN, stateN);
-        H.comb(measIdx.W_T_RPV, idx.W_T_RPV) = H.W_T_RPV;
-        H.comb(measIdx.W_T_LSK, idx.W_T_LSK) = H.W_T_LSK;
-        H.comb(measIdx.W_T_RSK, idx.W_T_RSK) = H.W_T_RSK;
-        H.comb(measIdx.vec, idx.vec) = H.vec;
-        y.comb = [y.W_T_RPV; y.W_T_LSK; y.W_T_RSK; y.vec];
-        yhat.comb = [yhat.W_T_RPV; yhat.W_T_LSK; yhat.W_T_RSK; yhat.vec];
-        R.comb = diag([R.W_T_RPV R.W_T_LSK R.W_T_RSK R.vec]);
-        
-        K = PhatPri(:,:,k)*H.comb'/(H.comb*PhatPri(:,:,k)*H.comb' + R.comb);
-        PhatPos(:,:,k) = (I_N-K*H.comb)*PhatPri(:,:,k);
-        measUpt = K*(y.comb-yhat.comb);
-        
-        for i=1:se3StateListN
-            sname = se3StateList{i};
-            xhatPos.(sname)(:,:,k) = xhatPri.(sname)(:,:,k)*...
-                                        vec2tran(measUpt(measIdx.(sname)));
+        if measN > 0
+            y.vec = [ylzupt_k; yrzupt_k];
+            R.vec = [Rlzupt_k Rrzupt_k];
+            yhat.vec = H.vec*xhatPri.vec(:,k);
+
+            H.comb = zeros(measN, stateN);
+            H.comb(measIdx.W_T_RPV, idx.W_T_RPV) = H.W_T_RPV;
+            H.comb(measIdx.W_T_LSK, idx.W_T_LSK) = H.W_T_LSK;
+            H.comb(measIdx.W_T_RSK, idx.W_T_RSK) = H.W_T_RSK;
+            H.comb(measIdx.vec, idx.vec) = H.vec;
+            y.comb = [y.W_T_RPV; y.W_T_LSK; y.W_T_RSK; y.vec];
+            yhat.comb = [yhat.W_T_RPV; yhat.W_T_LSK; yhat.W_T_RSK; yhat.vec];
+            R.comb = diag([R.W_T_RPV R.W_T_LSK R.W_T_RSK R.vec]);
+                
+            K = PhatPri(:,:,k)*H.comb'/(H.comb*PhatPri(:,:,k)*H.comb' + R.comb);
+            PhatPos(:,:,k) = (I_N-K*H.comb)*PhatPri(:,:,k);
+            measUpt = K*(y.comb-yhat.comb);
+
+            for i=1:se3StateListN
+                sname = se3StateList{i};
+                xhatPos.(sname)(:,:,k) = xhatPri.(sname)(:,:,k)*...
+                                            vec2tran(measUpt(idx.(sname)));
+            end
+            xhatPos.vec(:,k) = xhatPri.vec(:,k) + measUpt(idx.vec);
+        else
+            for i=1:se3StateListN
+                sname = se3StateList{i};
+                xhatPos.(sname)(:,:,k) = xhatPri.(sname)(:,:,k);
+            end
+            xhatPos.vec(:,k) = xhatPri.vec(:,k);
+            PhatPos(:,:,k) = PhatPri(:,:,k);
         end
-        xhatPos.vec(:,k) = xhatPri.vec(:,k) + measUpt(measIdx.vec);
         
 %         pRPV = pRPV + vRPV*dt + gfrAccMP(n,:)*dt2;
 %         pLSK = pLSK + vLSK*dt + gfrAccLA(n,:)*dt2;
@@ -275,6 +285,7 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             xtilde.(sname)(:,:,k) = xhatPos.(sname)(:,:,k);
         end
         xtilde.vec(:,k) = xhatPos.vec(:,k);
+        Ptilde(:,:,k) = PhatPos(:,:,k);
     end
     
     for i=1:se3StateListN
@@ -287,25 +298,25 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     xhatPos.vec = xhatPos.vec(:,2:end);
     xtilde.vec = xtilde.vec(:,2:end);
     
-    LTIBz = squeeze(xtilde.LSK(1:3,3,:))';
-    RTIBz = squeeze(xtilde.RSK(1:3,3,:))';
-    PELVy = squeeze(xtilde.RPV(1:3,2,:))';
-    debug_dat.LFEO = squeeze(xtilde.LSK(1:3,4,:))' + dLTibia * LTIBz;
-    debug_dat.RFEO = squeeze(xtilde.RSK(1:3,4,:))' + dRTibia * RTIBz;
-    debug_dat.LFEP = squeeze(xtilde.RPV(1:3,4,:))' + dPelvis/2 * PELVy;
-    debug_dat.RFEP = squeeze(xtilde.RPV(1:3,4,:))' - dPelvis/2 * PELVy;
+    LTIBz = squeeze(xtilde.W_T_LSK(1:3,3,:))';
+    RTIBz = squeeze(xtilde.W_T_RSK(1:3,3,:))';
+    PELVy = squeeze(xtilde.W_T_RPV(1:3,2,:))';
+    debug_dat.LFEO = squeeze(xtilde.W_T_LSK(1:3,4,:))' + dLTibia * LTIBz;
+    debug_dat.RFEO = squeeze(xtilde.W_T_RSK(1:3,4,:))' + dRTibia * RTIBz;
+    debug_dat.LFEP = squeeze(xtilde.W_T_RPV(1:3,4,:))' + dPelvis/2 * PELVy;
+    debug_dat.RFEP = squeeze(xtilde.W_T_RPV(1:3,4,:))' - dPelvis/2 * PELVy;
     
     R_LFEM = zeros(3,3,nSamples);
     R_RFEM = zeros(3,3,nSamples);
     
     LFEM_z = (debug_dat.LFEP-debug_dat.LFEO)'; 
-    LFEM_y = squeeze(xtilde.LSK(1:3,2,:));
+    LFEM_y = squeeze(xtilde.W_T_LSK(1:3,2,:));
     LFEM_x = cross(LFEM_y, LFEM_z);
     R_LFEM(:,3,:) = LFEM_z ./ vecnorm(LFEM_z, 2, 1);
     R_LFEM(:,2,:) = LFEM_y ./ vecnorm(LFEM_y, 2, 1);
     R_LFEM(:,1,:) = LFEM_x ./ vecnorm(LFEM_x, 2, 1);
     RFEM_z = (debug_dat.RFEP-debug_dat.RFEO)';
-    RFEM_y = squeeze(xtilde.RSK(1:3,2,:));
+    RFEM_y = squeeze(xtilde.W_T_RSK(1:3,2,:));
     RFEM_x = cross(RFEM_y, RFEM_z);
     R_RFEM(:,3,:) = RFEM_z ./ vecnorm(RFEM_z, 2, 1);
     R_RFEM(:,2,:) = RFEM_y ./ vecnorm(RFEM_y, 2, 1);
