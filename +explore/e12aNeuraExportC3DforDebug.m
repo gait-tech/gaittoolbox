@@ -21,7 +21,7 @@ list = {
 %     struct('file', 'S04-Trial-JumpingJacks-2', 'algo', 'NS1+Aw__sOw__sIw__x+Sav01+M02+C176'), ...
 %     struct('file', 'S01-Trial-JumpingJacks-1', 'algo', 'NS1+Aw__sOw__sIw__x+Sav01+M02+C176'), ...
 %      % debug
-      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__vOw__vIw__v+Sav03+P001+M001"), ...
+%       struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__vOw__vIw__v+Sav03+P001+M001"), ...
       struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P001+M001"), ...
     % london demo
 %     struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M00+C000"), ...
@@ -120,7 +120,9 @@ for lIdx=1:length(list)
     sensors.eOri = dOri;
     
     if strcmp(cs.est, 'lieekfv1')
-        
+        sensors.PELVVel = estState.vec(1:3, :)';
+        sensors.LANKVel = estState.vec(4:6, :)';
+        sensors.RANKVel = estState.vec(7:9, :)';        
     else
         sensors.PELVVel = estState(:, 4:6);
         sensors.LANKVel = estState(:, 14:16);
