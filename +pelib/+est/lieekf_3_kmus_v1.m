@@ -55,6 +55,7 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
           'sigmaROriPV', 1e-3, 'sigmaROriLS', 1e-3, 'sigmaROriRS', 1e-3, ...
           'sigmaRZPosPV', 1e-1, 'sigmaRZPosLS', 1e-2, 'sigmaRZPosRS', 1e-2, ...
           'sigmaRZuptLA', 1e-1, 'sigmaRZuptRA', 1e-1, ...
+          'sigmaRXYPosPVLSRS', 1e2, ...
           'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
           'alphaRKmin', 0, 'alphaRKmax', pi*8/9 );
     optionFieldNames = fieldnames(options);
@@ -67,7 +68,7 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     
     addpath('liese3lib');
     
-    step = struct('PV', bIsStatMP, 'LS', bIsStatLA, 'RS', bIsStatRA);
+    step = struct('PV', true(N.samples, 1), 'LS', bIsStatLA, 'RS', bIsStatRA);
     qOri = struct('PV', quat2rotm(qMP), ...
                   'LS', quat2rotm(qLA), 'RS', quat2rotm(qRA));
     % wOri = struct('RPV', wMP, 'LSK', wLA, 'RSK', wRA);
@@ -96,10 +97,13 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     
     idx = struct('W_T_PV', 1:6, 'W_T_LS', 7:12, 'W_T_RS', 13:18, ...
                  'vec', (N.se3State+1):N.state);
-    r3StateList = {'vecVelMP', 'vecVelLA', 'vecVelRA', ...
-                   'vecAVelMP', 'vecAVelLA', 'vecAVelRA'};
+    r3StateList = {'vecVelPV', 'vecVelLS', 'vecVelRS', ...
+                   'vecAVelPV', 'vecAVelLS', 'vecAVelRS'};
+    r3StateList2 = {'velPV', 'velLS', 'velRS', ...
+                    'aVelPV', 'aVelLS', 'aVelRS'};
     for i=1:length(r3StateList)
         idx.(r3StateList{i}) = (1:3) + ((i-1)*3);
+        idx.(r3StateList2{i}) = (1:3) + ((i-1)*3) + N.se3State;
     end
     I_N = eye(N.state);
     
@@ -155,10 +159,11 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     H0 = {}; y0 = {}; R0 = {};
     
     % Orientation check
-    H0.ori = [zeros(3,3) eye(3,3)];
-    R0.ori= {};
+    H0.ori = {};    R0.ori = {};
     for i=1:N.se3StateList
         sname = se3StateList{i};
+        H0.ori.(sname) = zeros(3, N.state);
+        H0.ori.(sname)(:, idx.(sname)) = [zeros(3,3) eye(3,3)];
         fOptparam = sprintf('sigmaROri%s', sname(end-1:end));
         R0.ori.(sname) = repelem(fOpt.(fOptparam), 3);
     end
@@ -166,25 +171,26 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     % ZUPT
     % zero velocity and angular velocity
     if false
-        H0.lzupt = zeros(6, N.r3State);
-        H0.lzupt(:,[idx.vecVelLA idx.vecAVelLA]) = eye(6,6);
-        y0.lzupt = zeros(6, 1);
-        R0.lzupt = repelem(fOpt.sigmaRZuptLA, 6);
-        H0.rzupt = zeros(6, N.r3State);
-        H0.rzupt(:,[idx.vecVelRA idx.vecAVelRA]) = eye(6,6);
-        y0.rzupt = zeros(6, 1);
-        R0.rzupt = repelem(fOpt.sigmaRZuptRA, 6);
+        idx.lzupt = [idx.velLS idx.aVelLS];
+        idx.rzupt = [idx.velRS idx.aVelRS];
+        idx.vecLZupt = [idx.vecVelLS idx.vecAVelLS];
+        idx.vecRZupt = [idx.vecVelRS idx.vecAVelRS];
     else
-        H0.lzupt = zeros(3, N.r3State);
-        H0.lzupt(:,idx.vecVelLA) = eye(3,3);
-        y0.lzupt = zeros(3, 1);
-        R0.lzupt = repelem(fOpt.sigmaRZuptLA, 3);
-        H0.rzupt = zeros(3, N.r3State);
-        H0.rzupt(:,idx.vecVelRA) = eye(3,3);
-        y0.rzupt = zeros(3, 1);
-        R0.rzupt = repelem(fOpt.sigmaRZuptRA, 3);
+        idx.lzupt = idx.velLS;
+        idx.rzupt = idx.velRS;
+        idx.vecLZupt = idx.vecVelLS;
+        idx.vecRZupt = idx.vecVelRS;
     end
-    
+    N.zupt = length(idx.lzupt);
+    H0.lzupt = zeros(N.zupt, N.state);
+    H0.lzupt(:,idx.lzupt) = eye(N.zupt, N.zupt);
+    y0.lzupt = zeros(N.zupt, 1);
+    R0.lzupt = repelem(fOpt.sigmaRZuptLA, N.zupt);
+    H0.rzupt = zeros(N.zupt, N.state);
+    H0.rzupt(:,idx.rzupt) = eye(N.zupt, N.zupt);
+    y0.rzupt = zeros(N.zupt, 1);
+    R0.rzupt = repelem(fOpt.sigmaRZuptRA, N.zupt);
+        
     % zpos = some value assumption (e.g., flat floor)
     % H.zposMP, H.zposLS, H.zposRS varies with t=k
     H0.zposAnkPCircdot = point2fs([0 0 0 1]');
@@ -195,6 +201,13 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         y0.zpos.(sname) = xtilde.(sname)(3,4,1);
         R0.zpos.(sname) = fOpt.(fOptparam);
     end
+    
+    % pelvis = ankle x y pos
+    H0.p0 = [0 0 0 1]';
+    H0.p0Circdot = point2fs([0 0 0 1]');
+    H0.xyposDT = [eye(2,2) zeros(2,2)];
+    y0.xypos = zeros(2, 1);
+    R0.xypos = repelem(fOpt.sigmaRXYPosPVLSRS, 2);
     
     %% D matrix initialization
     D0 = {}; d0 = {};
@@ -248,64 +261,92 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         %% Measurement update
         H = {}; deltay = {}; R = {};
         measIdx = {}; N.meas_k = 0;
+        
+        H.ori_k = {};   R.ori_k = {};
+        H.zpos_k = {};  R.zpos_k = {};
         for i=1:N.se3StateList
             sname = se3StateList{i};
             bname = sname(end-1:end);
 
             % Orientation
             if true
-                H.ori_k = H0.ori;
-                deltay.ori_k = rot2vec(xhatPri.(sname)(1:3,1:3,k)'*qOri.(bname)(:,:,kPast));
-                R.ori_k = R0.ori.(sname);
+                H.ori_k.(sname) = H0.ori.(sname);
+                deltay.ori_k.(sname) = rot2vec(xhatPri.(sname)(1:3,1:3,k)' ...
+                                * qOri.(bname)(:,:,kPast));
+                R.ori_k.(sname) = R0.ori.(sname);
             else
-                H.ori_k = []; deltay.ori_k = []; R.ori_k = [];
+                H.ori_k.(sname) = []; 
+                deltay.ori_k.(sname) = []; 
+                R.ori_k.(sname) = [];
             end
             
-            % Flat floor assumption
+            N.meas_k = N.meas_k + size(H.ori_k.(sname), 1);
+            
+            % zPos assumption
             if step.(bname)(kPast) % step detected
-                H.zpos_k = [0 0 1 0]*xhatPri.(sname)(:,:,k)*H0.zposAnkPCircdot;
-                deltay.zpos_k = y0.zpos.(sname) ...
+                H.zpos_k.(sname) = zeros(1, N.state);
+                H.zpos_k.(sname)(1, idx.(sname)) = ...
+                    [0 0 1 0] * xhatPri.(sname)(:,:,k) * H0.zposAnkPCircdot;
+                deltay.zpos_k.(sname) = y0.zpos.(sname) ...
                     - [0 0 1 0]*xhatPri.(sname)(:,:,k)*[0; 0; 0; 1];
-                R.zpos_k = R0.zpos.(sname);
+                R.zpos_k.(sname) = R0.zpos.(sname);
             else
-                H.zpos_k = []; deltay.zpos_k = []; R.zpos_k = [];
+                H.zpos_k.(sname) = []; 
+                deltay.zpos_k.(sname) = []; 
+                R.zpos_k.(sname) = [];
             end
-            
-            H.(sname) = [H.ori_k; H.zpos_k]; 
-            R.(sname) = [R.ori_k R.zpos_k];
-            deltay.(sname) = [deltay.ori_k; deltay.zpos_k];
-            measIdx.(sname) = (1:size(H.(sname), 1)) + N.meas_k;
-            N.meas_k = N.meas_k + size(H.(sname), 1);
+                       
+            N.meas_k = N.meas_k + size(H.zpos_k.(sname), 1);
         end
         
-        if step.LS(kPast)
-            Hlzupt_k = H0.lzupt; Rlzupt_k = R0.lzupt;
-            deltaylzupt_k = y0.lzupt - Hlzupt_k*xhatPri.vec(:,k); 
+        % XY pos
+        if true
+            H.xypos = zeros(2, N.state);
+            H.xypos(:, idx.W_T_PV) = - H0.xyposDT * xhatPri.W_T_PV(:,:,k) ...
+                                     * H0.p0Circdot;
+            H.xypos(:, idx.W_T_LS) = H0.xyposDT * xhatPri.W_T_LS(:,:,k) ...
+                                     * H0.p0Circdot / 2;
+            H.xypos(:, idx.W_T_RS) = H0.xyposDT * xhatPri.W_T_RS(:,:,k) ...
+                                     * H0.p0Circdot / 2;
+            deltay.xypos = y0.xypos - H0.xyposDT * ...
+                ( xhatPri.W_T_LS(:,:,k) * H0.p0 / 2 ...
+                  + xhatPri.W_T_RS(:,:,k) * H0.p0 / 2 ...
+                  - xhatPri.W_T_PV(:,:,k) * H0.p0); 
+            R.xypos = R0.xypos;
         else
-            Hlzupt_k = []; deltaylzupt_k = []; Rlzupt_k = [];
+            H.xypos = []; deltay.xypos = []; R.xypos = [];
+        end
+        N.meas_k = N.meas_k + size(H.xypos, 1);
+        
+        % ZUPT
+        if step.LS(kPast)
+            H.lzupt_k = H0.lzupt; R.lzupt_k = R0.lzupt;
+            deltay.lzupt_k = y0.lzupt - xhatPri.vec(idx.vecLZupt,k); 
+        else
+            H.lzupt_k = []; deltay.lzupt_k = []; R.lzupt_k = [];
         end
         if step.RS(kPast)
-            Hrzupt_k = H0.rzupt; Rrzupt_k = R0.rzupt;
-            deltayrzupt_k = y0.rzupt - Hrzupt_k*xhatPri.vec(:,k);
+            H.rzupt_k = H0.rzupt; R.rzupt_k = R0.rzupt;
+            deltay.rzupt_k = y0.rzupt - xhatPri.vec(idx.vecRZupt,k);
         else
-            Hrzupt_k = []; deltayrzupt_k = []; Rrzupt_k = [];
+            H.rzupt_k = []; deltay.rzupt_k = []; R.rzupt_k = [];
         end
-        H.vec = [Hlzupt_k; Hrzupt_k];
-        measIdx.vec = (1:size(H.vec, 1)) + N.meas_k;
-        N.meas_k = N.meas_k + size(H.vec, 1);
+        N.meas_k = N.meas_k + size(H.lzupt_k, 1);
+        N.meas_k = N.meas_k + size(H.rzupt_k, 1);
 
         if N.meas_k > 0
-            deltay.vec = [deltaylzupt_k; deltayrzupt_k];
-            R.vec = [Rlzupt_k Rrzupt_k];
-
-            H.comb = zeros(N.meas_k, N.state);
-            H.comb(measIdx.W_T_PV, idx.W_T_PV) = H.W_T_PV;
-            H.comb(measIdx.W_T_LS, idx.W_T_LS) = H.W_T_LS;
-            H.comb(measIdx.W_T_RS, idx.W_T_RS) = H.W_T_RS;
-            H.comb(measIdx.vec, idx.vec) = H.vec;
-            deltay.comb = [deltay.W_T_PV; deltay.W_T_LS; deltay.W_T_RS; ...
-                           deltay.vec];
-            R.comb = diag([R.W_T_PV R.W_T_LS R.W_T_RS R.vec]);
+            H.comb = [H.ori_k.W_T_PV; H.zpos_k.W_T_PV; ...
+                      H.ori_k.W_T_LS; H.zpos_k.W_T_LS; ...
+                      H.ori_k.W_T_RS; H.zpos_k.W_T_RS; ...
+                      H.xypos; H.lzupt_k; H.rzupt_k];
+            deltay.comb = [deltay.ori_k.W_T_PV; deltay.zpos_k.W_T_PV;...
+                           deltay.ori_k.W_T_LS; deltay.zpos_k.W_T_LS;...
+                           deltay.ori_k.W_T_RS; deltay.zpos_k.W_T_RS;...
+                           deltay.xypos; deltay.lzupt_k; deltay.rzupt_k];
+            R.comb = diag([R.ori_k.W_T_PV R.zpos_k.W_T_PV ...
+                           R.ori_k.W_T_LS R.zpos_k.W_T_LS ...
+                           R.ori_k.W_T_RS R.zpos_k.W_T_RS ...
+                           R.xypos R.lzupt_k R.rzupt_k]);
                 
             K = PhatPri(:,:,k)*H.comb'/(H.comb*PhatPri(:,:,k)*H.comb' + R.comb);
             PhatPos(:,:,k) = (I_N-K*H.comb)*PhatPri(:,:,k);
@@ -417,7 +458,8 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             end
             
             K = PhatPos(:,:,k)*D'/(D*PhatPos(:,:,k)*D');
-            % PhatPos(:,:,k) = (I_N-K*H.comb)*PhatPri(:,:,k);
+            Ptilde(:,:,k) = (I_N-K*D)*PhatPos(:,:,k);
+%             Ptilde(:,:,k) = PhatPos(:,:,k);
             measUpt = K*(d-dhat);
 
             for i=1:N.se3StateList
@@ -426,7 +468,6 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                                             vec2tran(measUpt(idx.(sname)));
             end
             xtilde.vec(:,k) = xhatPos.vec(:,k) + measUpt(idx.vec);
-            Ptilde(:,:,k) = PhatPos(:,:,k);
         else
             for i=1:N.se3StateList
                 sname = se3StateList{i};

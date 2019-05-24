@@ -375,12 +375,42 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         qOri.w__sx.PELV = qPelvisEst0(sIdx:eIdx, :);
         qOri.w__sx.LTIB = qLankleEst0(sIdx:eIdx, :);
         qOri.w__sx.RTIB = qRankleEst0(sIdx:eIdx, :);
+                
+        % https://math.stackexchange.com/questions/2282938/converting-from-quaternion-to-angular-velocity-then-back-to-quaternion
+        % Angular velocity of body in body frame as obtained from sparse sensor
+        wbodyOri.w__sx.PELV = quatrotate(quatconj(xsensCalibSB.Pelvis.ori), W__dataS.Pelvis.gyr);
+        wbodyOri.w__sx.PELV = wbodyOri.w__sx.PELV(sIdx:eIdx, :);
+        wbodyOri.w__sx.LTIB = quatrotate(quatconj(xsensCalibSB.L_LowLeg.ori), W__dataS.L_LowLeg.gyr);
+        wbodyOri.w__sx.LTIB = wbodyOri.w__sx.LTIB(sIdx:eIdx, :);
+        wbodyOri.w__sx.RTIB = quatrotate(quatconj(xsensCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.gyr);
+        wbodyOri.w__sx.RTIB = wbodyOri.w__sx.RTIB(sIdx:eIdx, :);
         
         % orientation of body from xsens
         qOri.w__x.PELV = W__dataX.qHips(sIdx:eIdx, :);
         qOri.w__x.LTIB = W__dataX.qLeftLeg(sIdx:eIdx, :);
         qOri.w__x.RTIB = W__dataX.qRightLeg(sIdx:eIdx, :);
-       
+               
+        % Angular velocity of body in body frame as obtained from vicon input
+        wPelvis0 = quatmultiply(quatconj(W__dataX.qHips(sIdx:eIdx, :)), ...
+                                W__dataX.qHips([sIdx+1:eIdx eIdx], :));
+        wLankle0 = quatmultiply(quatconj(W__dataX.qLeftLeg(sIdx:eIdx, :)), ...
+                                W__dataX.qLeftLeg([sIdx+1:eIdx eIdx], :));
+        wRankle0 = quatmultiply(quatconj(W__dataX.qRightLeg(sIdx:eIdx, :)), ...
+                                W__dataX.qRightLeg([sIdx+1:eIdx eIdx], :));
+        % this check is important as quat rep is a 2-1 mapping (i.e., q=-q)
+        % I need angular velocity to be consistent (i.e., scalar part is
+        % always positive)
+        tmpIdx = wPelvis0(:,1)<0;
+        wPelvis0(tmpIdx,:) = -wPelvis0(tmpIdx,:);
+        tmpIdx = wLankle0(:,1)<0;
+        wLankle0(tmpIdx,:) = -wLankle0(tmpIdx,:);
+        tmpIdx = wRankle0(:,1)<0;
+        wRankle0(tmpIdx,:) = -wRankle0(tmpIdx,:);
+        
+        wbodyOri.w__x.PELV = 2*wPelvis0(:,2:4)*fs;
+        wbodyOri.w__x.LTIB = 2*wLankle0(:,2:4)*fs;
+        wbodyOri.w__x.RTIB = 2*wRankle0(:,2:4)*fs;
+        
         % Position, Velocity, Acceleration
         % gfrAcc from xsens
         W__xsensBody = W__dataX.togrBody(1:nSamples, {'name', 'xsens', 'oriUnit', 'deg', ...
@@ -412,6 +442,14 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         gfrAcc.w__sx.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
                                 W__dataS.R_LowLeg.acc) - [0 0 9.81];
         gfrAcc.w__sx.RA = gfrAcc.w__sx.RA(sIdx:eIdx,:);
+        
+        %% body acceleration
+        for i={'w__sx', 'w__x'}
+            sname = i{1};
+            bodyAcc.(sname).MP = quatrotate(qOri.(sname).PELV, gfrAcc.(sname).MP);
+            bodyAcc.(sname).LA = quatrotate(qOri.(sname).LTIB, gfrAcc.(sname).LA);
+            bodyAcc.(sname).RA = quatrotate(qOri.(sname).RTIB, gfrAcc.(sname).RA);
+        end
         
         % UWB measurements
         %  Simulate uwb measurement by generating pairwise combinations, using the
