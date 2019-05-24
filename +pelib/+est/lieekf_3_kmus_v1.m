@@ -8,6 +8,14 @@
 %> 
 %> Coding notation based on <a href="http://paulfurgale.info/news/2014/6/9/representing-robot-pose-the-good-the-bad-and-the-ugly">link</a>
 %>
+%> More detail about options
+%>      applyPred 0YX
+%>          X:  1st bit use velocity to predict position
+%>              2nd bit use angular velocity to predict orientation
+%>          Y=0 Calculates acc and ang vel from sensor ori
+%>      applyMeas
+%>      applyCstr
+%>
 %> Inputs:
 %>   x0       - the initial state in the GFR
 %>   P0       - initial covariance
@@ -38,7 +46,7 @@
 %>   vel0      - struct of MP, LA, RA containing initial velocity of joints
 %>   options   - struct containing the ff. settings:
 %>   + fs      - sampling frequency of the magnetic and inertial measurement units
-function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
+function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     bodyAccMP, bIsStatMP, qMP, wbodyMP, ...
     bodyAccLA, bIsStatLA, qLA, wbodyLA, ...
     bodyAccRA, bIsStatRA, qRA, wbodyRA, ...
@@ -48,6 +56,7 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     
     %% input parsing
     fOpt = struct('fs', 100, ...
+          'applyPred', 1, 'applyMeas', 1, 'applyCstr', 1, ...
           'sigmaQPosMP', 1, 'sigmaQPosLA', 1, 'sigmaQPosRA', 1, ...
           'sigmaQOriMP', 1, 'sigmaQOriLA', 1, 'sigmaQOriRA', 1, ...
           'sigmaQVelMP', 1, 'sigmaQVelLA', 1, 'sigmaQVelRA', 1, ...
@@ -55,7 +64,7 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
           'sigmaROriPV', 1e-3, 'sigmaROriLS', 1e-3, 'sigmaROriRS', 1e-3, ...
           'sigmaRZPosPV', 1e-1, 'sigmaRZPosLS', 1e-2, 'sigmaRZPosRS', 1e-2, ...
           'sigmaRZuptLA', 1e-1, 'sigmaRZuptRA', 1e-1, ...
-          'sigmaRXYPosPVLSRS', 1e2, ...
+          'sigmaRXYPosPVLSRS', 1e1, ...
           'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
           'alphaRKmin', 0, 'alphaRKmax', pi*8/9 );
     optionFieldNames = fieldnames(options);
@@ -236,6 +245,13 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     d0.lkrom = 0;
     d0.rkrom = 0;
     
+    %% Feature on off
+    knob = {};
+    knob.apModTen = mod(fOpt.applyPred, 10);
+    % zero velocity otherwise
+    knob.pred.PosWithStateVel = bitand(knob.apModTen, 1); 
+    % zero angular velocity otherwise
+    knob.pred.OriWithStateAngVel = bitand(knob.apModTen, 2); 
     %% Iteration
     se32vecIdxs = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
     
@@ -249,7 +265,14 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             
             xi = xtilde.vec(se32vecIdxs{i},kPast);
             % convert W_vel to B_vel
-            xi(1:3) = qOri.(bname)(:,:,kPast)'*xi(1:3);
+            if knob.pred.PosWithStateVel
+                xi(1:3) = qOri.(bname)(:,:,kPast)'*xi(1:3);
+            else
+                xi(1:3) = 0;
+            end
+            if ~knob.pred.OriWithStateAngVel
+                xi(4:6) = 0; 
+            end
             bigxi = vec2tran(xi*dt);
             F(idx.(sname),idx.(sname)) = tranAd(bigxi);
             xhatPri.(sname)(:,:,k) = xtilde.(sname)(:,:,kPast)*bigxi;
@@ -300,7 +323,7 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         end
         
         % XY pos
-        if true
+        if false
             H.xypos = zeros(2, N.state);
             H.xypos(:, idx.W_T_PV) = - H0.xyposDT * xhatPri.W_T_PV(:,:,k) ...
                                      * H0.p0Circdot;
@@ -513,4 +536,10 @@ function [ xhatPri, xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     R_RFEM(:,1,:) = RFEM_x ./ vecnorm(RFEM_x, 2, 1);
     debug_dat.qLTH = rotm2quat(R_LFEM);
     debug_dat.qRTH = rotm2quat(R_RFEM);
+    
+    debug_dat.xhatPri = xhatPri;
+    debug_dat.xhatPos = xhatPos;
+    debug_dat.PhatPri = PhatPri;
+    debug_dat.PhatPos = PhatPos;
+    debug_dat.Ptilde = Ptilde;
 end
