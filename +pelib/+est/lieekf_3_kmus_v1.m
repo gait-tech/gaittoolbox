@@ -9,50 +9,36 @@
 %> Coding notation based on <a href="http://paulfurgale.info/news/2014/6/9/representing-robot-pose-the-good-the-bad-and-the-ugly">link</a>
 %>
 %> More detail about options
-%>      applyPred 0YX
-%>          X:  1st bit use velocity to predict position
-%>              2nd bit use angular velocity to predict orientation
-%>          Y=0 Calculates acc and ang vel from sensor ori
-%>      applyMeas
-%>      applyCstr
+%>      fs: sampling frequency of the magnetic and inertial measurement units
+%>      applyPred: 3 digit 0YX
+%>          X:   1st bit use velocity to predict position
+%>               2nd bit use angular velocity to predict orientation
+%>          Y=0: Calculates acc and ang vel from sensor ori
+%>      applyMeas: 3 digit ZYX
+%>          X=1: Zupt and Ankle zpos
+%>          Y=0: Ori
+%>          Y=1: Ori, Pelvis assumption (xy=ankle average, z=initial height) 
+%>      applyCstr: 3 digit ZYX
+%>          X:   1st bit enforce thigh length
+%>               2nd bit enforce hinge knee joint
+%>               3rd bit enforce knee range of motion
+%>          Y=0: Fixed knee angle min and max
+%>          Y=1: Fixed knee angle max but no knee bending
 %>
-%> Inputs:
-%>   x0       - the initial state in the GFR
-%>   P0       - initial covariance
-%>   bodyAccMP - the acceleration of the mid-pelvis in the body frame
-%>   bodyAccLA - the acceleration of the left ankle in the body frame
-%>   bodyAccRA - the acceleration of the right ankle in the body frame
-%>   bIsStatMP  - a boolean vector, for whichever timepoints, n(i) are true,
-%>                i.e., bMoving_MP(i) == 1, a zero velocity update will be 
-%>                performed by using psuedo-zero velocity measurements 
-%>   bIsStatLA  - a boolean vector, for whichever timepoints, n(i) are true,
-%>                i.e., bMoving_LA(i) == 1, a zero velocity update will be 
-%>                performed by using psuedo-zero velocity measurements 
-%>   bIsStatRA  - a boolean vector, for whichever timepoints, n(i) are true,
-%>                i.e., bMoving_RA(i) == 1, a zero velocity update will be 
-%>                performed by using psuedo-zero velocity measurements 
-%>   qMP       - mid  pelvis orientation in the GFR (quaternion)
-%>   qLA       - left  ankle orientation in the GFR (quaternion)
-%>   qRA       - right ankle orientation in the GFR (quaternion)
-%>   wbodyMP   - pelvis      angular velocity in the body frame
-%>   wbodyLA   - left  shank angular velocity in the body frame
-%>   wbodyRA   - right shank angular velocity in the body frame
-%>   body.PV_d   - pelvis width
-%>   body.RT_d   - right femur length
-%>   body.LT_d   - left femur length
-%>   body.RS_d   - right tibia length
-%>   body.LS_d   - left tibia length
-%>   uwb_mea   - a structure containing the range measurements (m) between
-%>   vel0      - struct of MP, LA, RA containing initial velocity of joints
-%>   options   - struct containing the ff. settings:
-%>   + fs      - sampling frequency of the magnetic and inertial measurement units
+%> @param x0 initial state in the GFR
+%> @param P0 initial covariance
+%> @param bodyAcc acceleration of PV, LS, RS in the body frame
+%> @param step boolean vector of PV, LS, RS indicating step detection
+%> @param qOri PV, LS, RS orientation in the GFR (rotm)
+%> @param wbody PV, LS, RS angular velocity in the body frame
+%> @param body Length of PV_d (pelvis), RT_d and LT_d (r/l femur), RS_d and LS_d (r/l tibia)
+%> @param uwb_mea a structure containing the range measurements (m) between
+%> @param options struct containing the estimator settings:
+
 function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
-    bodyAccMP, bIsStatMP, qMP, wbodyMP, ...
-    bodyAccLA, bIsStatLA, qLA, wbodyLA, ...
-    bodyAccRA, bIsStatRA, qRA, wbodyRA, ...
-    body, uwb_mea, options)
+    bodyAcc, step, qOri, wbody, body, uwb_mea, options)
     N = {};
-    [N.samples, ~] = size(bodyAccMP);
+    [N.samples, ~] = size(bodyAcc.PV);
     
     %% input parsing
     fOpt = struct('fs', 100, ...
@@ -77,25 +63,12 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     
     addpath('liese3lib');
     
-    step = struct('PV', true(N.samples, 1), 'LS', bIsStatLA, 'RS', bIsStatRA);
-    qOri = struct('PV', quat2rotm(qMP), ...
-                  'LS', quat2rotm(qLA), 'RS', quat2rotm(qRA));
     % wOri = struct('RPV', wMP, 'LSK', wLA, 'RSK', wRA);
-    u = [bodyAccMP'; bodyAccLA'; bodyAccRA';
-         wbodyMP'; wbodyLA'; wbodyRA'];
+    u = [bodyAcc.PV'; bodyAcc.LS'; bodyAcc.RS';
+         wbody.PV'; wbody.LS'; wbody.RS'];
     dt = 1/(fOpt.fs);       % assume constant sampling interval
     dt2 = 0.5*dt^2;
     
-%     xhat_pos.RPV = zeros(4,4,N.samples);
-%     xhat_pos.LSK = zeros(4,4,N.samples);
-%     xhat_pos.RSK = zeros(4,4,N.samples);
-%     xhat_pos.RPV(1:3,1:3,:) = quat2rotm(qMP); 
-%     xhat_pos.RPV(4,4,:) = 1;
-%     xhat_pos.LSK(1:3,1:3,:) = quat2rotm(qLA); 
-%     xhat_pos.LSK(4,4,:) = 1;
-%     xhat_pos.RSK(1:3,1:3,:) = quat2rotm(qRA); 
-%     xhat_pos.RSK(4,4,:) = 1;
-
     %% State and error covariance initialization
     bodyList = {'RPV', 'LSK', 'RSK'};
     se3StateList = {'W_T_PV', 'W_T_LS', 'W_T_RS'};
@@ -248,10 +221,53 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     %% Feature on off
     knob = {};
     knob.apModTen = mod(fOpt.applyPred, 10);
+    knob.amModTen = mod(fOpt.applyMeas, 10);
+    knob.amTenDig = mod(idivide(int32(fOpt.applyMeas), 10, 'floor'), 10);
+    knob.acModTen = mod(fOpt.applyCstr, 10);
+    knob.acTenDig = mod(idivide(int32(fOpt.applyCstr), 10, 'floor'), 10);
+    
+    % Prediction
     % zero velocity otherwise
     knob.pred.PosWithStateVel = bitand(knob.apModTen, 1); 
     % zero angular velocity otherwise
-    knob.pred.OriWithStateAngVel = bitand(knob.apModTen, 2); 
+    knob.pred.OriWithStateAngVel = bitand(knob.apModTen, 2);
+    
+    % Meas X=1: Zupt and Ankle zpos
+    if bitand(knob.amModTen, 1)
+        knob.meas.zupt = true;
+        knob.meas.zpos.LS = true;
+        knob.meas.zpos.RS = true;
+    else
+        knob.meas.zupt = false;
+        knob.meas.zpos.LS = false;
+        knob.meas.zpos.RS = false;
+        step.LS = false(N.samples, 1);
+        step.RS = false(N.samples, 1);
+    end
+    
+    if knob.amTenDig == 0
+        knob.meas.ori = true;
+        knob.meas.xyposPVLSRS = false;
+        knob.meas.zpos.PV = false;
+        step.PV = false(N.samples, 1);
+    elseif knob.amTenDig == 1
+        knob.meas.ori = true;
+        knob.meas.xyposPVLSRS = true;
+        knob.meas.zpos.PV = true;
+        step.PV = true(N.samples, 1);
+    end
+    
+    % Constraint
+    knob.cstr.thighlength = bitand(knob.acModTen, 1);
+    knob.cstr.hingeknee = bitand(knob.acModTen, 2);
+    knob.cstr.kneerom = bitand(knob.acModTen, 4);
+    knob.cstr.on = knob.cstr.thighlength | knob.cstr.hingeknee | knob.cstr.kneerom;
+    if knob.acTenDig == 0
+        knob.cstr.bendknee = true;
+    elseif knob.acTenDig == 1
+        knob.cstr.bendknee = false;
+    end
+    
     %% Iteration
     se32vecIdxs = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
     
@@ -283,7 +299,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         
         %% Measurement update
         H = {}; deltay = {}; R = {};
-        measIdx = {}; N.meas_k = 0;
+        N.meas_k = 0;
         
         H.ori_k = {};   R.ori_k = {};
         H.zpos_k = {};  R.zpos_k = {};
@@ -292,7 +308,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             bname = sname(end-1:end);
 
             % Orientation
-            if true
+            if knob.meas.ori
                 H.ori_k.(sname) = H0.ori.(sname);
                 deltay.ori_k.(sname) = rot2vec(xhatPri.(sname)(1:3,1:3,k)' ...
                                 * qOri.(bname)(:,:,kPast));
@@ -323,7 +339,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         end
         
         % XY pos
-        if false
+        if knob.meas.xyposPVLSRS
             H.xypos = zeros(2, N.state);
             H.xypos(:, idx.W_T_PV) = - H0.xyposDT * xhatPri.W_T_PV(:,:,k) ...
                                      * H0.p0Circdot;
@@ -391,21 +407,29 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         end
 
         %% Constraint update
-        N.cstr_k = 4;
-        if N.cstr_k > 0
+        if knob.cstr.on
             n_LT = D0.H2CT*(xhatPos.W_T_PV(:,:,k)*D0.PV_p_LH - ...
                                 xhatPos.W_T_LS(:,:,k)*D0.LS_p_LK);
             n_RT = D0.H2CT*(xhatPos.W_T_PV(:,:,k)*D0.PV_p_RH - ...
                                 xhatPos.W_T_RS(:,:,k)*D0.RS_p_RK);
-            alphaLK = atan2(-dot(n_LT, xhatPos.W_T_LS(1:3,3,k)), ...
-                            -dot(n_LT, xhatPos.W_T_LS(1:3,1,k))) + 0.5*pi;
-            alphaRK = atan2(-dot(n_RT, xhatPos.W_T_RS(1:3,3,k)), ...
-                            -dot(n_RT, xhatPos.W_T_RS(1:3,1,k))) + 0.5*pi;
-            if (alphaLK < fOpt.alphaLKmin) || (alphaLK > fOpt.alphaLKmax)
-                N.cstr_k = N.cstr_k + 1;
+            N.cstr_k = 0;
+            if knob.cstr.thighlength
+                N.cstr_k = N.cstr_k + 2;
             end
-            if (alphaRK < fOpt.alphaRKmin) || (alphaRK > fOpt.alphaRKmax)
-                N.cstr_k = N.cstr_k + 1;
+            if knob.cstr.hingeknee
+                N.cstr_k = N.cstr_k + 2;
+            end
+            if knob.cstr.kneerom
+                alphaLK = atan2(-dot(n_LT, xhatPos.W_T_LS(1:3,3,k)), ...
+                                -dot(n_LT, xhatPos.W_T_LS(1:3,1,k))) + 0.5*pi;
+                alphaRK = atan2(-dot(n_RT, xhatPos.W_T_RS(1:3,3,k)), ...
+                                -dot(n_RT, xhatPos.W_T_RS(1:3,1,k))) + 0.5*pi;
+                if (alphaLK < fOpt.alphaLKmin) || (alphaLK > fOpt.alphaLKmax)
+                    N.cstr_k = N.cstr_k + 1;
+                end
+                if (alphaRK < fOpt.alphaRKmin) || (alphaRK > fOpt.alphaRKmax)
+                    N.cstr_k = N.cstr_k + 1;
+                end
             end
             
             D = zeros(N.cstr_k, N.state);
@@ -414,70 +438,76 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             N.cstr_k = 0;
             
             % thigh length constraint
-            D(N.cstr_k+1,idx.W_T_PV) = 2*n_LT'*D0.H2CT*xhatPos.W_T_PV(:,:,k)*...
-                                D0.PV_p_LH_Circdot;
-            D(N.cstr_k+1,idx.W_T_LS) = -2*n_LT'*D0.H2CT*xhatPos.W_T_LS(:,:,k)*...
-                                D0.LS_p_LK_Circdot;
-            D(N.cstr_k+2,idx.W_T_PV) = 2*n_RT'*D0.H2CT*xhatPos.W_T_PV(:,:,k)*...
-                                D0.PV_p_RH_Circdot;
-            D(N.cstr_k+2,idx.W_T_RS) = -2*n_RT'*D0.H2CT*xhatPos.W_T_RS(:,:,k)*...
-                                D0.RS_p_RK_Circdot;
-            d(N.cstr_k+(1:2),:) = [d0.ltl; d0.rtl];
-            dhat(N.cstr_k+(1:2),:) = [n_LT'*n_LT; n_RT'*n_RT];
-            N.cstr_k = N.cstr_k + 2;
+            if knob.cstr.thighlength
+                D(N.cstr_k+1,idx.W_T_PV) = 2*n_LT'*D0.H2CT*xhatPos.W_T_PV(:,:,k)*...
+                                    D0.PV_p_LH_Circdot;
+                D(N.cstr_k+1,idx.W_T_LS) = -2*n_LT'*D0.H2CT*xhatPos.W_T_LS(:,:,k)*...
+                                    D0.LS_p_LK_Circdot;
+                D(N.cstr_k+2,idx.W_T_PV) = 2*n_RT'*D0.H2CT*xhatPos.W_T_PV(:,:,k)*...
+                                    D0.PV_p_RH_Circdot;
+                D(N.cstr_k+2,idx.W_T_RS) = -2*n_RT'*D0.H2CT*xhatPos.W_T_RS(:,:,k)*...
+                                    D0.RS_p_RK_Circdot;
+                d(N.cstr_k+(1:2),:) = [d0.ltl; d0.rtl];
+                dhat(N.cstr_k+(1:2),:) = [n_LT'*n_LT; n_RT'*n_RT];
+                N.cstr_k = N.cstr_k + 2;
+            end
             
             % hinge knee joint constraint
-            W_r_LS_y = xhatPos.W_T_LS(:,:,k) * D0.p_y;
-            W_r_RS_y = xhatPos.W_T_RS(:,:,k) * D0.p_y;
-            D(N.cstr_k+1,idx.W_T_PV) = W_r_LS_y' * D0.H2H ...
-                              * xhatPos.W_T_PV(:,:,k) * D0.PV_p_LH_Circdot;
-            D(N.cstr_k+1,idx.W_T_LS) = - W_r_LS_y' * D0.H2H ...
-                              * xhatPos.W_T_LS(:,:,k)*D0.LS_p_LK_Circdot ...
-                              + n_LT' * D0.H2CT * xhatPos.W_T_LS(:,:,k) ...
-                              * D0.p_y_Circdot;
-            D(N.cstr_k+2,idx.W_T_PV) = W_r_RS_y'*D0.H2H ...
-                              * xhatPos.W_T_PV(:,:,k) * D0.PV_p_RH_Circdot;
-            D(N.cstr_k+2,idx.W_T_RS) = - W_r_RS_y'*D0.H2H ...
-                              * xhatPos.W_T_RS(:,:,k)*D0.RS_p_RK_Circdot ...
-                              + n_RT'*D0.H2CT*xhatPos.W_T_RS(:,:,k) ...
-                              * D0.p_y_Circdot;
-            d(N.cstr_k+(1:2),:) = [d0.lkh; d0.rkh];
-            dhat(N.cstr_k+(1:2),:) = [(W_r_LS_y)'*D0.H2C*n_LT;
-                           (W_r_RS_y)'*D0.H2C*n_RT];
-            N.cstr_k = N.cstr_k + 2;
+            if knob.cstr.hingeknee
+                W_r_LS_y = xhatPos.W_T_LS(:,:,k) * D0.p_y;
+                W_r_RS_y = xhatPos.W_T_RS(:,:,k) * D0.p_y;
+                D(N.cstr_k+1,idx.W_T_PV) = W_r_LS_y' * D0.H2H ...
+                                  * xhatPos.W_T_PV(:,:,k) * D0.PV_p_LH_Circdot;
+                D(N.cstr_k+1,idx.W_T_LS) = - W_r_LS_y' * D0.H2H ...
+                                  * xhatPos.W_T_LS(:,:,k)*D0.LS_p_LK_Circdot ...
+                                  + n_LT' * D0.H2CT * xhatPos.W_T_LS(:,:,k) ...
+                                  * D0.p_y_Circdot;
+                D(N.cstr_k+2,idx.W_T_PV) = W_r_RS_y'*D0.H2H ...
+                                  * xhatPos.W_T_PV(:,:,k) * D0.PV_p_RH_Circdot;
+                D(N.cstr_k+2,idx.W_T_RS) = - W_r_RS_y'*D0.H2H ...
+                                  * xhatPos.W_T_RS(:,:,k)*D0.RS_p_RK_Circdot ...
+                                  + n_RT'*D0.H2CT*xhatPos.W_T_RS(:,:,k) ...
+                                  * D0.p_y_Circdot;
+                d(N.cstr_k+(1:2),:) = [d0.lkh; d0.rkh];
+                dhat(N.cstr_k+(1:2),:) = [(W_r_LS_y)'*D0.H2C*n_LT;
+                               (W_r_RS_y)'*D0.H2C*n_RT];
+                N.cstr_k = N.cstr_k + 2;
+            end
             
             % knee range of motion
-            if (alphaLK < fOpt.alphaLKmin) || (alphaLK > fOpt.alphaLKmax)
-                alphaLK2 = min(max(alphaLK, fOpt.alphaLKmin), fOpt.alphaLKmax);
-                a = [-sin(alphaLK2-pi/2); 0; cos(alphaLK2-pi/2); 0];
-                Ta = xhatPos.W_T_LS(:,:,k) * a;
-                
-                D(N.cstr_k+1,idx.W_T_PV) = Ta' * D0.H2H ...
-                        * xhatPos.W_T_PV(:,:,k) * D0.PV_p_LH_Circdot;
-                D(N.cstr_k+1,idx.W_T_LS) = n_LT' * D0.H2CT ...
-                        * xhatPos.W_T_LS(:,:,k) * point2fs(a) ...
-                    - Ta' * D0.H2H * xhatPos.W_T_LS(:,:,k) ...
-                        * D0.LS_p_LK_Circdot;
-                d(N.cstr_k+1,:) = d0.lkrom;
-                dhat(N.cstr_k+1,:) = n_LT' * D0.H2CT * Ta;
-                
-                N.cstr_k = N.cstr_k + 1;
-            end
-            if (alphaRK < fOpt.alphaRKmin) || (alphaRK > fOpt.alphaRKmax)
-                alphaRK2 = min(max(alphaRK, fOpt.alphaRKmin), fOpt.alphaRKmax);
-                a = [-sin(alphaRK2-pi/2); 0; cos(alphaRK2-pi/2); 0];
-                Ta = xhatPos.W_T_RS(:,:,k) * a;
-                
-                D(N.cstr_k+1,idx.W_T_PV) = Ta' * D0.H2H ...
-                        * xhatPos.W_T_PV(:,:,k) * D0.PV_p_RH_Circdot;
-                D(N.cstr_k+1,idx.W_T_RS) = n_RT' * D0.H2CT ...
-                        * xhatPos.W_T_RS(:,:,k) * point2fs(a) ...
-                    - Ta' * D0.H2H * xhatPos.W_T_RS(:,:,k) ...
-                        * D0.RS_p_RK_Circdot;
-                d(N.cstr_k+1,:) = d0.rkrom;
-                dhat(N.cstr_k+1,:) = n_RT' * D0.H2CT * Ta;
-                
-                N.cstr_k = N.cstr_k + 1;
+            if knob.cstr.kneerom
+                if (alphaLK < fOpt.alphaLKmin) || (alphaLK > fOpt.alphaLKmax)
+                    alphaLK2 = min(max(alphaLK, fOpt.alphaLKmin), fOpt.alphaLKmax);
+                    a = [-sin(alphaLK2-pi/2); 0; cos(alphaLK2-pi/2); 0];
+                    Ta = xhatPos.W_T_LS(:,:,k) * a;
+
+                    D(N.cstr_k+1,idx.W_T_PV) = Ta' * D0.H2H ...
+                            * xhatPos.W_T_PV(:,:,k) * D0.PV_p_LH_Circdot;
+                    D(N.cstr_k+1,idx.W_T_LS) = n_LT' * D0.H2CT ...
+                            * xhatPos.W_T_LS(:,:,k) * point2fs(a) ...
+                        - Ta' * D0.H2H * xhatPos.W_T_LS(:,:,k) ...
+                            * D0.LS_p_LK_Circdot;
+                    d(N.cstr_k+1,:) = d0.lkrom;
+                    dhat(N.cstr_k+1,:) = n_LT' * D0.H2CT * Ta;
+
+                    N.cstr_k = N.cstr_k + 1;
+                end
+                if (alphaRK < fOpt.alphaRKmin) || (alphaRK > fOpt.alphaRKmax)
+                    alphaRK2 = min(max(alphaRK, fOpt.alphaRKmin), fOpt.alphaRKmax);
+                    a = [-sin(alphaRK2-pi/2); 0; cos(alphaRK2-pi/2); 0];
+                    Ta = xhatPos.W_T_RS(:,:,k) * a;
+
+                    D(N.cstr_k+1,idx.W_T_PV) = Ta' * D0.H2H ...
+                            * xhatPos.W_T_PV(:,:,k) * D0.PV_p_RH_Circdot;
+                    D(N.cstr_k+1,idx.W_T_RS) = n_RT' * D0.H2CT ...
+                            * xhatPos.W_T_RS(:,:,k) * point2fs(a) ...
+                        - Ta' * D0.H2H * xhatPos.W_T_RS(:,:,k) ...
+                            * D0.RS_p_RK_Circdot;
+                    d(N.cstr_k+1,:) = d0.rkrom;
+                    dhat(N.cstr_k+1,:) = n_RT' * D0.H2CT * Ta;
+
+                    N.cstr_k = N.cstr_k + 1;
+                end
             end
             
             K = PhatPos(:,:,k)*D'/(D*PhatPos(:,:,k)*D');
