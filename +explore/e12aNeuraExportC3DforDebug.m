@@ -22,7 +22,8 @@ list = {
 %     struct('file', 'S01-Trial-JumpingJacks-1', 'algo', 'NS1+Aw__sOw__sIw__x+Sav01+M02+C176'), ...
 %      % debug
 %       struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__vOw__vIw__v+Sav03+P001+M001"), ...
-      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P003+M011+C007"), ...
+      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
+      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P001+M011+C007"), ...
 %       struct('file', 'S01-Trial-FigureofEight-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P001+M001"), ...
     % london demo
 %     struct('file', 'S07-Trial-Walk-1', 'algo', "NS1+Av__sOv__sIv__v+Sav01+M00+C000"), ...
@@ -69,26 +70,6 @@ for lIdx=1:length(list)
     
     eMarkers = struct();
 
-    % estBodyPred = estBody.copy();
-    % estBodyPred.MIDPEL = estState2.predState(:,1:3);
-    % estBodyPred.LTIO = estState2.predState(:,11:13);
-    % estBodyPred.RTIO = estState2.predState(:,21:23);
-    % estBodyPredRel = estBodyPred.changeRefFrame('MIDPEL');
-    % 
-    % eMarkers.MIDPELPred = estBodyPredRel.MIDPEL;
-    % eMarkers.LTIOPred = estBodyPredRel.LTIO;
-    % eMarkers.RTIOPred = estBodyPredRel.RTIO;
-    % 
-    % estBodyMeas = estBody.copy();
-    % estBodyMeas.MIDPEL = estState2.zuptState(:,1:3);
-    % estBodyMeas.LTIO = estState2.zuptState(:,11:13);
-    % estBodyMeas.RTIO = estState2.zuptState(:,21:23);
-    % estBodyMeasRel = estBodyMeas.changeRefFrame('MIDPEL');
-    % 
-    % eMarkers.MIDPELMeas = estBodyMeasRel.MIDPEL;
-    % eMarkers.LTIOMeas = estBodyMeasRel.LTIO;
-    % eMarkers.RTIOMeas = estBodyMeasRel.RTIO;
-
     estBodyRel = estBody.changeRefFrame('MIDPEL');
     viconBodyRel = vb.changeRefFrame('MIDPEL');
 
@@ -120,15 +101,8 @@ for lIdx=1:length(list)
     sensors.ePos = estBody2.calcDPos(viconBody2);
     sensors.eOri = estBody2.calcDOri(viconBody2);
     
-    if strcmp(cs.est, 'lieekfv1')
-        sensors.PELVVel = estState.vec(1:3, :)';
-        sensors.LANKVel = estState.vec(4:6, :)';
-        sensors.RANKVel = estState.vec(7:9, :)';        
-    else
-        sensors.PELVVel = estState(:, 4:6);
-        sensors.LANKVel = estState(:, 14:16);
-        sensors.RANKVel = estState(:, 24:26);
-    end
+    sensors = experiment.buildSensorStructFromDebug(sensors, estState, estState2, cs.est);
+    
     % step detection
     fs = estBody.fs;
     VAR_WIN  = floor(fs*0.25); % NUM_SAMPLES
@@ -202,105 +176,9 @@ for lIdx=1:length(list)
 %     vb.exportc3d(sprintf('%s-Vicon.c3d', targetname));
     
     %% Debug level c3d export
-    estBodyDebug = estBody.copy();
-    n2 = estBody.nSamples*3;
-    estBodyDebug.MIDPEL = repelem(estBodyDebug.MIDPEL, 3, 1);
-    estBodyDebug.LTIO = repelem(estBodyDebug.LTIO, 3, 1);
-    estBodyDebug.RTIO = repelem(estBodyDebug.RTIO, 3, 1);
-    estBodyDebug.qRPV = repelem(estBodyDebug.qRPV, 3, 1);
-    estBodyDebug.qLSK = repelem(estBodyDebug.qLSK, 3, 1);
-    estBodyDebug.qRSK = repelem(estBodyDebug.qRSK, 3, 1);
-    
-    sensorsDebug = struct();
-    fn = fieldnames(sensors);
-    for i=1:length(fn)
-        n = fn{i};
-        sensorsDebug.(n) = repelem(sensors.(n), 3, 1);
-    end
-        
-    if strcmp(cs.est, 'lieekfv1')
-        estBodyDebug.MIDPEL(1:3:n2, :) = squeeze(estState2.xhatPri.W_T_PV(1:3,4,:))';
-        estBodyDebug.MIDPEL(2:3:n2, :) = squeeze(estState2.xhatPos.W_T_PV(1:3,4,:))';
-        estBodyDebug.LTIO(1:3:n2, :) = squeeze(estState2.xhatPri.W_T_LS(1:3,4,:))';
-        estBodyDebug.LTIO(2:3:n2, :) = squeeze(estState2.xhatPos.W_T_LS(1:3,4,:))';
-        estBodyDebug.RTIO(1:3:n2, :) = squeeze(estState2.xhatPri.W_T_RS(1:3,4,:))';
-        estBodyDebug.RTIO(2:3:n2, :) = squeeze(estState2.xhatPos.W_T_RS(1:3,4,:))';
-        estBodyDebug.qRPV(1:3:n2, :) = rotm2quat(estState2.xhatPri.W_T_PV(1:3,1:3,:));
-        estBodyDebug.qRPV(2:3:n2, :) = rotm2quat(estState2.xhatPos.W_T_PV(1:3,1:3,:));
-        estBodyDebug.qLSK(1:3:n2, :) = rotm2quat(estState2.xhatPri.W_T_LS(1:3,1:3,:));
-        estBodyDebug.qLSK(2:3:n2, :) = rotm2quat(estState2.xhatPos.W_T_LS(1:3,1:3,:));
-        estBodyDebug.qRSK(1:3:n2, :) = rotm2quat(estState2.xhatPri.W_T_RS(1:3,1:3,:));
-        estBodyDebug.qRSK(2:3:n2, :) = rotm2quat(estState2.xhatPos.W_T_RS(1:3,1:3,:));
-
-        sensorsDebug.PELVVel(1:3:n2, :) = estState2.xhatPri.vec(1:3,:)';
-        sensorsDebug.PELVVel(2:3:n2, :) = estState2.xhatPos.vec(1:3,:)';
-        sensorsDebug.LANKVel(1:3:n2, :) = estState2.xhatPri.vec(4:6,:)';
-        sensorsDebug.LANKVel(2:3:n2, :) = estState2.xhatPos.vec(4:6,:)';
-        sensorsDebug.RANKVel(1:3:n2, :) = estState2.xhatPri.vec(7:9,:)';
-        sensorsDebug.RANKVel(2:3:n2, :) = estState2.xhatPos.vec(7:9,:)';
-    else
-        estBodyDebug.MIDPEL(1:3:n2, :) = estState2.predState(:,1:3);
-        estBodyDebug.MIDPEL(2:3:n2, :) = estState2.zuptState(:,1:3);
-        estBodyDebug.LTIO(1:3:n2, :) = estState2.predState(:,11:13);
-        estBodyDebug.LTIO(2:3:n2, :) = estState2.zuptState(:,11:13);
-        estBodyDebug.RTIO(1:3:n2, :) = estState2.predState(:,21:23);
-        estBodyDebug.RTIO(2:3:n2, :) = estState2.zuptState(:,21:23);
-
-        estBodyDebug.qRPV = repelem(estBodyDebug.qRPV, 3, 1);
-        estBodyDebug.qLSK = repelem(estBodyDebug.qLSK, 3, 1);
-        estBodyDebug.qRSK = repelem(estBodyDebug.qRSK, 3, 1);
-        
-        sensorsDebug.PELVVel(1:3:n2, :) = estState2.predState(:,  4: 6);
-        sensorsDebug.PELVVel(2:3:n2, :) = estState2.zuptState(:,  4: 6);
-        sensorsDebug.LANKVel(1:3:n2, :) = estState2.predState(:, 14:16);
-        sensorsDebug.LANKVel(2:3:n2, :) = estState2.zuptState(:, 14:16);
-        sensorsDebug.RANKVel(1:3:n2, :) = estState2.predState(:, 24:26);
-        sensorsDebug.RANKVel(2:3:n2, :) = estState2.zuptState(:, 24:26);
-    end
-
-    v = quat2rotm(estBodyDebug.qLSK); v = squeeze(v(:,3,:))';
-    estBodyDebug.LFEO = estBodyDebug.LTIO + estBodyDebug.getLShankLength()*v;
-    v = quat2rotm(estBodyDebug.qRSK); v = squeeze(v(:,3,:))';
-    estBodyDebug.RFEO = estBodyDebug.RTIO + estBodyDebug.getRShankLength()*v;
-    v = quat2rotm(estBodyDebug.qRPV); v = squeeze(v(:,2,:))';
-    estBodyDebug.LFEP = estBodyDebug.MIDPEL + estBodyDebug.getPelvisLength()/2*v;
-    estBodyDebug.RFEP = estBodyDebug.MIDPEL - estBodyDebug.getPelvisLength()/2*v;
-
-    v = zeros(3, 3, n2);
-    z = (estBodyDebug.LFEP-estBodyDebug.LFEO)';
-    z = z ./ vecnorm(z, 2, 1);
-    v(:, 3, :) = reshape(z, 3, 1, []);
-    y =  quat2rotm(estBodyDebug.qLSK);
-    v(:, 2, :) = y(:, 2, :);
-    x = cross(v(:, 2, :), v(:, 3, :));
-    x = x ./ vecnorm(x, 2, 1);
-    v(:, 1, :) =  reshape(x, 3, 1, []);
-    estBodyDebug.qLTH = rotm2quat(v);
-
-    v = zeros(3, 3, n2);
-    z = (estBodyDebug.RFEP-estBodyDebug.RFEO)';
-    z = z ./ vecnorm(z, 2, 1);
-    v(:, 3, :) = reshape(z, 3, 1, []);
-    y =  quat2rotm(estBodyDebug.qRSK);
-    v(:, 2, :) = y(:, 2, :);
-    x = cross(v(:, 2, :), v(:, 3, :));
-    x = x ./ vecnorm(x, 2, 1);
-    v(:, 1, :) =  reshape(x, 3, 1, []);
-    estBodyDebug.qRTH = rotm2quat(v);
-
-    estBodyDebug.nSamples = estBodyDebug.nSamples*3;
-    estBodyDebug.fs = estBodyDebug.fs*3;
-
-    viconBodyDebug = vb.copy();
-    for i=1:length(viconBodyDebug.posList)
-        n = viconBodyDebug.posList{i};
-        viconBodyDebug.(n) = repelem(viconBodyDebug.(n), 3, 1);
-    end
-    for i=1:length(viconBodyDebug.oriList)
-        n = viconBodyDebug.oriList{i};
-        viconBodyDebug.(n) = repelem(viconBodyDebug.(n), 3, 1);
-    end
-    viconBodyDebug.nSamples = viconBodyDebug.nSamples*3;
+    [estBodyDebug, sensorsDebug] = experiment.buildgrBodyDebug(estBody, sensors, estState2, cs.est);
+    n2 = estBodyDebug.nSamples;
+    [viconBodyDebug, ~] = experiment.buildgrBodyDebug(vb, {}, false, 'vicon');
 
     bIsStatLADebug = repelem(bIsStatLA, 3, 1);
     bIsStatRADebug = repelem(bIsStatRA, 3, 1);

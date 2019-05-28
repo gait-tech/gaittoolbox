@@ -22,8 +22,8 @@
 %>          X:   1st bit enforce thigh length
 %>               2nd bit enforce hinge knee joint
 %>               3rd bit enforce knee range of motion
-%>          Y=0: Fixed knee angle min and max
-%>          Y=1: Fixed knee angle max but no knee bending
+%>          Y=0: No P update
+%>          Y=1: P update
 %>
 %> @param x0 initial state in the GFR
 %> @param P0 initial covariance
@@ -36,13 +36,15 @@
 %> @param options struct containing the estimator settings:
 
 function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
-    bodyAcc, step, qOri, wbody, body, uwb_mea, options)
+    bodyAcc, step, W_R_, B_w_, body, uwb_mea, options)
     N = {};
     [N.samples, ~] = size(bodyAcc.PV);
     
     %% input parsing
     fOpt = struct('fs', 100, ...
           'applyPred', 1, 'applyMeas', 1, 'applyCstr', 1, ...
+          'sigmaQAccPV', 1, 'sigmaQAccLS', 1, 'sigmaQAccRS', 1, ...
+          'sigmaQGyrPV', 1, 'sigmaQGyrLS', 1, 'sigmaQGyrRS', 1, ...
           'sigmaQPosMP', 1, 'sigmaQPosLA', 1, 'sigmaQPosRA', 1, ...
           'sigmaQOriMP', 1, 'sigmaQOriLA', 1, 'sigmaQOriRA', 1, ...
           'sigmaQVelMP', 1, 'sigmaQVelLA', 1, 'sigmaQVelRA', 1, ...
@@ -50,7 +52,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
           'sigmaROriPV', 1e-3, 'sigmaROriLS', 1e-3, 'sigmaROriRS', 1e-3, ...
           'sigmaRZPosPV', 1e-1, 'sigmaRZPosLS', 1e-2, 'sigmaRZPosRS', 1e-2, ...
           'sigmaRZuptLA', 1e-1, 'sigmaRZuptRA', 1e-1, ...
-          'sigmaRXYPosPVLSRS', 1e1, ...
+          'sigmaRXYPosPVLSRS', 1e2, ...
           'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
           'alphaRKmin', 0, 'alphaRKmax', pi*8/9 );
     optionFieldNames = fieldnames(options);
@@ -65,7 +67,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     
     % wOri = struct('RPV', wMP, 'LSK', wLA, 'RSK', wRA);
     u = [bodyAcc.PV'; bodyAcc.LS'; bodyAcc.RS';
-         wbody.PV'; wbody.LS'; wbody.RS'];
+         B_w_.PV'; B_w_.LS'; B_w_.RS'];
     dt = 1/(fOpt.fs);       % assume constant sampling interval
     dt2 = 0.5*dt^2;
     
@@ -116,14 +118,27 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
          zeros(9,18)];
     Gvec = [dt*eye(9,9) zeros(9,9);
          zeros(9,9) eye(9,9)];
-        
+    G = zeros(N.state, size(u, 1));
+    G(idx.W_T_PV(1:3), 1:3) = dt2*eye(3,3);
+    G(idx.W_T_LS(1:3), 4:6) = dt2*eye(3,3);
+    G(idx.W_T_RS(1:3), 7:9) = dt2*eye(3,3);
+    G(idx.W_T_PV(4:6), 10:12) = dt*eye(3,3);
+    G(idx.W_T_LS(4:6), 13:15) = dt*eye(3,3);
+    G(idx.W_T_RS(4:6), 16:18) = dt*eye(3,3);
+    G(idx.vec, 1:18) = Gvec;
     Q = diag(repelem([fOpt.sigmaQPosMP.^2, fOpt.sigmaQOriMP.^2, ...
                       fOpt.sigmaQPosLA.^2, fOpt.sigmaQOriLA.^2, ...
                       fOpt.sigmaQPosRA.^2, fOpt.sigmaQOriRA.^2, ...
                       fOpt.sigmaQVelMP.^2, fOpt.sigmaQVelLA.^2, ...
                       fOpt.sigmaQVelRA.^2, fOpt.sigmaQAngVelMP.^2, ...
                       fOpt.sigmaQAngVelLA.^2, fOpt.sigmaQAngVelRA.^2], 3));
-    
+%     Q1 = diag(repelem([fOpt.sigmaQAccPV.^2, fOpt.sigmaQAccLS.^2, ...
+%                       fOpt.sigmaQAccRS.^2, ...
+%                       fOpt.sigmaQGyrPV.^2, fOpt.sigmaQGyrLS.^2, ...
+%                       fOpt.sigmaQGyrRS.^2], 3));
+% %     Q1 = diag(repelem([0, fOpt.sigmaQAccLS.^2, fOpt.sigmaQAccRS.^2, ...
+% %                       0, fOpt.sigmaQGyrLS.^2, fOpt.sigmaQGyrRS.^2], 3));
+%     Q = G * Q1 * G';
     %% Set k=1 states (initial state taken from input)
     % SE(3) state initilization (i.e., position and orientation)
     x0Offset = [0, 10, 20];
@@ -180,9 +195,11 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     for i=1:N.se3StateList
         sname = se3StateList{i};
         fOptparam = sprintf('sigmaRZPos%s', sname(end-1:end));
-        y0.zpos.(sname) = xtilde.(sname)(3,4,1);
         R0.zpos.(sname) = fOpt.(fOptparam);
     end
+    y0.zpos.W_T_PV = xtilde.W_T_PV(3,4,1);
+    y0.zpos.W_T_LS =  min([xtilde.W_T_LS(3,4,1), xtilde.W_T_RS(3,4,1)]);
+    y0.zpos.W_T_RS =  y0.zpos.W_T_LS;
     
     % pelvis = ankle x y pos
     H0.p0 = [0 0 0 1]';
@@ -263,9 +280,9 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     knob.cstr.kneerom = bitand(knob.acModTen, 4);
     knob.cstr.on = knob.cstr.thighlength | knob.cstr.hingeknee | knob.cstr.kneerom;
     if knob.acTenDig == 0
-        knob.cstr.bendknee = true;
+        knob.cstr.Pupdate = false;
     elseif knob.acTenDig == 1
-        knob.cstr.bendknee = false;
+        knob.cstr.Pupdate = true;
     end
     
     %% Iteration
@@ -282,7 +299,8 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             xi = xtilde.vec(se32vecIdxs{i},kPast);
             % convert W_vel to B_vel
             if knob.pred.PosWithStateVel
-                xi(1:3) = qOri.(bname)(:,:,kPast)'*xi(1:3);
+                xi(1:3) = W_R_.(bname)(:,:,kPast)'*(xi(1:3));
+%                 xi(1:3) = W_R_.(bname)(:,:,kPast)'*(xi(1:3) + dt2*bodyAcc.(bname)(kPast,:)');
             else
                 xi(1:3) = 0;
             end
@@ -311,7 +329,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             if knob.meas.ori
                 H.ori_k.(sname) = H0.ori.(sname);
                 deltay.ori_k.(sname) = rot2vec(xhatPri.(sname)(1:3,1:3,k)' ...
-                                * qOri.(bname)(:,:,kPast));
+                                * W_R_.(bname)(:,:,kPast));
                 R.ori_k.(sname) = R0.ori.(sname);
             else
                 H.ori_k.(sname) = []; 
@@ -511,8 +529,11 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             end
             
             K = PhatPos(:,:,k)*D'/(D*PhatPos(:,:,k)*D');
-            Ptilde(:,:,k) = (I_N-K*D)*PhatPos(:,:,k);
-%             Ptilde(:,:,k) = PhatPos(:,:,k);
+            if knob.cstr.Pupdate
+                Ptilde(:,:,k) = (I_N-K*D)*PhatPos(:,:,k);
+            else
+                Ptilde(:,:,k) = PhatPos(:,:,k);
+            end
             measUpt = K*(d-dhat);
 
             for i=1:N.se3StateList
@@ -540,6 +561,9 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     xhatPri.vec = xhatPri.vec(:,2:end);
     xhatPos.vec = xhatPos.vec(:,2:end);
     xtilde.vec = xtilde.vec(:,2:end);
+    PhatPri = PhatPri(:,:,2:end);
+    PhatPos = PhatPos(:,:,2:end);
+    Ptilde = Ptilde(:,:,2:end);
     
     LTIBz = squeeze(xtilde.W_T_LS(1:3,3,:))';
     RTIBz = squeeze(xtilde.W_T_RS(1:3,3,:))';
@@ -569,6 +593,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     
     debug_dat.xhatPri = xhatPri;
     debug_dat.xhatPos = xhatPos;
+    debug_dat.xtilde = xtilde;
     debug_dat.PhatPri = PhatPri;
     debug_dat.PhatPos = PhatPos;
     debug_dat.Ptilde = Ptilde;
