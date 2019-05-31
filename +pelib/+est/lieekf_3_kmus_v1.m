@@ -36,9 +36,9 @@
 %> @param options struct containing the estimator settings:
 
 function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
-    bodyAcc, step, W_R_, B_w_, body, uwb_mea, options)
+    B_a_, step, W_R_, B_w_, body, uwb_mea, options)
     N = {};
-    [N.samples, ~] = size(bodyAcc.PV);
+    [N.samples, ~] = size(B_a_.PV);
     
     %% input parsing
     fOpt = struct('fs', 100, ...
@@ -66,8 +66,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     addpath('liese3lib');
     
     % wOri = struct('RPV', wMP, 'LSK', wLA, 'RSK', wRA);
-    u = [bodyAcc.PV'; bodyAcc.LS'; bodyAcc.RS';
-         B_w_.PV'; B_w_.LS'; B_w_.RS'];
+    g = [0 0 9.81]';        % gravity
     dt = 1/(fOpt.fs);       % assume constant sampling interval
     dt2 = 0.5*dt^2;
     
@@ -114,31 +113,36 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         Ptilde(:,:,1) = P0;
     end
     
-    Fvec = [eye(9,9) zeros(9,9);
-         zeros(9,18)];
-    Gvec = [dt*eye(9,9) zeros(9,9);
+    F = struct(); G = struct(); Q = struct();
+    F.vec = [eye(9,9) zeros(9,9);
+             zeros(9,18)];
+    G.vec = [dt*eye(9,9) zeros(9,9);
          zeros(9,9) eye(9,9)];
-    G = zeros(N.state, size(u, 1));
-    G(idx.W_T_PV(1:3), 1:3) = dt2*eye(3,3);
-    G(idx.W_T_LS(1:3), 4:6) = dt2*eye(3,3);
-    G(idx.W_T_RS(1:3), 7:9) = dt2*eye(3,3);
-    G(idx.W_T_PV(4:6), 10:12) = dt*eye(3,3);
-    G(idx.W_T_LS(4:6), 13:15) = dt*eye(3,3);
-    G(idx.W_T_RS(4:6), 16:18) = dt*eye(3,3);
-    G(idx.vec, 1:18) = Gvec;
-    Q = diag(repelem([fOpt.sigmaQPosMP.^2, fOpt.sigmaQOriMP.^2, ...
-                      fOpt.sigmaQPosLA.^2, fOpt.sigmaQOriLA.^2, ...
-                      fOpt.sigmaQPosRA.^2, fOpt.sigmaQOriRA.^2, ...
-                      fOpt.sigmaQVelMP.^2, fOpt.sigmaQVelLA.^2, ...
-                      fOpt.sigmaQVelRA.^2, fOpt.sigmaQAngVelMP.^2, ...
-                      fOpt.sigmaQAngVelLA.^2, fOpt.sigmaQAngVelRA.^2], 3));
-%     Q1 = diag(repelem([fOpt.sigmaQAccPV.^2, fOpt.sigmaQAccLS.^2, ...
-%                       fOpt.sigmaQAccRS.^2, ...
-%                       fOpt.sigmaQGyrPV.^2, fOpt.sigmaQGyrLS.^2, ...
-%                       fOpt.sigmaQGyrRS.^2], 3));
-% %     Q1 = diag(repelem([0, fOpt.sigmaQAccLS.^2, fOpt.sigmaQAccRS.^2, ...
-% %                       0, fOpt.sigmaQGyrLS.^2, fOpt.sigmaQGyrRS.^2], 3));
-%     Q = G * Q1 * G';
+    G.naive = zeros(N.state, 18);
+    G.naive(idx.W_T_PV(1:3), 1:3) = dt2*eye(3,3);
+    G.naive(idx.W_T_LS(1:3), 4:6) = dt2*eye(3,3);
+    G.naive(idx.W_T_RS(1:3), 7:9) = dt2*eye(3,3);
+    G.naive(idx.W_T_PV(4:6), 10:12) = dt*eye(3,3);
+    G.naive(idx.W_T_LS(4:6), 13:15) = dt*eye(3,3);
+    G.naive(idx.W_T_RS(4:6), 16:18) = dt*eye(3,3);
+    G.naive(idx.vec, 1:18) = G.vec;
+%     Q = diag(repelem([fOpt.sigmaQPosMP.^2, fOpt.sigmaQOriMP.^2, ...
+%                       fOpt.sigmaQPosLA.^2, fOpt.sigmaQOriLA.^2, ...
+%                       fOpt.sigmaQPosRA.^2, fOpt.sigmaQOriRA.^2, ...
+%                       fOpt.sigmaQVelMP.^2, fOpt.sigmaQVelLA.^2, ...
+%                       fOpt.sigmaQVelRA.^2, fOpt.sigmaQAngVelMP.^2, ...
+%                       fOpt.sigmaQAngVelLA.^2, fOpt.sigmaQAngVelRA.^2], 3));
+    Q0 = diag(repelem([fOpt.sigmaQAccPV.^2, fOpt.sigmaQAccLS.^2, ...
+                      fOpt.sigmaQAccRS.^2, ...
+                      fOpt.sigmaQGyrPV.^2, fOpt.sigmaQGyrLS.^2, ...
+                      fOpt.sigmaQGyrRS.^2], 3));
+%     Q1 = diag(repelem([0, fOpt.sigmaQAccLS.^2, fOpt.sigmaQAccRS.^2, ...
+%                       0, fOpt.sigmaQGyrLS.^2, fOpt.sigmaQGyrRS.^2], 3));
+    Q.naive = G.naive * Q0 * G.naive';
+    Q.vec = G.vec*Q0*G.vec';
+    Q.comb = zeros(N.state, N.state);
+    Q.comb(idx.vec,idx.vec) = Q.vec;
+    
     %% Set k=1 states (initial state taken from input)
     % SE(3) state initilization (i.e., position and orientation)
     x0Offset = [0, 10, 20];
@@ -238,6 +242,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     %% Feature on off
     knob = {};
     knob.apModTen = mod(fOpt.applyPred, 10);
+    knob.apTenDig = mod(idivide(int32(fOpt.applyPred), 10, 'floor'), 10);
     knob.amModTen = mod(fOpt.applyMeas, 10);
     knob.amTenDig = mod(idivide(int32(fOpt.applyMeas), 10, 'floor'), 10);
     knob.acModTen = mod(fOpt.applyCstr, 10);
@@ -248,6 +253,11 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     knob.pred.PosWithStateVel = bitand(knob.apModTen, 1); 
     % zero angular velocity otherwise
     knob.pred.OriWithStateAngVel = bitand(knob.apModTen, 2);
+    if knob.apTenDig == 0
+        knob.pred.useStateinWFrameConv = false;
+    else
+        knob.pred.useStateinWFrameConv = true;
+    end
     
     % Meas X=1: Zupt and Ankle zpos
     if bitand(knob.amModTen, 1)
@@ -287,11 +297,25 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     
     %% Iteration
     se32vecIdxs = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
-    
+    u = zeros(18, N.samples);
     for k=2:(N.samples+1)
         kPast = k-1;
         %% Prediction update
-        F = zeros(N.state,N.state);
+        %         u(:,kPast) = [B_a_.PV(kPast,:)'; B_a_.LS(kPast,:)'; B_a_.RS(kPast,:)'; ...
+%                  B_w_.PV(kPast,:)'; B_w_.LS(kPast,:)'; B_w_.RS(kPast,:)'];
+        if knob.pred.useStateinWFrameConv
+            u(:,kPast) = [xtilde.W_T_PV(1:3,1:3,kPast)*B_a_.PV(kPast,:)' - g; ...
+                 xtilde.W_T_LS(1:3,1:3,kPast)*B_a_.LS(kPast,:)' - g; ...
+                 xtilde.W_T_RS(1:3,1:3,kPast)*B_a_.RS(kPast,:)' - g; ...
+                 B_w_.PV(kPast,:)'; B_w_.LS(kPast,:)'; B_w_.RS(kPast,:)'];
+        else
+            u(:,kPast) = [W_R_.PV(:,:,kPast)*B_a_.PV(kPast,:)' - g; ...
+                 W_R_.LS(:,:,kPast)*B_a_.LS(kPast,:)' - g; ...
+                 W_R_.RS(:,:,kPast)*B_a_.RS(kPast,:)' - g; ...
+                 B_w_.PV(kPast,:)'; B_w_.LS(kPast,:)'; B_w_.RS(kPast,:)'];
+        end
+        
+        F.comb = zeros(N.state,N.state);
         for i=1:N.se3StateList
             sname = se3StateList{i};
             bname = sname(end-1:end);
@@ -300,7 +324,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             % convert W_vel to B_vel
             if knob.pred.PosWithStateVel
                 xi(1:3) = W_R_.(bname)(:,:,kPast)'*(xi(1:3));
-%                 xi(1:3) = W_R_.(bname)(:,:,kPast)'*(xi(1:3) + dt2*bodyAcc.(bname)(kPast,:)');
+%                 xi(1:3) = W_R_.(bname)(:,:,kPast)'*(xi(1:3) + dt*u(se32vecIdxs{i}(1:3),kPast));
             else
                 xi(1:3) = 0;
             end
@@ -308,12 +332,16 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                 xi(4:6) = 0; 
             end
             bigxi = vec2tran(xi*dt);
-            F(idx.(sname),idx.(sname)) = tranAd(bigxi);
+            bigphi = vec2jac(xi*dt);
+            F.comb(idx.(sname),idx.(sname)) = tranAd(bigxi);
             xhatPri.(sname)(:,:,k) = xtilde.(sname)(:,:,kPast)*bigxi;
+            Q.comb(idx.(sname),idx.(sname)) = bigphi * ...
+                        Q.vec(se32vecIdxs{i}, se32vecIdxs{i}) * bigphi';
         end
-        F(idx.vec,idx.vec) = Fvec;
-        xhatPri.vec(:,k) = Fvec*xtilde.vec(:,kPast) + Gvec*u(:,kPast);
-        PhatPri(:,:,k) = F*Ptilde(:,:,kPast)*F' + Q;
+        F.comb(idx.vec,idx.vec) = F.vec;
+        xhatPri.vec(:,k) = F.vec*xtilde.vec(:,kPast) + G.vec*u(:,kPast);
+%         Phi = 
+        PhatPri(:,:,k) = F.comb*Ptilde(:,:,kPast)*F.comb' + Q.comb;
         
         %% Measurement update
         H = {}; deltay = {}; R = {};
@@ -591,6 +619,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     debug_dat.qLTH = rotm2quat(R_LFEM);
     debug_dat.qRTH = rotm2quat(R_RFEM);
     
+    debug_dat.u = u;
     debug_dat.xhatPri = xhatPri;
     debug_dat.xhatPos = xhatPos;
     debug_dat.xtilde = xtilde;

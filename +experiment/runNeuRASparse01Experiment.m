@@ -210,12 +210,17 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         gfrAcc.w__sfv.RA = filter(lpf_b, lpf_a, gfrAcc.w__sv.RA);
     
         %% body acceleration
-        for i={'w__sv', 'w__v'}
-            sname = i{1};
-            bodyAcc.(sname).MP = quatrotate(qOri.(sname).PELV, gfrAcc.(sname).MP);
-            bodyAcc.(sname).LA = quatrotate(qOri.(sname).LTIB, gfrAcc.(sname).LA);
-            bodyAcc.(sname).RA = quatrotate(qOri.(sname).RTIB, gfrAcc.(sname).RA);
-        end
+        bodyAcc.w__v.MP = quatrotate(qOri.w__v.PELV, gfrAcc.w__v.MP + [0 0 9.81]);
+        bodyAcc.w__v.LA = quatrotate(qOri.w__v.LTIB, gfrAcc.w__v.LA + [0 0 9.81]);
+        bodyAcc.w__v.RA = quatrotate(qOri.w__v.RTIB, gfrAcc.w__v.RA + [0 0 9.81]);
+
+        bodyAcc.w__sv.MP = quatrotate(quatconj(viconCalibSB.Pelvis.ori), W__dataS.Pelvis.acc);
+        bodyAcc.w__sv.MP = bodyAcc.w__sv.MP(sIdx:eIdx, :);
+        bodyAcc.w__sv.LA = quatrotate(quatconj(viconCalibSB.L_LowLeg.ori), W__dataS.L_LowLeg.acc);
+        bodyAcc.w__sv.LA = bodyAcc.w__sv.LA(sIdx:eIdx, :);
+        bodyAcc.w__sv.RA = quatrotate(quatconj(viconCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.acc);
+        bodyAcc.w__sv.RA = bodyAcc.w__sv.RA(sIdx:eIdx, :);
+        
         
         % UWB measurements
         %  Simulate uwb measurement by generating pairwise combinations, using the
@@ -444,12 +449,16 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         gfrAcc.w__sx.RA = gfrAcc.w__sx.RA(sIdx:eIdx,:);
         
         %% body acceleration
-        for i={'w__sx', 'w__x'}
-            sname = i{1};
-            bodyAcc.(sname).MP = quatrotate(qOri.(sname).PELV, gfrAcc.(sname).MP);
-            bodyAcc.(sname).LA = quatrotate(qOri.(sname).LTIB, gfrAcc.(sname).LA);
-            bodyAcc.(sname).RA = quatrotate(qOri.(sname).RTIB, gfrAcc.(sname).RA);
-        end
+        bodyAcc.w__x.MP = quatrotate(qOri.w__x.PELV, gfrAcc.w__x.MP + [0 0 9.81]);
+        bodyAcc.w__x.LA = quatrotate(qOri.w__x.LTIB, gfrAcc.w__x.LA + [0 0 9.81]);
+        bodyAcc.w__x.RA = quatrotate(qOri.w__x.RTIB, gfrAcc.w__x.RA + [0 0 9.81]);
+
+        bodyAcc.w__sx.MP = quatrotate(quatconj(xsensCalibSB.Pelvis.ori), W__dataS.Pelvis.acc);
+        bodyAcc.w__sx.MP = bodyAcc.w__sx.MP(sIdx:eIdx, :);
+        bodyAcc.w__sx.LA = quatrotate(quatconj(xsensCalibSB.L_LowLeg.ori), W__dataS.L_LowLeg.acc);
+        bodyAcc.w__sx.LA = bodyAcc.w__sx.LA(sIdx:eIdx, :);
+        bodyAcc.w__sx.RA = quatrotate(quatconj(xsensCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.acc);
+        bodyAcc.w__sx.RA = bodyAcc.w__sx.RA(sIdx:eIdx, :);
         
         % UWB measurements
         %  Simulate uwb measurement by generating pairwise combinations, using the
@@ -748,16 +757,17 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
                   'applyMeas', cs.applyMeas, 'applyCstr', cs.applyCstr, ...
                   'sigmaQAccPV', cs.sigmaQAcc, 'sigmaQAccLS', cs.sigmaQAcc, ...
                   'sigmaQAccRS', cs.sigmaQAcc, ...
-                  'sigmaQGyrPV', cs.sigmaQAcc, 'sigmaQGyrLS', cs.sigmaQAcc, ...
-                  'sigmaQGyrRS', cs.sigmaQAcc);
+                  'sigmaQGyrPV', cs.sigmaQAngVel, ...
+                  'sigmaQGyrLS', cs.sigmaQAngVel, ...
+                  'sigmaQGyrRS', cs.sigmaQAngVel);
                 csx0(07:10) = csQOri.PELV(1,:)';
                 csx0(17:20) = csQOri.LTIB(1,:)';
                 csx0(27:30) = csQOri.RTIB(1,:)';
                 body = struct('PV_d', d_pelvis, ...
                               'LT_d', d_lfemur, 'RT_d', d_rfemur, ...
                               'LS_d', d_ltibia, 'RS_d', d_rtibia);
-                tmpBodyAcc = struct('PV', csGfrAcc.MP, ...
-                                 'LS', csGfrAcc.LA, 'RS', csGfrAcc.RA);
+                tmpBodyAcc = struct('PV', csBodyAcc.MP, ...
+                                 'LS', csBodyAcc.LA, 'RS', csBodyAcc.RA);
                 tmpStep = struct('PV', bIsStatMP, ...
                               'LS', bIsStatLA, 'RS', bIsStatRA);
                 tmpQOri = struct('PV', quat2rotm(csQOri.PELV), ...
