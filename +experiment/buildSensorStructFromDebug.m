@@ -21,7 +21,13 @@ function sensors = buildSensorStructFromDebug(sensors, state, state2, algo, suff
             sname = sprintf('%sVel%s', idx{i}{1}, suffix);
             sensors.(sname) = state.vec(idx{i}{2}, :)';
         end
-           
+        
+        idx = {{'PELV', 10:12}, {'LANK', 13:15}, {'RANK', 16:18}};
+        for i=1:3
+            sname = sprintf('%sAVel%s', idx{i}{1}, suffix);
+            sensors.(sname) = state.vec(idx{i}{2}, :)';
+        end
+        
         idx = {{'PV',  1: 3,  4: 6, 19:21, 28:30}, ...
                {'LS',  7: 9, 10:12, 22:24, 31:33}, ...
                {'RS', 13:15, 16:18, 25:27, 34:36}};

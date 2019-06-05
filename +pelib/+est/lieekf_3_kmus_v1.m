@@ -15,11 +15,11 @@
 %>               2nd bit use angular velocity to predict orientation
 %>          Y=0: Calculates acc and ang vel from sensor ori
 %>      applyMeas: 3 digit ZYX
-%>          X=1: Zupt and Ankle zpos
-%>          Y=0: Ori
-%>          Y=1: Ori, Pelvis assumption (xy=ankle average, z=initial height) 
-%>          Y=2: Ori, Vel cstr Y and Z
-%>          Y=3: Ori, Pelvis assumption, Vel cstr Y and Z
+%>          X: Ori always on
+%>               1st bit Zupt and Ankle zpos
+%>               2nd bit Update angular velocity
+%>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
+%>               2nd bit Vel cstr Y and Z
 %>      applyCstr: 3 digit ZYX
 %>          X:   1st bit enforce thigh length
 %>               2nd bit enforce hinge knee joint
@@ -80,6 +80,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     N.se3StateList = length(se3StateList);
     N.se3State = N.se3StateList*6;    
     N.r3State = 18;
+    
     N.state = N.se3State + N.r3State;
     
     idx = struct('W_T_PV', 1:6, 'W_T_LS', 7:12, 'W_T_RS', 13:18, ...
@@ -174,7 +175,6 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     end
     
     % Angular velocity
-    H0.angvel = [zeros(9,18+9) dt*eye(9,9)];
     R0.angvel = repelem([fOpt.sigmaRAngVelPV, fOpt.sigmaRAngVelLS, ...
                          fOpt.sigmaRAngVelRS], 3);
     % ZUPT
@@ -273,10 +273,12 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         knob.pred.useStateinWFrameConv = true;
     end
     
-    knob.meas = struct('ori', false, 'angvel', false, ...
+    knob.meas = struct('ori', true, 'angvel', false, ...
         'zupt', false, 'xyposPVLSRS', false, ...
         'velcstrY', false, 'velcstrZ', false);   
-    % Meas X=1: Zupt and Ankle zpos
+%>          X: Ori always on
+%>               1st bit Zupt and Ankle zpos
+%>               2nd bit Update angular velocity
     if bitand(knob.amModTen, 1)
         knob.meas.zupt = true;
         knob.meas.zpos.LS = true;
@@ -287,34 +289,21 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         step.LS = false(N.samples, 1);
         step.RS = false(N.samples, 1);
     end
-    
-    if knob.amTenDig == 0
-        knob.meas.ori = true;
-%         knob.meas.angvel = true;
-        knob.meas.zpos.PV = false;
-        step.PV = false(N.samples, 1);
-    elseif knob.amTenDig == 1
-        knob.meas.ori = true;
-%         knob.meas.angvel = true;
-        knob.meas.xyposPVLSRS = true;
+    knob.meas.angvel = bitand(knob.amModTen, 2);
+
+%>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
+%>               2nd bit Vel cstr Y and Z
+
+    if bitand(knob.amTenDig, 1)
         knob.meas.zpos.PV = true;
         step.PV = true(N.samples, 1);
-    elseif knob.amTenDig == 2
-        knob.meas.ori = true;
-%         knob.meas.angvel = true;
+        knob.meas.xyposPVLSRS = true;
+    else
         knob.meas.zpos.PV = false;
         step.PV = false(N.samples, 1);
-        knob.meas.velcstrY = false;
-        knob.meas.velcstrZ = true;
-    elseif knob.amTenDig == 3
-        knob.meas.ori = true;
-%         knob.meas.angvel = true;
-        knob.meas.xyposPVLSRS = true;
-        knob.meas.zpos.PV = true;
-        step.PV = true(N.samples, 1);
-        knob.meas.velcstrY = true;
-        knob.meas.velcstrZ = true;
     end
+    knob.meas.velcstrY = bitand(knob.amTenDig, 2);
+    knob.meas.velcstrZ = bitand(knob.amTenDig, 2);
     
     % Constraint
     knob.cstr.thighlength = bitand(knob.acModTen, 1);
@@ -339,12 +328,16 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             u(:,kPast) = [xtilde.W_T_PV(1:3,1:3,kPast)*B_a_.PV(kPast,:)' - g; ...
                  xtilde.W_T_LS(1:3,1:3,kPast)*B_a_.LS(kPast,:)' - g; ...
                  xtilde.W_T_RS(1:3,1:3,kPast)*B_a_.RS(kPast,:)' - g; ...
-                 B_w_.PV(kPast,:)'; B_w_.LS(kPast,:)'; B_w_.RS(kPast,:)'];
+                 xtilde.W_T_PV(1:3,1:3,kPast)*B_w_.PV(kPast,:)'; ...
+                 xtilde.W_T_LS(1:3,1:3,kPast)*B_w_.LS(kPast,:)'; ...
+                 xtilde.W_T_RS(1:3,1:3,kPast)*B_w_.RS(kPast,:)'];
         else
             u(:,kPast) = [W_R_.PV(:,:,kPast)*B_a_.PV(kPast,:)' - g; ...
                  W_R_.LS(:,:,kPast)*B_a_.LS(kPast,:)' - g; ...
                  W_R_.RS(:,:,kPast)*B_a_.RS(kPast,:)' - g; ...
-                 B_w_.PV(kPast,:)'; B_w_.LS(kPast,:)'; B_w_.RS(kPast,:)'];
+                 W_R_.PV(:,:,kPast)*B_w_.PV(kPast,:)'; ...
+                 W_R_.LS(:,:,kPast)*B_w_.LS(kPast,:)'; ...
+                 W_R_.RS(:,:,kPast)*B_w_.RS(kPast,:)'];
         end
         
         F.comb = zeros(N.state,N.state);
@@ -354,13 +347,20 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             
             xi = xtilde.vec(se32vecIdxs{i},kPast);
             % convert W_vel to B_vel
+            if knob.pred.useStateinWFrameConv
+                B_R_W = xtilde.(sname)(1:3,1:3,kPast)';
+            else
+                B_R_W = W_R_.(bname)(:,:,kPast)';
+            end
             if knob.pred.PosWithStateVel
-                xi(1:3) = W_R_.(bname)(:,:,kPast)'*(xi(1:3));
+                xi(1:3) = B_R_W*xi(1:3);
 %                 xi(1:3) = W_R_.(bname)(:,:,kPast)'*(xi(1:3) + dt*u(se32vecIdxs{i}(1:3),kPast));
             else
                 xi(1:3) = 0;
             end
-            if ~knob.pred.OriWithStateAngVel
+            if knob.pred.OriWithStateAngVel
+                xi(4:6) = B_R_W*xi(4:6);
+            else
                 xi(4:6) = 0; 
             end
             bigxi = vec2tran(xi*dt);
@@ -388,8 +388,8 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             % Orientation
             if knob.meas.ori
                 H.ori_k.(sname) = H0.ori.(sname);
-                deltay.ori_k.(sname) = rot2vec(xhatPri.(sname)(1:3,1:3,k)' ...
-                                * W_R_.(bname)(:,:,kPast));
+                deltay.ori_k.(sname) = real(rot2vec(xhatPri.(sname)(1:3,1:3,k)' ...
+                                * W_R_.(bname)(:,:,kPast)));
                 R.ori_k.(sname) = R0.ori.(sname);
             else
                 H.ori_k.(sname) = []; 
@@ -418,18 +418,23 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         
         % Angular Velocity
         if knob.meas.angvel
-            H.angvel = H0.angvel;
-            deltay.angvel = [ rot2vec(xhatPri.W_T_PV(1:3,1:3,k)' ...
-                                * W_R_.PV(:,:,kPast));
-                              rot2vec(xhatPri.W_T_LS(1:3,1:3,k)' ...
-                                * W_R_.LS(:,:,kPast));
-                              rot2vec(xhatPri.W_T_RS(1:3,1:3,k)' ...
-                                * W_R_.RS(:,:,kPast)) ] ...
+            H.angvel = [zeros(9,18+9) eye(9,9)];
+                        
+            deltay.angvel = real([ W_R_.PV(:,:,kPast) * ...
+                              rot2vec(xtilde.W_T_PV(1:3,1:3,kPast)' ...
+                                * W_R_.PV(:,:,kPast)) ./ dt; ...
+                              W_R_.LS(:,:,kPast) * ...
+                              rot2vec(xtilde.W_T_LS(1:3,1:3,kPast)' ...
+                                * W_R_.LS(:,:,kPast)) ./ dt; ...
+                              W_R_.RS(:,:,kPast) * ...
+                              rot2vec(xtilde.W_T_RS(1:3,1:3,kPast)' ...
+                                * W_R_.RS(:,:,kPast)) ./ dt ]) ...
                             - xhatPri.vec(10:18,k);
             R.angvel = R0.angvel;
         else
             H.angvel = []; deltay.angvel = []; R.angvel = [];
         end
+        N.meas_k = N.meas_k + size(H.angvel, 1);
         
         % XY pos
         if knob.meas.xyposPVLSRS

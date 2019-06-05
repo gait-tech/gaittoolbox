@@ -108,6 +108,14 @@ function [bodyDebug, sensorsDebug] = buildgrBodyDebug(body, sensors, debugData, 
                 sensorsDebug.(sname)(2:3:n2, :) = debugData.xhatPos.vec(idx{i}{2},:)';
                 sensorsDebug.(sname)(3:3:n2, :) = debugData.xtilde.vec(idx{i}{2},:)';
             end
+            
+            idx = {{'PELV', 10:12}, {'LANK', 13:15}, {'RANK', 16:18}};
+            for i=1:3
+                sname = sprintf('%sAVel%s', idx{i}{1}, suffix);
+                sensorsDebug.(sname)(1:3:n2, :) = debugData.xhatPri.vec(idx{i}{2},:)';
+                sensorsDebug.(sname)(2:3:n2, :) = debugData.xhatPos.vec(idx{i}{2},:)';
+                sensorsDebug.(sname)(3:3:n2, :) = debugData.xtilde.vec(idx{i}{2},:)';
+            end
         else
             idx = {{'PELV',  4: 6}, {'LANK', 14:16}, {'RANK', 24:26}};
             for i=1:3

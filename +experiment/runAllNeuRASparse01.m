@@ -79,7 +79,7 @@ for nsI = 1:length(nsList)
 %                            'sigmaUwbLeg', 0);
 %     end
     for pI = [3]
-        for mI = [21]
+        for mI = [1 11 21 31 3 13 23 33]
             for cI = [7]
                 for sdI = {'av03'} % {'av01', 'av03'}
     %                     setups{end+1} = struct('est', 'ekfv3', ...

@@ -1,6 +1,6 @@
 % motion list
 mot = struct('file', 'S01-Trial-Walk-1', ...
-             'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P003+M021+C007");
+             'algo', "NS2+lieekfv1+Aw__vOw__vIw__v+Sav03+P003+M000+C000");
 
 dataSfname = sprintf('neura-sparse01/imu/%s', mot.file);
 ns = extractBetween(mot.algo, 1, 3);
@@ -36,9 +36,14 @@ csQOri = qOri.(aLabel);
 % clf; pelib.viz.plotXYZ(100, vel.LFEO, vel.LFEO2)
 
 vHmkbasisT = {}; vecIdx = 1;
+W_avel = {}; avelIdx = 1;
+
 for body = {vb, estBody}
     body1 = body{1};
     vel = body1.calcJointVel({'MIDPEL', 'LFEO', 'RFEO', 'LFEP', 'RFEP', 'LTIO', 'RTIO'});
+    W_avel{avelIdx} = body1.calcSegAngVel({'qRPV', 'qLSK', 'qRSK'}, 'W');
+    avelIdx = avelIdx + 1;
+    
     W_R_LT = quat2rotm(body1.qLTH);
     W_R_RT = quat2rotm(body1.qRTH);
     vLHmLK = vel.LFEP - vel.LFEO;
@@ -63,3 +68,15 @@ vRHmRKbasisRTEst = vHmkbasisT{4};
 updateFigureContents('vHmK');
 pelib.viz.plotXYZ(100, vLHmLKbasisLTAct, vRHmRKbasisRTAct, ...
                        vLHmLKbasisLTEst, vRHmRKbasisRTEst);
+
+WavelActPV = W_avel{1}.qRPV;
+WavelEstPV = W_avel{2}.qRPV;
+WavelActLS = W_avel{1}.qLSK;
+WavelEstLS = W_avel{2}.qLSK;
+WavelActRS = W_avel{1}.qRSK;
+WavelEstRS = W_avel{2}.qRSK;
+
+updateFigureContents('avel check');
+t=1:length(idx);
+pelib.viz.plotXYZ(100, WavelActPV, WavelEstPV, WavelActLS, WavelEstLS, ...
+                  WavelActRS, WavelEstRS);

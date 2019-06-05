@@ -146,37 +146,22 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         qOri.w__v.RTIB = W__dataV.qRSK(sIdx+1:eIdx+1, :);
         
         % Angular velocity of body in body frame as obtained from vicon input
-        wPelvis0 = quatmultiply(quatconj(W__dataV.qRPV(sIdx+1:eIdx+1, :)), ...
-                                W__dataV.qRPV([sIdx+2:eIdx+1 eIdx+1], :));
-        wLankle0 = quatmultiply(quatconj(W__dataV.qLSK(sIdx+1:eIdx+1, :)), ...
-                                W__dataV.qLSK([sIdx+2:eIdx+1 eIdx+1], :));
-        wRankle0 = quatmultiply(quatconj(W__dataV.qRSK(sIdx+1:eIdx+1, :)), ...
-                                W__dataV.qRSK([sIdx+2:eIdx+1 eIdx+1], :));
-        % this check is important as quat rep is a 2-1 mapping (i.e., q=-q)
-        % I need angular velocity to be consistent (i.e., scalar part is
-        % always positive)
-        tmpIdx = wPelvis0(:,1)<0;
-        wPelvis0(tmpIdx,:) = -wPelvis0(tmpIdx,:);
-        tmpIdx = wLankle0(:,1)<0;
-        wLankle0(tmpIdx,:) = -wLankle0(tmpIdx,:);
-        tmpIdx = wRankle0(:,1)<0;
-        wRankle0(tmpIdx,:) = -wRankle0(tmpIdx,:);
-        
-        wbodyOri.w__v.PELV = 2*wPelvis0(:,2:4)*fs;
-        wbodyOri.w__v.LTIB = 2*wLankle0(:,2:4)*fs;
-        wbodyOri.w__v.RTIB = 2*wRankle0(:,2:4)*fs;
-        
-        %% position, velocity, acceleration
         W__viconBody = W__dataV.togrBody(1:nSamples, {'name', 'act', 'oriUnit', 'deg', ...
                          'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
-                         'xyzColor', {'m', 'y', 'c'}});  
+                         'xyzColor', {'m', 'y', 'c'}});
+        angvel = W__viconBody.calcSegAngVel({'qRPV', 'qLSK', 'qRSK'}, 'B');
+        wbodyOri.w__v.PELV = angvel.qRPV(sIdx+1:eIdx+1,:);
+        wbodyOri.w__v.LTIB = angvel.qLSK(sIdx+1:eIdx+1,:);
+        wbodyOri.w__v.RTIB = angvel.qRSK(sIdx+1:eIdx+1,:);
+                
+        %% position, velocity, acceleration
         vel = W__viconBody.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
         acc = W__viconBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
 
         x0.w__v = [W__viconBody.MIDPEL(sIdx,:) vel.MIDPEL(sIdx,:) zeros(1,4) ...
                    W__viconBody.LTIO(sIdx,:) vel.LTIO(sIdx,:) zeros(1,4) ...
                    W__viconBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]';     
-
+        
         vsigma = unique([cellfun(@(x) x.accDataNoise, setups), 0]);
         randnN = size(acc.MIDPEL, 1);
         for i = 1:length(vsigma)
@@ -396,31 +381,16 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         qOri.w__x.RTIB = W__dataX.qRightLeg(sIdx:eIdx, :);
                
         % Angular velocity of body in body frame as obtained from vicon input
-        wPelvis0 = quatmultiply(quatconj(W__dataX.qHips(sIdx:eIdx, :)), ...
-                                W__dataX.qHips([sIdx+1:eIdx eIdx], :));
-        wLankle0 = quatmultiply(quatconj(W__dataX.qLeftLeg(sIdx:eIdx, :)), ...
-                                W__dataX.qLeftLeg([sIdx+1:eIdx eIdx], :));
-        wRankle0 = quatmultiply(quatconj(W__dataX.qRightLeg(sIdx:eIdx, :)), ...
-                                W__dataX.qRightLeg([sIdx+1:eIdx eIdx], :));
-        % this check is important as quat rep is a 2-1 mapping (i.e., q=-q)
-        % I need angular velocity to be consistent (i.e., scalar part is
-        % always positive)
-        tmpIdx = wPelvis0(:,1)<0;
-        wPelvis0(tmpIdx,:) = -wPelvis0(tmpIdx,:);
-        tmpIdx = wLankle0(:,1)<0;
-        wLankle0(tmpIdx,:) = -wLankle0(tmpIdx,:);
-        tmpIdx = wRankle0(:,1)<0;
-        wRankle0(tmpIdx,:) = -wRankle0(tmpIdx,:);
-        
-        wbodyOri.w__x.PELV = 2*wPelvis0(:,2:4)*fs;
-        wbodyOri.w__x.LTIB = 2*wLankle0(:,2:4)*fs;
-        wbodyOri.w__x.RTIB = 2*wRankle0(:,2:4)*fs;
-        
-        % Position, Velocity, Acceleration
-        % gfrAcc from xsens
         W__xsensBody = W__dataX.togrBody(1:nSamples, {'name', 'xsens', 'oriUnit', 'deg', ...
                              'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
                              'xyzColor', {'m', 'y', 'c'}}); 
+        angvel = W__xsensBody.calcSegAngVel({'qRPV', 'qLSK', 'qRSK'}, 'B');
+        wbodyOri.w__x.PELV = angvel.qRPV(sIdx:eIdx,:);
+        wbodyOri.w__x.LTIB = angvel.qLSK(sIdx:eIdx,:);
+        wbodyOri.w__x.RTIB = angvel.qRSK(sIdx:eIdx,:);
+        
+        % Position, Velocity, Acceleration
+        % gfrAcc from xsens
         vel = W__xsensBody.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
         acc = W__xsensBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
 
