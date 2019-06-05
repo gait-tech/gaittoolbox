@@ -70,6 +70,14 @@ for lIdx=1:length(list)
     else
         eLabel = cs.accData;
     end
+    if strcmp(cs.oriData, 'w__s') || strcmp(cs.oriData, 'v__s')
+        csQOri = qOri.(strcat(cs.oriData, cs.initSrc(end)));
+        csBodyWOri = wbodyOri.(strcat(cs.oriData, cs.initSrc(end)));
+    else
+        csQOri = qOri.(cs.oriData);
+        csBodyWOri = wbodyOri.(cs.oriData);
+    end
+        
     idx = allIdx.(cs.initSrc);
     
     eMarkers = struct();
@@ -100,16 +108,24 @@ for lIdx=1:length(list)
     sensors.RANKFreeAccRef = gfrAcc.(aLabel).RA;
     vel = vb.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
     angvel = vb.calcSegAngVel({'qRPV', 'qLSK', 'qRSK'}, 'W');
-    angvel2 = W__xsensBody.calcSegAngVel({'qRPV', 'qLSK', 'qRSK'}, 'W');
     sensors.PELVVelRef = vel.MIDPEL;
     sensors.LANKVelRef = vel.LTIO;
     sensors.RANKVelRef = vel.RTIO;
     sensors.PELVAVelRef = angvel.qRPV;
     sensors.LANKAVelRef = angvel.qLSK;
     sensors.RANKAVelRef = angvel.qRSK;
-    sensors.PELVAVelXsens = angvel2.qRPV;
-    sensors.LANKAVelXsens = angvel2.qLSK;
-    sensors.RANKAVelXsens = angvel2.qRSK;
+    segs = {'PELV', 'LTIB', 'RTIB'};
+    for i=1:length(segs)
+        n = segs{i};
+        n2 = sprintf('%sAVelXsens', n);
+        w = quatmultiply(quatconj(csQOri.(n)(1:end, :)), ...
+                                csQOri.(n)([2:end end], :));
+        tmpIdx = w(:,1)<0;
+        w(tmpIdx,:) = -w(tmpIdx,:);
+        
+%         sensors.(n2) = 2*w(:,2:4)*fs;
+        sensors.(n2) = quatrotate(quatconj(csQOri.(n)), 2*w(:,2:4)*vb.fs);
+    end
     sensors.ePos = estBody2.calcDPos(viconBody2);
     sensors.eOri = estBody2.calcDOri(viconBody2);
     
