@@ -23,10 +23,10 @@ list = {
 %      % debug
 %       struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__vOw__vIw__v+Sav03+P001+M001"), ...
 %       struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
-      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P003+M001+C007"), ...
-      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P003+M003+C007"), ...
+%       struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P001+M001+C007"), ...
+%       struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P001+M031+C007"), ...
 %       struct('file', 'S01-Trial-FigureofEight-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ...
-%       struct('file', 'S01-Trial-FigureofEight-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P003+M031+C007"), ...
+      struct('file', 'S01-Trial-FigureofEight-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P001+M031+C007"), ...
 %       struct('file', 'S01-Trial-FigureofEight-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P003+M031+C017"), ...
 %       struct('file', 'S01-Trial-FigureofEight-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P001+M001"), ...
     % london demo
@@ -114,18 +114,26 @@ for lIdx=1:length(list)
     sensors.PELVAVelRef = angvel.qRPV;
     sensors.LANKAVelRef = angvel.qLSK;
     sensors.RANKAVelRef = angvel.qRSK;
-    segs = {'PELV', 'LTIB', 'RTIB'};
-    for i=1:length(segs)
-        n = segs{i};
-        n2 = sprintf('%sAVelXsens', n);
-        w = quatmultiply(quatconj(csQOri.(n)(1:end, :)), ...
-                                csQOri.(n)([2:end end], :));
-        tmpIdx = w(:,1)<0;
-        w(tmpIdx,:) = -w(tmpIdx,:);
-        
-%         sensors.(n2) = 2*w(:,2:4)*fs;
-        sensors.(n2) = quatrotate(quatconj(csQOri.(n)), 2*w(:,2:4)*vb.fs);
-    end
+    
+    seq = 'YXZ';    
+    [r2 r1 r3] = quat2angle(csQOri.PELV, seq); eul = rad2deg([r1 r2 r3]);
+    sensors.PelvisAnglesXsens = eul;
+    [r2 r1 r3] = quat2angle(csQOri.LTIB, seq); eul = rad2deg([r1 r2 r3]);
+    sensors.LShankAnglesXsens = eul;
+    [r2 r1 r3] = quat2angle(csQOri.RTIB, seq); eul = rad2deg([r1 r2 r3]);
+    sensors.RShankAnglesXsens = eul;
+%     segs = {'PELV', 'LTIB', 'RTIB'};
+%     for i=1:length(segs)
+%         n = segs{i};
+%         n2 = sprintf('%sAVelXsens', n);
+%         w = quatmultiply(quatconj(csQOri.(n)(1:end, :)), ...
+%                                 csQOri.(n)([2:end end], :));
+%         tmpIdx = w(:,1)<0;
+%         w(tmpIdx,:) = -w(tmpIdx,:);
+%         
+% %         sensors.(n2) = 2*w(:,2:4)*fs;
+%         sensors.(n2) = quatrotate(quatconj(csQOri.(n)), 2*w(:,2:4)*vb.fs);
+%     end
     sensors.ePos = estBody2.calcDPos(viconBody2);
     sensors.eOri = estBody2.calcDOri(viconBody2);
     

@@ -78,8 +78,8 @@ for nsI = 1:length(nsList)
 %                            'sigmaQAcc', 1e1, ...
 %                            'sigmaUwbLeg', 0);
 %     end
-    for pI = [3]
-        for mI = [1 3]
+    for pI = [1]
+        for mI = [11 31]
             for cI = [7]
                 for sdI = {'av03'} % {'av01', 'av03'}
     %                     setups{end+1} = struct('est', 'ekfv3', ...
@@ -93,7 +93,7 @@ for nsI = 1:length(nsList)
                                'initSrc', 'w__v', 'stepDetection', sdI, ...
                                'applyPred', pI, 'applyMeas', mI, ...
                                'applyCstr', cI, 'P', 0.5, ...
-                               'sigmaQAcc', 1e1, 'sigmaQAngVel', 1e1);
+                               'sigmaQAcc', 1e1, 'sigmaQAngVel', 1e2);
                 end
             end
         end
@@ -105,7 +105,7 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-    for i = [15]
+    for i = [1 15]
         n = table2struct(dataList(i, :));
         
         uwbDistSigma = 0.0;

@@ -139,9 +139,6 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         wbodyOri.w__sv.LTIB = wbodyOri.w__sv.LTIB(sIdx:eIdx, :);
         wbodyOri.w__sv.RTIB = quatrotate(quatconj(viconCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.gyr);
         wbodyOri.w__sv.RTIB = wbodyOri.w__sv.RTIB(sIdx:eIdx, :);
-%         wbodyOri.w__sv.PELV = quatrotate(qOri.w__sv.PELV, W__dataS.Pelvis.gyr(sIdx:eIdx, :));
-%         wbodyOri.w__sv.LTIB = quatrotate(qOri.w__sv.LTIB, W__dataS.L_LowLeg.gyr(sIdx:eIdx, :));        
-%         wbodyOri.w__sv.RTIB = quatrotate(qOri.w__sv.RTIB, W__dataS.R_LowLeg.gyr(sIdx:eIdx, :));
         
         % Orientation of body in world frame as obtained from vicon input
         qOri.w__v.PELV = W__dataV.qRPV(sIdx+1:eIdx+1, :);

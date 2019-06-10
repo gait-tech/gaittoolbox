@@ -354,12 +354,13 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             end
             if knob.pred.PosWithStateVel
                 xi(1:3) = B_R_W*xi(1:3);
-%                 xi(1:3) = W_R_.(bname)(:,:,kPast)'*(xi(1:3) + dt*u(se32vecIdxs{i}(1:3),kPast));
+%                 xi(1:3) = B_R_W*(xi(1:3) + dt*u(se32vecIdxs{i}(1:3),kPast));
             else
                 xi(1:3) = 0;
             end
             if knob.pred.OriWithStateAngVel
                 xi(4:6) = B_R_W*xi(4:6);
+%                 xi(4:6) = B_w_.(bname)(kPast,:)';
             else
                 xi(4:6) = 0; 
             end

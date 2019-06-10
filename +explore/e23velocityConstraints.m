@@ -76,14 +76,34 @@ WavelEstLS = W_avel{2}.qLSK;
 WavelActRS = W_avel{1}.qRSK;
 WavelEstRS = W_avel{2}.qRSK;
 
-updateFigureContents('avel check PV2');
+% segs = {'PELV', 'LTIB', 'RTIB'};
+% for i=1:length(segs)
+%     n = segs{i};
+%     w = quatmultiply(quatconj(qOri.w__x.(n)(1:end, :)), ...
+%                             qOri.w__x.(n)([2:end end], :));
+%     tmpIdx = w(:,1)<0;
+%     w(tmpIdx,:) = -w(tmpIdx,:);
+% 
+%     W_avel{4}.(n) = 2*w(:,2:4)*fs;
+% %     W_avel{4}.(n) = quatrotate(quatconj(csQOri.(n)), 2*w(:,2:4)*vb.fs);
+% end
+% W_avel{3} = W__xsensBody.calcSegAngVel({'qRPV', 'qLSK', 'qRSK'}, 'B');
+% WavelActPV = W_avel{3}.qRPV;
+% WavelEstPV = W_avel{4}.PELV;
+% WavelActLS = W_avel{3}.qLSK;
+% WavelEstLS = W_avel{4}.LTIB;
+% WavelActRS = W_avel{3}.qRSK;
+% WavelEstRS = W_avel{4}.RTIB;
+
+updateFigureContents('avel check PV');
 t=1:length(idx);
 pelib.viz.plotXYZ(100, WavelActPV, WavelEstPV);
 
-updateFigureContents('avel check LS2');
+updateFigureContents('avel check LS');
 t=1:length(idx);
 pelib.viz.plotXYZ(100, WavelActLS, WavelEstLS);
 
-updateFigureContents('avel check RS2');
+updateFigureContents('avel check RS');
 t=1:length(idx);
 pelib.viz.plotXYZ(100, WavelActRS, WavelEstRS);
+
