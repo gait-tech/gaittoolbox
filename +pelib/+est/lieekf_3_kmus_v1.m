@@ -48,7 +48,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
           'sigmaQAccPV', 1, 'sigmaQAccLS', 1, 'sigmaQAccRS', 1, ...
           'sigmaQGyrPV', 1, 'sigmaQGyrLS', 1, 'sigmaQGyrRS', 1, ...
           'sigmaQPosMP', 1, 'sigmaQPosLA', 1, 'sigmaQPosRA', 1, ...
-          'sigmaQOriMP', 1, 'sigmaQOriLA', 1, 'sigmaQOriRA', 1, ...
+          'sigmaQOriPV', 1e1, 'sigmaQOriLS', 1e1, 'sigmaQOriRS', 1e1, ...
           'sigmaQVelMP', 1, 'sigmaQVelLA', 1, 'sigmaQVelRA', 1, ...
           'sigmaQAngVelPV', 1, 'sigmaQAngVelLS', 1, 'sigmaQAngVelRS', 1, ...
           'sigmaROriPV', 1e-3, 'sigmaROriLS', 1e-3, 'sigmaROriRS', 1e-3, ...
@@ -65,6 +65,69 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             error("Field %s is not a valid option", optionFieldNames{i});
         end
         fOpt.(optionFieldNames{i}) = options.(optionFieldNames{i});
+    end
+    
+    %% Feature on off
+    knob = struct();
+    knob.apModTen = mod(fOpt.applyPred, 10);
+    knob.apTenDig = mod(idivide(int32(fOpt.applyPred), 10, 'floor'), 10);
+    knob.amModTen = mod(fOpt.applyMeas, 10);
+    knob.amTenDig = mod(idivide(int32(fOpt.applyMeas), 10, 'floor'), 10);
+    knob.acModTen = mod(fOpt.applyCstr, 10);
+    knob.acTenDig = mod(idivide(int32(fOpt.applyCstr), 10, 'floor'), 10);
+    
+    % Prediction
+    % zero velocity otherwise
+    knob.pred.PosWithStateVel = bitand(knob.apModTen, 1); 
+    % zero angular velocity otherwise
+    knob.pred.OriWithStateAngVel = bitand(knob.apModTen, 2);
+    if knob.apTenDig == 0
+        knob.pred.useStateinWFrameConv = false;
+    else
+        knob.pred.useStateinWFrameConv = true;
+    end
+    
+    knob.meas = struct('ori', true, 'angvel', false, ...
+        'zupt', false, 'xyposPVLSRS', false, ...
+        'velcstrY', false, 'velcstrZ', false);   
+%>          X: Ori always on
+%>               1st bit Zupt and Ankle zpos
+%>               2nd bit Update angular velocity
+    if bitand(knob.amModTen, 1)
+        knob.meas.zupt = true;
+        knob.meas.zpos.LS = true;
+        knob.meas.zpos.RS = true;
+    else
+        knob.meas.zpos.LS = false;
+        knob.meas.zpos.RS = false;
+        step.LS = false(N.samples, 1);
+        step.RS = false(N.samples, 1);
+    end
+    knob.meas.angvel = bitand(knob.amModTen, 2);
+
+%>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
+%>               2nd bit Vel cstr Y and Z
+
+    if bitand(knob.amTenDig, 1)
+        knob.meas.zpos.PV = true;
+        step.PV = true(N.samples, 1);
+        knob.meas.xyposPVLSRS = true;
+    else
+        knob.meas.zpos.PV = false;
+        step.PV = false(N.samples, 1);
+    end
+    knob.meas.velcstrY = bitand(knob.amTenDig, 2);
+    knob.meas.velcstrZ = bitand(knob.amTenDig, 2);
+    
+    % Constraint
+    knob.cstr.thighlength = bitand(knob.acModTen, 1);
+    knob.cstr.hingeknee = bitand(knob.acModTen, 2);
+    knob.cstr.kneerom = bitand(knob.acModTen, 4);
+    knob.cstr.on = knob.cstr.thighlength | knob.cstr.hingeknee | knob.cstr.kneerom;
+    if knob.acTenDig == 0
+        knob.cstr.Pupdate = false;
+    elseif knob.acTenDig == 1
+        knob.cstr.Pupdate = true;
     end
     
     addpath('liese3lib');
@@ -123,17 +186,31 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
              zeros(9,18)];
     G.vec = [dt*eye(9,9) zeros(9,9);
          zeros(9,9) eye(9,9)];
+    F.curlyC = struct();
+    for i=1:N.se3StateList
+        sname = se3StateList{i};
+        vname = sprintf('vel%s', sname(end-1:end));
+        
+        F.curlyC.(sname) = zeros(6, N.state);
+        F.curlyC.(sname)(1:3,idx.(vname)) = dt*eye(3,3);
+        if knob.pred.OriWithStateAngVel
+            wname = sprintf('aVel%s', sname(end-1:end));
+            F.curlyC.(sname)(4:6,idx.(wname)) = dt*eye(3,3);
+        end
+    end
     G.naive = zeros(N.state, 18);
     G.naive(idx.W_T_PV(1:3), 1:3) = dt2*eye(3,3);
     G.naive(idx.W_T_LS(1:3), 4:6) = dt2*eye(3,3);
     G.naive(idx.W_T_RS(1:3), 7:9) = dt2*eye(3,3);
-    G.naive(idx.W_T_PV(4:6), 10:12) = dt*eye(3,3);
-    G.naive(idx.W_T_LS(4:6), 13:15) = dt*eye(3,3);
-    G.naive(idx.W_T_RS(4:6), 16:18) = dt*eye(3,3);
+    if knob.pred.OriWithStateAngVel
+        G.naive(idx.W_T_PV(4:6), 10:12) = dt*eye(3,3);
+        G.naive(idx.W_T_LS(4:6), 13:15) = dt*eye(3,3);
+        G.naive(idx.W_T_RS(4:6), 16:18) = dt*eye(3,3);
+    end
     G.naive(idx.vec, 1:18) = G.vec;
-%     Q = diag(repelem([fOpt.sigmaQPosMP.^2, fOpt.sigmaQOriMP.^2, ...
-%                       fOpt.sigmaQPosLA.^2, fOpt.sigmaQOriLA.^2, ...
-%                       fOpt.sigmaQPosRA.^2, fOpt.sigmaQOriRA.^2, ...
+%     Q = diag(repelem([fOpt.sigmaQPosMP.^2, fOpt.sigmaQOriPV.^2, ...
+%                       fOpt.sigmaQPosLA.^2, fOpt.sigmaQOriLS.^2, ...
+%                       fOpt.sigmaQPosRA.^2, fOpt.sigmaQOriRS.^2, ...
 %                       fOpt.sigmaQVelMP.^2, fOpt.sigmaQVelLA.^2, ...
 %                       fOpt.sigmaQVelRA.^2, fOpt.sigmaQAngVelPV.^2, ...
 %                       fOpt.sigmaQAngVelLS.^2, fOpt.sigmaQAngVelRS.^2], 3));
@@ -141,9 +218,13 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                       fOpt.sigmaQAccRS.^2, ...
                       fOpt.sigmaQGyrPV.^2, fOpt.sigmaQGyrLS.^2, ...
                       fOpt.sigmaQGyrRS.^2], 3));
-%     Q1 = diag(repelem([0, fOpt.sigmaQAccLS.^2, fOpt.sigmaQAccRS.^2, ...
-%                       0, fOpt.sigmaQGyrLS.^2, fOpt.sigmaQGyrRS.^2], 3));
-    Q.naive = G.naive * Q0 * G.naive';
+    if knob.pred.OriWithStateAngVel
+        Q.naive = G.naive * Q0 * G.naive';
+    else
+        Q.naive = G.naive * Q0 * G.naive' + ...
+            diag(repelem([0, fOpt.sigmaQOriPV.^2, 0, fOpt.sigmaQOriLS.^2, ...
+                      0, fOpt.sigmaQOriRS.^2, 0 0 0 0 0 0], 3));
+    end   
     Q.vec = G.vec*Q0*G.vec';
     Q.comb = zeros(N.state, N.state);
     Q.comb(idx.vec,idx.vec) = Q.vec;
@@ -253,69 +334,6 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     d0.lkrom = 0;
     d0.rkrom = 0;
     
-    %% Feature on off
-    knob = struct();
-    knob.apModTen = mod(fOpt.applyPred, 10);
-    knob.apTenDig = mod(idivide(int32(fOpt.applyPred), 10, 'floor'), 10);
-    knob.amModTen = mod(fOpt.applyMeas, 10);
-    knob.amTenDig = mod(idivide(int32(fOpt.applyMeas), 10, 'floor'), 10);
-    knob.acModTen = mod(fOpt.applyCstr, 10);
-    knob.acTenDig = mod(idivide(int32(fOpt.applyCstr), 10, 'floor'), 10);
-    
-    % Prediction
-    % zero velocity otherwise
-    knob.pred.PosWithStateVel = bitand(knob.apModTen, 1); 
-    % zero angular velocity otherwise
-    knob.pred.OriWithStateAngVel = bitand(knob.apModTen, 2);
-    if knob.apTenDig == 0
-        knob.pred.useStateinWFrameConv = false;
-    else
-        knob.pred.useStateinWFrameConv = true;
-    end
-    
-    knob.meas = struct('ori', true, 'angvel', false, ...
-        'zupt', false, 'xyposPVLSRS', false, ...
-        'velcstrY', false, 'velcstrZ', false);   
-%>          X: Ori always on
-%>               1st bit Zupt and Ankle zpos
-%>               2nd bit Update angular velocity
-    if bitand(knob.amModTen, 1)
-        knob.meas.zupt = true;
-        knob.meas.zpos.LS = true;
-        knob.meas.zpos.RS = true;
-    else
-        knob.meas.zpos.LS = false;
-        knob.meas.zpos.RS = false;
-        step.LS = false(N.samples, 1);
-        step.RS = false(N.samples, 1);
-    end
-    knob.meas.angvel = bitand(knob.amModTen, 2);
-
-%>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
-%>               2nd bit Vel cstr Y and Z
-
-    if bitand(knob.amTenDig, 1)
-        knob.meas.zpos.PV = true;
-        step.PV = true(N.samples, 1);
-        knob.meas.xyposPVLSRS = true;
-    else
-        knob.meas.zpos.PV = false;
-        step.PV = false(N.samples, 1);
-    end
-    knob.meas.velcstrY = bitand(knob.amTenDig, 2);
-    knob.meas.velcstrZ = bitand(knob.amTenDig, 2);
-    
-    % Constraint
-    knob.cstr.thighlength = bitand(knob.acModTen, 1);
-    knob.cstr.hingeknee = bitand(knob.acModTen, 2);
-    knob.cstr.kneerom = bitand(knob.acModTen, 4);
-    knob.cstr.on = knob.cstr.thighlength | knob.cstr.hingeknee | knob.cstr.kneerom;
-    if knob.acTenDig == 0
-        knob.cstr.Pupdate = false;
-    elseif knob.acTenDig == 1
-        knob.cstr.Pupdate = true;
-    end
-    
     %% Iteration
     se32vecIdxs = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
     u = zeros(18, N.samples);
@@ -367,13 +385,16 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             bigxi = vec2tran(xi*dt);
             bigphi = vec2jac(xi*dt);
             F.comb(idx.(sname),idx.(sname)) = tranAd(bigxi);
+            F.comb(idx.(sname),:) = F.comb(idx.(sname),:) + bigphi * F.curlyC.(sname);
             xhatPri.(sname)(:,:,k) = xtilde.(sname)(:,:,kPast)*bigxi;
+%             Q.comb(idx.(sname),idx.(sname)) = bigphi * ...
+%                         Q.vec(se32vecIdxs{i}, se32vecIdxs{i}) * bigphi';
             Q.comb(idx.(sname),idx.(sname)) = bigphi * ...
-                        Q.vec(se32vecIdxs{i}, se32vecIdxs{i}) * bigphi';
+                        Q.naive(idx.(sname), idx.(sname)) * bigphi';
+
         end
         F.comb(idx.vec,idx.vec) = F.vec;
         xhatPri.vec(:,k) = F.vec*xtilde.vec(:,kPast) + G.vec*u(:,kPast);
-%         Phi = 
         PhatPri(:,:,k) = F.comb*Ptilde(:,:,kPast)*F.comb' + Q.comb;
         
         %% Measurement update
