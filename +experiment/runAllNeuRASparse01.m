@@ -69,7 +69,7 @@ for nsI = 1:length(nsList)
 %                            'sigmaUwbLeg', 0);
 %     end
 
-    for pI = [1]
+    for pI = [1 11]
         for mI = [11]
             for cI = [7]
                 for sdI = {'av03'} % {'av01', 'av03'}
