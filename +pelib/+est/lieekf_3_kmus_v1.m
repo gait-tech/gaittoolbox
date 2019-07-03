@@ -20,6 +20,7 @@
 %>               2nd bit Update angular velocity
 %>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
 %>               2nd bit Vel cstr Y and Z
+%>          z:   1st bit covariance limiter
 %>      applyCstr: 3 digit ZYX
 %>          X:   1st bit enforce thigh length
 %>               2nd bit enforce hinge knee joint
@@ -48,15 +49,16 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
           'sigma2QAccPV', 1, 'sigma2QAccLS', 1, 'sigma2QAccRS', 1, ...
           'sigma2QGyrPV', 1, 'sigma2QGyrLS', 1, 'sigma2QGyrRS', 1, ...
           'sigma2QPosMP', 1, 'sigma2QPosLA', 1, 'sigma2QPosRA', 1, ...
-          'sigma2QOriPV', 1e6, 'sigma2QOriLS', 1e6, 'sigma2QOriRS', 1e6, ...
+          'sigma2QOriPV', 1e-1, 'sigma2QOriLS', 1e-1, 'sigma2QOriRS', 1e-1, ...
           'sigma2QVelMP', 1, 'sigma2QVelLA', 1, 'sigma2QVelRA', 1, ...
-          'sigma2QAngVelPV', 1e2, 'sigma2QAngVelLS', 1e2, 'sigma2QAngVelRS', 1e2, ...
-          'sigma2ROriPV', 1e-6, 'sigma2ROriLS', 1e-6, 'sigma2ROriRS', 1e-6, ...
+          'sigma2QAngVelPV', 0, 'sigma2QAngVelLS', 0, 'sigma2QAngVelRS', 0, ...
+          'sigma2ROriPV', 1e-2, 'sigma2ROriLS', 1e-2, 'sigma2ROriRS', 1e-2, ...
           'sigma2RAngVelPV', 1e-3, 'sigma2RAngVelLS', 1e-3, 'sigma2RAngVelRS', 1e-3, ...
           'sigma2RZPosPV', 1e-1, 'sigma2RZPosLS', 1e-4, 'sigma2RZPosRS', 1e-4, ...
           'sigma2RZuptLA', 1e-2, 'sigma2RZuptRA', 1e-2, ...
           'sigma2RVelCstrY', 1e-2, 'sigma2RVelCstrZ', 1e-2, ...
           'sigma2RXYPosPVLSRS', 1e2, ...
+          'sigma2RLimPos', 1e1, 'sigma2RLimOri', 1e1, ...
           'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
           'alphaRKmin', 0, 'alphaRKmax', pi*8/9 );
     optionFieldNames = fieldnames(options);
@@ -73,6 +75,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     knob.apTenDig = mod(idivide(int32(fOpt.applyPred), 10, 'floor'), 10);
     knob.amModTen = mod(fOpt.applyMeas, 10);
     knob.amTenDig = mod(idivide(int32(fOpt.applyMeas), 10, 'floor'), 10);
+    knob.amHunDig = mod(idivide(int32(fOpt.applyMeas), 100, 'floor'), 10);
     knob.acModTen = mod(fOpt.applyCstr, 10);
     knob.acTenDig = mod(idivide(int32(fOpt.applyCstr), 10, 'floor'), 10);
     
@@ -104,7 +107,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         step.RS = false(N.samples, 1);
     end
     knob.meas.angvel = bitand(knob.amModTen, 2);
-
+    knob.meas.covlim = knob.amHunDig;
 %>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
 %>               2nd bit Vel cstr Y and Z
 
@@ -146,7 +149,8 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     
     N.state = N.se3State + N.r3State;
     
-    idx = struct('W_T_PV', 1:6, 'W_T_LS', 7:12, 'W_T_RS', 13:18, ...
+    idx = struct('se3state', 1:18, ...
+                 'W_T_PV', 1:6, 'W_T_LS', 7:12, 'W_T_RS', 13:18, ...
                  'vec', (N.se3State+1):N.state);
     r3StateList = {'vecVelPV', 'vecVelLS', 'vecVelRS', ...
                    'vecAVelPV', 'vecAVelLS', 'vecAVelRS'};
@@ -321,6 +325,12 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     R0.velcstrY = repelem(fOpt.sigma2RVelCstrY, 2);
     R0.velcstrZ = repelem(fOpt.sigma2RVelCstrZ, 2);
     
+    % covariance limiter
+    H0.covlim = [eye(18) zeros(18, N.state-18)];
+    R0.covlim = repelem([fOpt.sigma2RLimPos, fOpt.sigma2RLimOri, ...
+                         fOpt.sigma2RLimPos, fOpt.sigma2RLimOri, ...
+                         fOpt.sigma2RLimPos, fOpt.sigma2RLimOri], 3);
+    
     %% D matrix initialization
     D0 = {}; d0 = {};
     % thigh length constraint
@@ -347,7 +357,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     % knee range of motion
     d0.lkrom = 0;
     d0.rkrom = 0;
-    
+      
     %% Iteration
     se32vecIdxs = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
     u = zeros(18, N.samples);
@@ -373,7 +383,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         F.AdG = eye(N.state, N.state);
         bigphi = eye(N.state, N.state);
         F.curlyC = zeros(N.state, N.state);
-    
+        
         for i=1:N.se3StateList
             sname = se3StateList{i};
             bname = sname(end-1:end);
@@ -418,6 +428,9 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         
         H.ori_k = {};   R.ori_k = {};
         H.zpos_k = {};  R.zpos_k = {};
+%         if k==1283
+%             display('hi');
+%         end
         for i=1:N.se3StateList
             sname = se3StateList{i};
             bname = sname(end-1:end);
@@ -572,7 +585,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             K = PhatPri(:,:,k)*H.comb'/(H.comb*PhatPri(:,:,k)*H.comb' + R.comb);
             bigphi = eye(N.state, N.state);
             measUpt = K*(deltay.comb);
-
+            
             for i=1:N.se3StateList
                 sname = se3StateList{i};
                 xhatPos.(sname)(:,:,k) = xhatPri.(sname)(:,:,k)*...
@@ -580,7 +593,15 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                 bigphi(idx.(sname), idx.(sname)) = vec2jac(-measUpt(idx.(sname)));
             end
             xhatPos.vec(:,k) = xhatPri.vec(:,k) + measUpt(idx.vec);
-            PhatPos(:,:,k) = bigphi*(I_N-K*H.comb)*PhatPri(:,:,k)*bigphi';
+            
+            if knob.meas.covlim
+                H.comb2 = [H.comb; H0.covlim];
+                R.comb2 = diag([diag(R.comb)' R0.covlim]);
+                K2 = PhatPri(:,:,k)*H.comb2'/(H.comb2*PhatPri(:,:,k)*H.comb2' + R.comb2);
+                PhatPos(:,:,k) = bigphi*(I_N-K2*H.comb2)*PhatPri(:,:,k)*bigphi';
+            else
+                PhatPos(:,:,k) = bigphi*(I_N-K*H.comb)*PhatPri(:,:,k)*bigphi';
+            end
         else
             for i=1:N.se3StateList
                 sname = se3StateList{i};
