@@ -20,7 +20,7 @@
 %>               2nd bit Update angular velocity
 %>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
 %>               2nd bit Vel cstr Y and Z
-%>          z:   1st bit covariance limiter
+%>          Z:   1st bit covariance limiter
 %>      applyCstr: 3 digit ZYX
 %>          X:   1st bit enforce thigh length
 %>               2nd bit enforce hinge knee joint
@@ -180,10 +180,9 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     Ptilde = nan(N.state,N.state,N.samples+1); % constraint update covariance
     
     if isscalar(P0)
-        Ptilde(:,:,1) = I_N*P0;
-    else
-        Ptilde(:,:,1) = P0;
+        P0 = I_N*P0;
     end
+    Ptilde(:,:,1) = P0;
     
     F = struct(); G = struct(); Q = struct();
     F.vec = [eye(9,9) zeros(9,9);
@@ -357,7 +356,11 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     % knee range of motion
     d0.lkrom = 0;
     d0.rkrom = 0;
-      
+    
+    %% Debug
+    debug_dat.measUptPos = zeros(N.state, N.samples);
+    debug_dat.measUptTilde = zeros(N.state, N.samples);
+    
     %% Iteration
     se32vecIdxs = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
     u = zeros(18, N.samples);
@@ -411,7 +414,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                 xi(4:6) = 0; 
             end
             bigxi = vec2tran(xi*dt);
-            bigphi(idx.(sname),idx.(sname)) = vec2jac(-xi*dt);
+            bigphi(idx.(sname),idx.(sname)) = vec2jac(xi*dt);
             F.AdG(idx.(sname),idx.(sname)) = tranAd(bigxi);
             
             vname = sprintf('vel%s', sname(end-1:end));
@@ -563,7 +566,9 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             H.velcstrZ = []; R.velcstrZ = []; deltay.velcstrZ = [];
         end
         N.meas_k = N.meas_k + size(H.velcstrZ, 1);
-        
+%         if k==1652
+%             display('hi')
+%         end
         if N.meas_k > 0
             H.comb = [H.ori_k.W_T_PV; H.zpos_k.W_T_PV; ...
                       H.ori_k.W_T_LS; H.zpos_k.W_T_LS; ...
@@ -585,12 +590,14 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             K = PhatPri(:,:,k)*H.comb'/(H.comb*PhatPri(:,:,k)*H.comb' + R.comb);
             bigphi = eye(N.state, N.state);
             measUpt = K*(deltay.comb);
+            debug_dat.deltayPos(:,kPast) = deltay.comb;
+            debug_dat.measUptPos(:,kPast) = measUpt;
             
             for i=1:N.se3StateList
                 sname = se3StateList{i};
                 xhatPos.(sname)(:,:,k) = xhatPri.(sname)(:,:,k)*...
                                             vec2tran(measUpt(idx.(sname)));
-                bigphi(idx.(sname), idx.(sname)) = vec2jac(-measUpt(idx.(sname)));
+                bigphi(idx.(sname), idx.(sname)) = vec2jac(measUpt(idx.(sname)));
             end
             xhatPos.vec(:,k) = xhatPri.vec(:,k) + measUpt(idx.vec);
             
@@ -721,8 +728,10 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             else
                 Ptilde(:,:,k) = PhatPos(:,:,k);
             end
+            
             measUpt = K*(d-dhat);
-
+            debug_dat.measUptTilde(:,kPast) = measUpt;
+                        
             for i=1:N.se3StateList
                 sname = se3StateList{i};
                 xtilde.(sname)(:,:,k) = xhatPos.(sname)(:,:,k)*...

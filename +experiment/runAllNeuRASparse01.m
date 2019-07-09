@@ -70,8 +70,8 @@ for nsI = 1:length(nsList)
 %     end
 
     for pI = [1]
-        for mI = [111]
-            for cI = [7]
+        for mI = [000]
+            for cI = [0]
                 for sdI = {'av03'} % {'av01', 'av03'}
     %                     setups{end+1} = struct('est', 'ekfv3', ...
     %                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
@@ -96,7 +96,7 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-    for i = [1 15]
+    for i = [3 15]
         n = table2struct(dataList(i, :));
         
         uwbDistSigma = 0.0;
@@ -257,7 +257,7 @@ for nsI = 1:length(nsList)
         r = experiment.runNeuRASparse01Experiment(data.dataS, ...
                 data.dataV, data.calibV2W, data.calibYawFix, data.calibW2V, ...
                 data.dataX, data.revStepDetect, uwbDistSigma, ...
-                data.name, setups, expDir, n.startFrame, n.endFrame, data.bias);
+                data.name, setups, expDir, n.startFrame, min(n.endFrame, 6000), data.bias);
         results = [results; struct2table(r)];
     end
 end
