@@ -96,7 +96,7 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-    for i = 1:18
+    for i = [1 3 15]
         n = table2struct(dataList(i, :));
         
         uwbDistSigma = 0.0;
