@@ -83,14 +83,15 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     % zero velocity otherwise
     knob.pred.PosWithStateVel = bitand(knob.apModTen, 1); 
     % zero angular velocity otherwise
-    knob.pred.OriWithStateAngVel = bitand(knob.apModTen, 2);
+    knob.pred.OriWithStateAngVel = bitand(knob.apModTen, 1);
     if knob.apTenDig == 0
         knob.pred.useStateinWFrameConv = false;
     else
         knob.pred.useStateinWFrameConv = true;
     end
     
-    knob.meas = struct('ori', true, 'angvel', false, ...
+    knob.meas = struct('ori', false, 'angvel', false, ...
+        'zpos', struct('LS', false, 'RS', false, 'PV', false), ...
         'zupt', false, 'xyposPVLSRS', false, ...
         'velcstrY', false, 'velcstrZ', false);   
 %>          X: Ori always on
@@ -98,11 +99,9 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
 %>               2nd bit Update angular velocity
     if bitand(knob.amModTen, 1)
         knob.meas.zupt = true;
-        knob.meas.zpos.LS = true;
-        knob.meas.zpos.RS = true;
+%         knob.meas.zpos.LS = true;
+%         knob.meas.zpos.RS = true;
     else
-        knob.meas.zpos.LS = false;
-        knob.meas.zpos.RS = false;
         step.LS = false(N.samples, 1);
         step.RS = false(N.samples, 1);
     end
@@ -393,14 +392,14 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
 
             xi = xtilde.vec(se32vecIdxs{i},kPast);
             % convert W_vel to B_vel
-            if knob.pred.useStateinWFrameConv
+%             if knob.pred.useStateinWFrameConv
                 B_R_W = xtilde.(sname)(1:3,1:3,kPast)';
-            else
-                B_R_W = W_R_.(bname)(:,:,kPast)';
-            end
+%             else
+%                 B_R_W = W_R_.(bname)(:,:,kPast)';
+%             end
             if knob.pred.PosWithStateVel
-                xi(1:3) = B_R_W*xi(1:3);
-%                 xi(1:3) = B_R_W*(xi(1:3) + dt*u(se32vecIdxs{i}(1:3),kPast));
+%                 xi(1:3) = B_R_W*xi(1:3);
+                xi(1:3) = B_R_W*(xi(1:3) + 0.5*dt*u(se32vecIdxs{i}(1:3),kPast));
             else
                 xi(1:3) = 0;
             end
@@ -451,7 +450,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             N.meas_k = N.meas_k + size(H.ori_k.(sname), 1);
             
             % zPos assumption
-            if step.(bname)(kPast) % step detected
+            if knob.meas.zpos.(bname) && step.(bname)(kPast) % step detected
                 H.zpos_k.(sname) = zeros(1, N.state);
                 H.zpos_k.(sname)(1, idx.(sname)) = ...
                     [0 0 1 0] * xhatPri.(sname)(:,:,k) * H0.zposAnkPCircdot;
@@ -507,13 +506,13 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         N.meas_k = N.meas_k + size(H.xypos, 1);
         
         % ZUPT
-        if step.LS(kPast)
+        if knob.meas.zupt && step.LS(kPast)
             H.lzupt_k = H0.lzupt; R.lzupt_k = R0.lzupt;
             deltay.lzupt_k = y0.lzupt - xhatPri.vec(idx.vecLZupt,k); 
         else
             H.lzupt_k = []; deltay.lzupt_k = []; R.lzupt_k = [];
         end
-        if step.RS(kPast)
+        if knob.meas.zupt && step.RS(kPast)
             H.rzupt_k = H0.rzupt; R.rzupt_k = R0.rzupt;
             deltay.rzupt_k = y0.rzupt - xhatPri.vec(idx.vecRZupt,k);
         else

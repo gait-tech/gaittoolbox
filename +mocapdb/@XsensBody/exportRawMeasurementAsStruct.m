@@ -22,6 +22,8 @@ function out = exportRawMeasurementAsStruct(obj, seg, segAlias)
         error('seg and segAlias have different lengths');
     end
     
+    g = [0 0 9.81];
+    
     out = struct();
     lmap = 'XYZ';
     for i=1:length(seg)

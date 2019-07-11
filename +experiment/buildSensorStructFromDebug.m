@@ -49,6 +49,12 @@ function sensors = buildSensorStructFromDebug(sensors, state, state2, algo, suff
                 sensors.(sname3) = state2.measUptTilde(idx{i}{j+1}, :)';
             end
         end
+        
+        idx = {{'PV',  1: 3}, {'LS',  4: 6}, {'RS', 7: 9}};
+        for i=1:3
+            sname = sprintf('TAcc%s%s', idx{i}{1}, suffix);
+            sensors.(sname) = state2.u(idx{i}{2}, :)';
+        end
     else
         idx = {{'PELV',  4: 6}, {'LANK', 14:16}, {'RANK', 24:26}};
         for i=1:3
