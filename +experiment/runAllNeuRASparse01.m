@@ -42,7 +42,7 @@ for nsI = 1:length(nsList)
     setups{end+1} = struct('est', 'ekfv3', ...
                'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
                'initSrc', 'w__v', 'stepDetection', 'av03', ...
-               'applyMeas', 0, 'applyCstr', 0, 'P', 0.5, ...
+               'applyMeas', 76, 'applyCstr', 355, 'P', 0.5, ...
                'sigmaQAcc', 1e1);
 %     if strcmp(ns, 'NS2')
 %         mIList = [302, 376];
@@ -69,9 +69,9 @@ for nsI = 1:length(nsList)
 %                            'sigmaUwbLeg', 0);
 %     end
 
-    for pI = [1]
-        for mI = [0]
-            for cI = [0]
+    for pI = [21]
+        for mI = [115]
+            for cI = [7]
                 for sdI = {'av03'} % {'av01', 'av03'}
     %                     setups{end+1} = struct('est', 'ekfv3', ...
     %                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
@@ -96,7 +96,7 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-    for i = [15]
+    for i = [1 5 15]
         n = table2struct(dataList(i, :));
         
         uwbDistSigma = 0.0;
