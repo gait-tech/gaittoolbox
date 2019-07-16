@@ -69,9 +69,9 @@ for nsI = 1:length(nsList)
 %                            'sigmaUwbLeg', 0);
 %     end
 
-    for pI = [21]
-        for mI = [115]
-            for cI = [7]
+    for pI = [23]
+        for mI = [111]
+            for cI = [7 17]
                 for sdI = {'av03'} % {'av01', 'av03'}
     %                     setups{end+1} = struct('est', 'ekfv3', ...
     %                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
@@ -96,7 +96,7 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-    for i = [1 5 15]
+    for i = [15]
         n = table2struct(dataList(i, :));
         
         uwbDistSigma = 0.0;
