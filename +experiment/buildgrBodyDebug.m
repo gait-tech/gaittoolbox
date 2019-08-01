@@ -68,15 +68,25 @@ function [bodyDebug, sensorsDebug] = buildgrBodyDebug(body, sensors, debugData, 
             bodyDebug.LTIO(2:3:n2, :) = debugData.zuptState(:,11:13);
             bodyDebug.RTIO(1:3:n2, :) = debugData.predState(:,21:23);
             bodyDebug.RTIO(2:3:n2, :) = debugData.zuptState(:,21:23);
+            bodyDebug.qRPV(1:3:n2, :) = debugData.predState(:,7:10);
+            bodyDebug.qRPV(2:3:n2, :) = debugData.zuptState(:,7:10);
+            bodyDebug.qLSK(1:3:n2, :) = debugData.predState(:,17:20);
+            bodyDebug.qLSK(2:3:n2, :) = debugData.zuptState(:,17:20);
+            bodyDebug.qRSK(1:3:n2, :) = debugData.predState(:,27:30);
+            bodyDebug.qRSK(2:3:n2, :) = debugData.zuptState(:,27:30);
+            
+            bodyDebug.qRPV(1, :) = [1 0 0 0];
+            bodyDebug.qLSK(1, :) = [1 0 0 0];
+            bodyDebug.qRSK(1, :) = [1 0 0 0];
         end
 
         v = quat2rotm(bodyDebug.qLSK); v = squeeze(v(:,3,:))';
-        bodyDebug.LFEO = bodyDebug.LTIO + bodyDebug.getLShankLength()*v;
+        bodyDebug.LFEO = bodyDebug.LTIO + bodyDebug.getLShankLength(3)*v;
         v = quat2rotm(bodyDebug.qRSK); v = squeeze(v(:,3,:))';
-        bodyDebug.RFEO = bodyDebug.RTIO + bodyDebug.getRShankLength()*v;
+        bodyDebug.RFEO = bodyDebug.RTIO + bodyDebug.getRShankLength(3)*v;
         v = quat2rotm(bodyDebug.qRPV); v = squeeze(v(:,2,:))';
-        bodyDebug.LFEP = bodyDebug.MIDPEL + bodyDebug.getPelvisLength()/2*v;
-        bodyDebug.RFEP = bodyDebug.MIDPEL - bodyDebug.getPelvisLength()/2*v;
+        bodyDebug.LFEP = bodyDebug.MIDPEL + bodyDebug.getPelvisLength(3)/2*v;
+        bodyDebug.RFEP = bodyDebug.MIDPEL - bodyDebug.getPelvisLength(3)/2*v;
 
         v = zeros(3, 3, n2);
         z = (bodyDebug.LFEP-bodyDebug.LFEO)';

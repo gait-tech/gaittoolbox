@@ -69,23 +69,15 @@ for nsI = 1:length(nsList)
 %                            'sigmaUwbLeg', 0);
 %     end
 
-    for pI = [21]
-        for mI = [115]
-            for cI = [7]
-                for sdI = {'av03'} % {'av01', 'av03'}
-    %                     setups{end+1} = struct('est', 'ekfv3', ...
-    %                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
-    %                            'initSrc', 'w__v', 'stepDetection', sdI, ...
-    %                            'applyMeas', mI, 'applyCstr', cI, 'P', 0.5, ...
-    %                            'sigmaQAcc', 1e1, ...
-    %                            'sigmaUwbLeg', suwb);
-                    setups{end+1} = struct('est', 'lieekfv1', ...
-                               'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
-                               'initSrc', 'w__v', 'stepDetection', sdI, ...
-                               'applyPred', pI, 'applyMeas', mI, ...
-                               'applyCstr', cI, 'P', 0.5, ...
-                               'sigmaQAcc', 1e1, 'sigmaQAngVel', 1e2);
-                end
+    for sI = [struct('pI', 21, 'mI', 115), struct('pI', 23, 'mI', 111)]
+        for cI = [7]
+            for sdI = {'av03'} 
+                setups{end+1} = struct('est', 'lieekfv1', ...
+                           'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
+                           'initSrc', 'w__v', 'stepDetection', sdI, ...
+                           'applyPred', sI.pI, 'applyMeas', sI.mI, ...
+                           'applyCstr', cI, 'P', 0.5, ...
+                           'sigmaQAcc', 1e1, 'sigmaQAngVel', 1e2);
             end
         end
     end
@@ -96,24 +88,24 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-    for i = [1 5 15]
+    for i = 1:dataN
         n = table2struct(dataList(i, :));
         
-        uwbDistSigma = 0.0;
-        if strcmp(ns(1:3), 'NS2') && (size(ns, 2) > 3)
-            uwbDistSigma = str2double(ns(5:end)); 
-        end
-        
-        if ~(strcmp(n.act(7:end-2), "SpeedSkater") || ...
-           strcmp(n.act(7:end-2), "Static") || ...
-           strcmp(n.act(7:end-2), "HighKneeJog")) && ...
-           uwbDistSigma <= (0.03+1e-4)
-%             setups{1}.sigmaUwbLeg = 1e-1;
-            setups{1}.sigmaUwbLeg = 1e0;
-        else
-            setups{1}.sigmaUwbLeg = 1e0;
-            continue;
-        end
+%         uwbDistSigma = 0.0;
+%         if strcmp(ns(1:3), 'NS2') && (size(ns, 2) > 3)
+%             uwbDistSigma = str2double(ns(5:end)); 
+%         end
+%         
+%         if ~(strcmp(n.act(7:end-2), "SpeedSkater") || ...
+%            strcmp(n.act(7:end-2), "Static") || ...
+%            strcmp(n.act(7:end-2), "HighKneeJog")) && ...
+%            uwbDistSigma <= (0.03+1e-4)
+% %             setups{1}.sigmaUwbLeg = 1e-1;
+%             setups{1}.sigmaUwbLeg = 1e0;
+%         else
+%             setups{1}.sigmaUwbLeg = 1e0;
+%             continue;
+%         end
 
         name = sprintf("%s-%s-%s", ns, n.subj, n.act);
         dataPath = sprintf('%s/mat/%s-%s-%s.mat', dir, ns(1:3), n.subj, n.act);
