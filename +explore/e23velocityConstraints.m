@@ -1,6 +1,6 @@
 % motion list
 mot = struct('file', 'S01-Trial-Walk-1', ...
-             'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P003+M001+C007");
+             'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P023+M131+C007");
 
 dataSfname = sprintf('neura-sparse01/imu/%s', mot.file);
 ns = extractBetween(mot.algo, 1, 3);

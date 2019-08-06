@@ -20,8 +20,9 @@
 %>          X:   1st bit Zupt and Ankle zpos
 %>               2nd bit Update angular velocity
 %>               3rd bit Orientation update
-%>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
-%>               2nd bit Vel cstr Y and Z
+%>          Y:   1st bit Pelvis xy=ankle average
+%>               2nd bit Pelvis z=initial height
+%>               3rd bit Vel cstr Y and Z
 %>          Z:   1st bit covariance limiter
 %>      applyCstr: 3 digit ZYX
 %>          X:   1st bit enforce thigh length
@@ -58,7 +59,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
           'sigma2RAngVelPV', 1e-3, 'sigma2RAngVelLS', 1e-3, 'sigma2RAngVelRS', 1e-3, ...
           'sigma2RZPosPV', 1e-1, 'sigma2RZPosLS', 1e-4, 'sigma2RZPosRS', 1e-4, ...
           'sigma2RZuptLA', 1e-2, 'sigma2RZuptRA', 1e-2, ...
-          'sigma2RVelCstrY', 1e-2, 'sigma2RVelCstrZ', 1e-2, ...
+          'sigma2RVelCstrY', 1e0, 'sigma2RVelCstrZ', 1e0, ...
           'sigma2RXYPosPVLSRS', 1e2, ...
           'sigma2RLimPos', 1e1, 'sigma2RLimOri', 1e1, ...
           'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
@@ -93,7 +94,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
 %>                       If 0 calculates acc and ang vel from sensor ori
 %>               2nd bit calculate angular velocity from orientation
 
-    knob.meas = struct('ori', bitand(knob.amModTen, 3), 'angvel', false, ...
+    knob.meas = struct('ori', bitand(knob.amModTen, 4), 'angvel', false, ...
         'zpos', struct('LS', false, 'RS', false, 'PV', false), ...
         'zupt', false, 'xyposPVLSRS', false, ...
         'velcstrY', false, 'velcstrZ', false);   
@@ -113,16 +114,16 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
 %>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
 %>               2nd bit Vel cstr Y and Z
 
-    if bitand(knob.amTenDig, 1)
+    knob.meas.xyposPVLSRS = bitand(knob.amTenDig, 1);
+    if bitand(knob.amTenDig, 2)
         knob.meas.zpos.PV = true;
         step.PV = true(N.samples, 1);
-        knob.meas.xyposPVLSRS = true;
     else
         knob.meas.zpos.PV = false;
         step.PV = false(N.samples, 1);
     end
-    knob.meas.velcstrY = bitand(knob.amTenDig, 2);
-    knob.meas.velcstrZ = bitand(knob.amTenDig, 2);
+    knob.meas.velcstrY = bitand(knob.amTenDig, 4);
+    knob.meas.velcstrZ = bitand(knob.amTenDig, 4);
     
     % Constraint
     knob.cstr.thighlength = bitand(knob.acModTen, 1);
@@ -588,9 +589,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             H.velcstrZ = []; R.velcstrZ = []; deltay.velcstrZ = [];
         end
         N.meas_k = N.meas_k + size(H.velcstrZ, 1);
-%         if k==1652
-%             display('hi')
-%         end
+
         if N.meas_k > 0
             H.comb = [H.ori_k.W_T_PV; H.zpos_k.W_T_PV; ...
                       H.ori_k.W_T_LS; H.zpos_k.W_T_LS; ...

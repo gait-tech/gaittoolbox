@@ -3,11 +3,8 @@ TotalCaptureDataset/
 *.jpg
 *.asv
 totalcapture/
-mocap/
-experiments/
-exp/
+neura-sparse01/
+liese3lib/
+explore_output/
+btk/
 eXsens/
-xsens/
-eTCD/
-neura/
-xsensAnkleExperiment/
