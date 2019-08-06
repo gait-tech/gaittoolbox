@@ -44,7 +44,7 @@ elseif size(vec,1) == 6
     ph = norm(phi);
     if ph < tolerance;
         % If the angle is small, fall back on the series representation
-        J = vec2jacSeries(phi,10);
+        J = vec2jacSeries(vec,10);
     else
         Jsmall = vec2jac( phi );
         Q = vec2Q( vec );

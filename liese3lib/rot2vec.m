@@ -29,7 +29,8 @@ for i=1:3
       phim = acos((trace(C)-1)/2);
       phi = phim*a;
          
-      if abs(trace(vec2rot( phi )'*C)-3) > 1e-14
+      % if abs(trace(vec2rot( phi )'*C)-3) > 1e-14
+      if abs(trace(vec2rot( phi )'*C)-3) > 1e-13
          phi = -phi;
       end
    end
