@@ -4,7 +4,6 @@ TotalCaptureDataset/
 *.asv
 totalcapture/
 neura-sparse01/
-liese3lib/
 explore_output/
 btk/
 eXsens/
