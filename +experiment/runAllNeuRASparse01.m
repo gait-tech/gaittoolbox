@@ -42,11 +42,6 @@ for nsI = 1:length(nsList)
     setups{end+1} = struct('est', 'ekfv3', ...
                'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
                'initSrc', 'w__v', 'stepDetection', 'av03', ...
-               'applyMeas', 76, 'applyCstr', 351, 'P', 0.5, ...
-               'sigmaQAcc', 1e1);
-    setups{end+1} = struct('est', 'ekfv3', ...
-               'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
-               'initSrc', 'w__v', 'stepDetection', 'av03', ...
                'applyMeas', 76, 'applyCstr', 355, 'P', 0.5, ...
                'sigmaQAcc', 1e1);
 %     if strcmp(ns, 'NS2')
@@ -74,7 +69,8 @@ for nsI = 1:length(nsList)
 %                            'sigmaUwbLeg', 0);
 %     end
 
-    for sI = [struct('pI', 21, 'mI', 125), struct('pI', 23, 'mI', 121), struct('pI', 21, 'mI', 135), struct('pI', 23, 'mI', 131)]   
+%     for sI = [struct('pI', 21, 'mI', 125), struct('pI', 23, 'mI', 121), struct('pI', 21, 'mI', 135), struct('pI', 23, 'mI', 131)]   
+    for sI = [struct('pI', 21, 'mI', 175),]   
         for cI = [7]
             for sdI = {'av03'} 
                 setups{end+1} = struct('est', 'lieekfv1', ...
@@ -93,7 +89,8 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-    for i = 1:dataN
+%     for i = 1:dataN
+    for i = 15
         n = table2struct(dataList(i, :));
         
 %         uwbDistSigma = 0.0;

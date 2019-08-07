@@ -22,8 +22,7 @@ list = {
 %     struct('file', 'S01-Trial-JumpingJacks-1', 'algo', 'NS1+Aw__sOw__sIw__x+Sav01+M02+C176'), ...
 %      % debug
 %       struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355"), ....
-      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P023+M111+C007"), ...
-      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P023+M111+C007"), ...
+      struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P021+M175+C007"), ...
 %       struct('file', 'S01-Trial-FigureofEight-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P001+M111+C007"), ...
 %       struct('file', 'S01-Trial-Fivemin-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P001+M111+C007"), ...
     % london demo
@@ -170,8 +169,8 @@ for lIdx=1:length(list)
     end
 
     % velocity constraint debug
-    sensors = experiment.buildVelCstrDebug(sensors, estBody);
-    sensors = experiment.buildVelCstrDebug(sensors, vb, 'Ref');
+    sensors = experiment.buildVelCstrDebug(sensors, estBody, estState, cs.est);
+    sensors = experiment.buildVelCstrDebug(sensors, vb, estState, cs.est, 'Ref');
     
     estBody.exportc3d(sprintf('%s.c3d', targetname), sensors, ...
                       vb, bIsStatLA, bIsStatRA, eMarkers);
@@ -183,8 +182,8 @@ for lIdx=1:length(list)
     % side by side
 %     estBodyS2S = estBodyRel.toWorldFrame(vb.MIDPEL, vb.qRPV);
 %     estBodyS2S = estBodyRel.toWorldFrame(estBody.MIDPEL, estBody.qRPV);
-    viconBodyS2S = viconBodyRel.toWorldFrame(vb.MIDPEL+[0.5 0 0], vb.qRPV);
-    estBody.exportc3d(sprintf('%s-SidebySide.c3d', targetname), sensors, viconBodyS2S, bIsStatLA, bIsStatRA, eMarkers);
+%     viconBodyS2S = viconBodyRel.toWorldFrame(vb.MIDPEL+[0.5 0 0], vb.qRPV);
+%     estBody.exportc3d(sprintf('%s-SidebySide.c3d', targetname), sensors, viconBodyS2S, bIsStatLA, bIsStatRA, eMarkers);
     
     tmp = addAxis(quatmultiply(quatconj(estBody.qRPV), dataS.Pelvis.ori), ...
                   estBodyRel.MIDPEL, 'qRPVSens');
@@ -228,6 +227,9 @@ for lIdx=1:length(list)
     
     sensorsDebug.ePos = estBodyDebug2.calcDPos(viconBodyDebug2);
     sensorsDebug.eOri = estBodyDebug2.calcDOri(viconBodyDebug2);
+    
+    estStateDebug = experiment.buildStateDebug(estState, estState2, cs.est);
+    sensorsDebug = experiment.buildVelCstrDebug(sensorsDebug, estBodyDebug, estStateDebug, cs.est);
     
     estBodyDebug.exportc3d(sprintf('%s-Debug.c3d', targetname), sensorsDebug, ...
                            viconBodyDebug, bIsStatLADebug, bIsStatRADebug);
