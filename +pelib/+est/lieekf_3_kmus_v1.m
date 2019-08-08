@@ -22,14 +22,16 @@
 %>               3rd bit Orientation update
 %>          Y:   1st bit Pelvis xy=ankle average
 %>               2nd bit Pelvis z=initial height
-%>               3rd bit Vel cstr Y and Z
 %>          Z:   1st bit covariance limiter
+%>               2nd3rd bit If 1, vel cstr Y and Z always on
+%>                          If 2, vel cstr Y and Z only on during step detect
 %>      applyCstr: 3 digit ZYX
 %>          X:   1st bit enforce thigh length
 %>               2nd bit enforce hinge knee joint
 %>               3rd bit enforce knee range of motion
-%>          Y=0: No P update
-%>          Y=1: P update
+%>          Y:   1st2nd bit If 1, vel cstr Y and Z always on
+%>                          If 2, vel cstr Y and Z only on during step detect
+%>          Z:   1st bit do P update
 %>
 %> @param x0 initial state in the GFR
 %> @param P0 initial covariance
@@ -59,7 +61,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
           'sigma2RAngVelPV', 1e-3, 'sigma2RAngVelLS', 1e-3, 'sigma2RAngVelRS', 1e-3, ...
           'sigma2RZPosPV', 1e-1, 'sigma2RZPosLS', 1e-4, 'sigma2RZPosRS', 1e-4, ...
           'sigma2RZuptLA', 1e-2, 'sigma2RZuptRA', 1e-2, ...
-          'sigma2RVelCstrY', 1e-2, 'sigma2RVelCstrZ', 1e-2, ...
+          'sigma2RVelCstrY', 1e0, 'sigma2RVelCstrZ', 1e0, ...
           'sigma2RXYPosPVLSRS', 1e2, ...
           'sigma2RLimPos', 1e1, 'sigma2RLimOri', 1e1, ...
           'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
@@ -81,6 +83,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     knob.amHunDig = mod(idivide(int32(fOpt.applyMeas), 100, 'floor'), 10);
     knob.acModTen = mod(fOpt.applyCstr, 10);
     knob.acTenDig = mod(idivide(int32(fOpt.applyCstr), 10, 'floor'), 10);
+    knob.acHunDig = mod(idivide(int32(fOpt.applyCstr), 100, 'floor'), 10);
     
     % Prediction
     % zero velocity otherwise
@@ -122,19 +125,35 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         knob.meas.zpos.PV = false;
         step.PV = false(N.samples, 1);
     end
-    knob.meas.velcstrY = bitand(knob.amTenDig, 4);
-    knob.meas.velcstrZ = bitand(knob.amTenDig, 4);
+    
+    knob.meas.velcstrYAlways = bitshift(knob.amHunDig, -1) == 1;
+    knob.meas.velcstrYStep = bitshift(knob.amHunDig, -1) == 2;
+%     knob.meas.velcstrYAlways = 0;
+%     knob.meas.velcstrYStep = 0;
+    knob.meas.velcstrZAlways = bitshift(knob.amHunDig, -1) == 1;
+    knob.meas.velcstrZStep = bitshift(knob.amHunDig, -1) == 2;
+%     knob.meas.velcstrZAlways = 0;
+%     knob.meas.velcstrZStep = 0;
+%     knob.meas.velcstrY = bitand(knob.amTenDig, 4);
+%     knob.meas.velcstrZ = bitand(knob.amTenDig, 4);
     
     % Constraint
     knob.cstr.thighlength = bitand(knob.acModTen, 1);
     knob.cstr.hingeknee = bitand(knob.acModTen, 2);
     knob.cstr.kneerom = bitand(knob.acModTen, 4);
     knob.cstr.on = knob.cstr.thighlength | knob.cstr.hingeknee | knob.cstr.kneerom;
-    if knob.acTenDig == 0
-        knob.cstr.Pupdate = false;
-    elseif knob.acTenDig == 1
-        knob.cstr.Pupdate = true;
-    end
+    knob.cstr.Pupdate = bitand(knob.acHunDig, 1);
+
+    knob.cstr.velcstrYAlways = bitand(knob.acTenDig, 3) == 1;
+    knob.cstr.velcstrYStep = bitand(knob.acTenDig, 3) == 2;
+%     knob.cstr.velcstrYAlways = 0;
+%     knob.cstr.velcstrYStep = 0;
+    knob.cstr.velcstrZAlways = bitand(knob.acTenDig, 3) == 1;
+    knob.cstr.velcstrZStep = bitand(knob.acTenDig, 3) == 2;
+%     knob.cstr.velcstrZAlways = 0;
+%     knob.cstr.velcstrZStep = 0;
+%     knob.cstr.velcstrY = bitand(knob.acHunDig, 1);
+%     knob.cstr.velcstrZ = bitand(knob.acHunDig, 1);
     
     addpath('liese3lib');
     
@@ -340,8 +359,8 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     % velocity constraint
     y0.velcstrY = zeros(2, 1);
     y0.velcstrZ = zeros(2, 1);
-    R0.velcstrY = repelem(fOpt.sigma2RVelCstrY, 2);
-    R0.velcstrZ = repelem(fOpt.sigma2RVelCstrZ, 2);
+    R0.velcstrY = fOpt.sigma2RVelCstrY;
+    R0.velcstrZ = fOpt.sigma2RVelCstrZ;
     
     % covariance limiter
     H0.covlim = [eye(18) zeros(18, N.state-18)];
@@ -548,7 +567,12 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         N.meas_k = N.meas_k + size(H.rzupt_k, 1);
 
         % Velocity Constraint
-        if knob.meas.velcstrY || knob.meas.velcstrZ
+        applyLVelcstrY = knob.meas.velcstrYAlways | (knob.meas.velcstrYStep & step.LS(kPast));
+        applyRVelcstrY = knob.meas.velcstrYAlways | (knob.meas.velcstrYStep & step.RS(kPast));
+        applyLVelcstrZ = knob.meas.velcstrZAlways | (knob.meas.velcstrZStep & step.LS(kPast));
+        applyRVelcstrZ = knob.meas.velcstrZAlways | (knob.meas.velcstrZStep & step.RS(kPast));
+            
+        if applyLVelcstrY || applyRVelcstrY || applyLVelcstrZ || applyRVelcstrZ
             n_LT = D0.H2CT*(xhatPri.W_T_PV(:,:,k)*D0.PV_p_LH - ...
                             xhatPri.W_T_LS(:,:,k)*D0.LS_p_LK);
             n_RT = D0.H2CT*(xhatPri.W_T_PV(:,:,k)*D0.PV_p_RH - ...
@@ -556,57 +580,78 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             W_vy_PV = body.PV_d/2*xhatPri.W_T_PV(1:3, 2, k);
         end
         
-        if knob.meas.velcstrY
+        if applyLVelcstrY
             W_ry_LT = xhatPri.W_T_LS(1:3, 2, k);
-            W_ry_RT = xhatPri.W_T_RS(1:3, 2, k);
             W_rx_LS = xhatPri.W_T_LS(1:3, 1, k);
+            
+            H.velcstrYL = [zeros(1,18), W_ry_LT', -W_ry_LT', zeros(1,3) ...
+                (hat(W_vy_PV)*W_ry_LT)', ...
+                (-hat(n_LT)*W_ry_LT+body.LS_d*W_rx_LS)', zeros(1,3) ];
+            R.velcstrYL = R0.velcstrY;
+            deltay.velcstrYL = -H.velcstrYL(:,idx.vec)*xhatPri.vec(:,k);
+        else
+            H.velcstrYL = []; R.velcstrYL = []; deltay.velcstrYL = [];
+        end
+        N.meas_k = N.meas_k + size(H.velcstrYL, 1);
+        
+        if applyRVelcstrY
+            W_ry_RT = xhatPri.W_T_RS(1:3, 2, k);
             W_rx_RS = xhatPri.W_T_RS(1:3, 1, k);
             
-            H.velcstrY = [zeros(1,18), W_ry_LT', -W_ry_LT', zeros(1,3) ...
-                (hat(W_vy_PV)*W_ry_LT)', ...
-                (-hat(n_LT)*W_ry_LT+W_rx_LS)', zeros(1,3);
-                zeros(1,18), W_ry_RT', zeros(1,3), -W_ry_RT' ...
+            H.velcstrYR = [zeros(1,18), W_ry_RT', zeros(1,3), -W_ry_RT' ...
                 (hat(-W_vy_PV)*W_ry_RT)', ...
-                zeros(1,3), (-hat(n_RT)*W_ry_RT+W_rx_RS)' ];
-            R.velcstrY = R0.velcstrY;
-            deltay.velcstrY = -H.velcstrY(:,idx.vec)*xhatPri.vec(:,k);
+                zeros(1,3), (-hat(n_RT)*W_ry_RT+body.RS_d*W_rx_RS)' ];
+            R.velcstrYR = R0.velcstrY;
+            deltay.velcstrYR = -H.velcstrYR(:,idx.vec)*xhatPri.vec(:,k);
         else
-            H.velcstrY = []; R.velcstrY = []; deltay.velcstrY = [];
+            H.velcstrYR = []; R.velcstrYR = []; deltay.velcstrYR = [];
         end
-        N.meas_k = N.meas_k + size(H.velcstrY, 1);
-
-        if knob.meas.velcstrZ
+        N.meas_k = N.meas_k + size(H.velcstrYR, 1);
+        
+        if applyLVelcstrZ
             W_vz_LS = body.LS_d*xhatPri.W_T_LS(1:3, 3, k);
-            W_vz_RS = body.RS_d*xhatPri.W_T_RS(1:3, 3, k);
-            
-            H.velcstrZ = [zeros(1,18), n_LT', -n_LT', zeros(1,3) ...
-                (hat(W_vy_PV)*n_LT)', (-hat(W_vz_LS)*n_LT)', zeros(1,3);
-                zeros(1,18), n_RT', zeros(1,3), -n_RT' ...
-                (hat(-W_vy_PV)*n_RT)', zeros(1,3), (-hat(W_vz_RS)*n_RT)' ];
-            R.velcstrZ = R0.velcstrZ;
-            deltay.velcstrZ = -H.velcstrZ(:,idx.vec)*xhatPri.vec(:,k);
+            n_LT2 = n_LT/norm(n_LT);
+            H.velcstrZL = [zeros(1,18), n_LT2', -n_LT2', zeros(1,3) ...
+                (hat(W_vy_PV)*n_LT2)', (-hat(W_vz_LS)*n_LT2)', zeros(1,3) ];
+            R.velcstrZL = R0.velcstrZ;
+            deltay.velcstrZL = -H.velcstrZL(:,idx.vec)*xhatPri.vec(:,k);
         else
-            H.velcstrZ = []; R.velcstrZ = []; deltay.velcstrZ = [];
+            H.velcstrZL = []; R.velcstrZL = []; deltay.velcstrZL = [];
         end
-        N.meas_k = N.meas_k + size(H.velcstrZ, 1);
+        N.meas_k = N.meas_k + size(H.velcstrZL, 1);
 
+        if applyRVelcstrZ
+            W_vz_RS = body.RS_d*xhatPri.W_T_RS(1:3, 3, k);
+            n_RT2 = n_RT/norm(n_RT);
+            H.velcstrZR = [ zeros(1,18), n_RT2', zeros(1,3), -n_RT2' ...
+                (hat(-W_vy_PV)*n_RT2)', zeros(1,3), (-hat(W_vz_RS)*n_RT2)' ];
+            R.velcstrZR = R0.velcstrZ;
+            deltay.velcstrZR = -H.velcstrZR(:,idx.vec)*xhatPri.vec(:,k);
+        else
+            H.velcstrZR = []; R.velcstrZR = []; deltay.velcstrZR = [];
+        end
+        N.meas_k = N.meas_k + size(H.velcstrZR, 1);
+        
         if N.meas_k > 0
             H.comb = [H.ori_k.W_T_PV; H.zpos_k.W_T_PV; ...
                       H.ori_k.W_T_LS; H.zpos_k.W_T_LS; ...
                       H.ori_k.W_T_RS; H.zpos_k.W_T_RS; ...
                       H.angvel; H.xypos; H.lzupt_k; H.rzupt_k; ...
-                      H.velcstrY; H.velcstrZ];
+                      H.velcstrYL; H.velcstrYR; ...
+                      H.velcstrZL; H.velcstrZR];
             deltay.comb = [deltay.ori_k.W_T_PV; deltay.zpos_k.W_T_PV; ...
                            deltay.ori_k.W_T_LS; deltay.zpos_k.W_T_LS; ...
                            deltay.ori_k.W_T_RS; deltay.zpos_k.W_T_RS; ...
                            deltay.angvel; deltay.xypos; ...
                            deltay.lzupt_k; deltay.rzupt_k; ...
-                           deltay.velcstrY; deltay.velcstrZ];
+                           deltay.velcstrYL; deltay.velcstrYR; ...
+                           deltay.velcstrZL; deltay.velcstrZR];
             R.comb = diag([R.ori_k.W_T_PV R.zpos_k.W_T_PV ...
                            R.ori_k.W_T_LS R.zpos_k.W_T_LS ...
                            R.ori_k.W_T_RS R.zpos_k.W_T_RS ...
                            R.angvel R.xypos R.lzupt_k R.rzupt_k ...
-                           R.velcstrY R.velcstrZ]);
+                           R.velcstrYL R.velcstrYR ...
+                           R.velcstrZL R.velcstrZR]);
                 
             K = PhatPri(:,:,k)*H.comb'/(H.comb*PhatPri(:,:,k)*H.comb' + R.comb);
             bigphi = eye(N.state, N.state);
@@ -663,6 +708,16 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                     N.cstr_k = N.cstr_k + 1;
                 end
             end
+
+            applyLVelcstrY = knob.cstr.velcstrYAlways | (knob.cstr.velcstrYStep & step.LS(kPast));
+            applyRVelcstrY = knob.cstr.velcstrYAlways | (knob.cstr.velcstrYStep & step.RS(kPast));
+            applyLVelcstrZ = knob.cstr.velcstrZAlways | (knob.cstr.velcstrZStep & step.LS(kPast));
+            applyRVelcstrZ = knob.cstr.velcstrZAlways | (knob.cstr.velcstrZStep & step.RS(kPast));
+            
+            N.cstr_k = N.cstr_k + applyLVelcstrY;
+            N.cstr_k = N.cstr_k + applyRVelcstrY;
+            N.cstr_k = N.cstr_k + applyLVelcstrZ;
+            N.cstr_k = N.cstr_k + applyRVelcstrZ;
             
             D = zeros(N.cstr_k, N.state);
             d = zeros(N.cstr_k, 1);
@@ -742,6 +797,53 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                 end
             end
             
+            % Velocity Constraint
+            if applyLVelcstrY || applyRVelcstrY || applyLVelcstrZ || applyRVelcstrZ
+                W_vy_PV = body.PV_d/2*xhatPos.W_T_PV(1:3, 2, k);
+            end
+            
+            if applyLVelcstrY
+                W_ry_LT = xhatPos.W_T_LS(1:3, 2, k);
+                W_rx_LS = xhatPos.W_T_LS(1:3, 1, k);
+
+                D(N.cstr_k+1,:) = [ zeros(1,18), ...
+                    W_ry_LT', -W_ry_LT', zeros(1,3) ...
+                    (hat(W_vy_PV)*W_ry_LT)', ...
+                    (-hat(n_LT)*W_ry_LT+body.LS_d*W_rx_LS)', zeros(1,3)];
+                dhat(N.cstr_k+1,:) = D(N.cstr_k+1,idx.vec)*xhatPos.vec(:,k);
+                N.cstr_k = N.cstr_k + 1;
+            end
+            if applyRVelcstrY
+                W_ry_RT = xhatPos.W_T_RS(1:3, 2, k);
+                W_rx_RS = xhatPos.W_T_RS(1:3, 1, k);
+
+                D(N.cstr_k+1,:) = [ zeros(1,18), ...
+                    W_ry_RT', zeros(1,3), -W_ry_RT' ...
+                    (hat(-W_vy_PV)*W_ry_RT)', ...
+                    zeros(1,3), (-hat(n_RT)*W_ry_RT+body.RS_d*W_rx_RS)' ];
+                dhat(N.cstr_k+1,:) = D(N.cstr_k+1,idx.vec)*xhatPos.vec(:,k);
+                N.cstr_k = N.cstr_k + 1;
+            end
+            
+            if applyLVelcstrZ
+                W_vz_LS = body.LS_d*xhatPos.W_T_LS(1:3, 3, k);
+                n_LT2 = n_LT/norm(n_LT);
+                
+                D(N.cstr_k+1,:) = [zeros(1,18), n_LT2', -n_LT2', zeros(1,3) ...
+                    (hat(W_vy_PV)*n_LT2)', (-hat(W_vz_LS)*n_LT2)', zeros(1,3)];
+                dhat(N.cstr_k+1,:) = D(N.cstr_k+1,idx.vec)*xhatPos.vec(:,k);
+                N.cstr_k = N.cstr_k + 1;
+            end
+            if applyRVelcstrZ
+                W_vz_RS = body.RS_d*xhatPos.W_T_RS(1:3, 3, k);
+                n_RT2 = n_RT/norm(n_RT);
+                
+                D(N.cstr_k+1,:) = [zeros(1,18), n_RT2', zeros(1,3), -n_RT2' ...
+                    (hat(-W_vy_PV)*n_RT2)', zeros(1,3), (-hat(W_vz_RS)*n_RT2)' ];
+                dhat(N.cstr_k+1,:) = D(N.cstr_k+1,idx.vec)*xhatPos.vec(:,k);
+                N.cstr_k = N.cstr_k + 1;
+            end
+        
             K = PhatPos(:,:,k)*D'/(D*PhatPos(:,:,k)*D');
             if knob.cstr.Pupdate
                 Ptilde(:,:,k) = (I_N-K*D)*PhatPos(:,:,k);

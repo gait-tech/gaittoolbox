@@ -146,3 +146,88 @@ R_vcstr1 = quatrotate(vb.qRTH, W_v_RH1-W_v_RK1-cross(avel1.qRSK, vb.RFEP-vb.RFEO
 L_vcstr2 = quatrotate(estBody.qLTH, W_v_LH2-W_v_LK2-cross(avel2.qLSK, estBody.LFEP-estBody.LFEO));
 R_vcstr2 = quatrotate(estBody.qRTH, W_v_RH2-W_v_RK2-cross(avel2.qRSK, estBody.RFEP-estBody.RFEO));
 clf; pelib.viz.plotXYZ(100, L_vcstr1, R_vcstr1); 
+
+%% equation testing
+sensors, body, state        
+n = body.nSamples;
+compL1 = zeros(n,18); % sum components of LVcstr kane equation
+compL2 = zeros(n,18); % sum components of RVcstr kane equation
+compR1 = zeros(n,18); % sum components of LVcstr linear version
+compR2 = zeros(n,18); % sum components of RVcstr linear version
+
+compL1(:,1:3) = quatrotate(body.qLTH, state.vec(1:3, :)');
+compL1(:,4:6) = -quatrotate(body.qLTH, state.vec(4:6, :)');
+compL1(:,7:9) = 0;
+compL1(:,10:12) = quatrotate(body.qLTH, cross(state.vec(10:12, :)', (body.LFEP-body.MIDPEL)));
+compL1(:,13:15) = -quatrotate(body.qLTH, cross(state.vec(13:15, :)', (body.LFEP-body.LTIO)));
+compL1(:,16:18) = 0;
+
+compR1(:,1:3) = quatrotate(body.qRTH, state.vec(1:3, :)');
+compR1(:,4:6) = 0;
+compR1(:,7:9) = -quatrotate(body.qRTH, state.vec(7:9, :)');
+compR1(:,10:12) = quatrotate(body.qRTH, cross(state.vec(10:12, :)', (body.RFEP-body.MIDPEL)));
+compR1(:,13:15) = 0;
+compR1(:,16:18) = -quatrotate(body.qRTH, cross(state.vec(16:18, :)', (body.RFEP-body.RTIO)));
+
+addpath('liese3lib');
+
+VcstrByVel2 = zeros([size(LVcstrByVel,1) 2*size(LVcstrByVel,2)]);
+
+for k=1:size(LVcstrByVel,1)
+    body2 = struct();
+    body2.PV_d = norm(body.LFEP(1,:)-body.RFEP(1,:));
+    body2.LS_d = norm(body.LFEO(1,:)-body.LTIO(1,:));
+    body2.RS_d = norm(body.RFEO(1,:)-body.RTIO(1,:));
+    D0.H2CT = [eye(3,3); zeros(1,3)]';
+    D0.PV_p_LH = [0 body2.PV_d/2 0 1]'; 
+    D0.PV_p_RH = [0 -body2.PV_d/2 0 1]';
+    D0.LS_p_LK = [0 0 body2.LS_d 1]';    
+    D0.RS_p_RK = [0 0 body2.RS_d 1]';
+
+    n_LT = D0.H2CT*(state.W_T_PV(:,:,k)*D0.PV_p_LH - ...
+                    state.W_T_LS(:,:,k)*D0.LS_p_LK);
+    n_RT = D0.H2CT*(state.W_T_PV(:,:,k)*D0.PV_p_RH - ...
+                    state.W_T_RS(:,:,k)*D0.RS_p_RK);
+    W_vy_PV = body2.PV_d/2*state.W_T_PV(1:3, 2, k);
+
+    W_ry_LT = state.W_T_LS(1:3, 2, k);
+    W_ry_RT = state.W_T_RS(1:3, 2, k);
+    W_rx_LS = state.W_T_LS(1:3, 1, k);
+    W_rx_RS = state.W_T_RS(1:3, 1, k);
+
+%             velcstrY = [W_ry_LT', -W_ry_LT', zeros(1,3) ...
+%                 (hat(W_vy_PV)*W_ry_LT)', ...
+%                 (-hat(n_LT)*W_ry_LT+W_rx_LS)', zeros(1,3);
+%                 W_ry_RT', zeros(1,3), -W_ry_RT' ...
+%                 (hat(-W_vy_PV)*W_ry_RT)', ...
+%                 zeros(1,3), (-hat(n_RT)*W_ry_RT+W_rx_RS)' ];
+    velcstrY = [W_ry_LT', -W_ry_LT', zeros(1,3) ...
+        (hat(W_vy_PV)*W_ry_LT)', ...
+        (-hat(n_LT)*W_ry_LT+body2.LS_d*W_rx_LS)', zeros(1,3);
+        W_ry_RT', zeros(1,3), -W_ry_RT' ...
+        (hat(-W_vy_PV)*W_ry_RT)', ...
+        zeros(1,3), (-hat(n_RT)*W_ry_RT+body2.RS_d*W_rx_RS)' ];
+
+    W_vz_LS = body2.LS_d*state.W_T_LS(1:3, 3, k);
+    W_vz_RS = body2.RS_d*state.W_T_RS(1:3, 3, k);
+
+    n_LT2 = n_LT/norm(n_LT);
+    n_RT2 = n_RT/norm(n_RT);
+    velcstrZ = [n_LT2', -n_LT2', zeros(1,3) ...
+        (hat(W_vy_PV)*n_LT2)', (-hat(W_vz_LS)*n_LT2)', zeros(1,3);
+        n_RT2', zeros(1,3), -n_RT2' ...
+        (hat(-W_vy_PV)*n_RT2)', zeros(1,3), (-hat(W_vz_RS)*n_RT2)' ];
+
+    for l=1:3:18
+        compL2(k,l+1) = velcstrY(1,l:l+2)*state.vec(l:l+2,k);
+        compR2(k,l+1) = velcstrY(2,l:l+2)*state.vec(l:l+2,k);
+        compL2(k,l+2) = velcstrZ(1,l:l+2)*state.vec(l:l+2,k);
+        compR2(k,l+2) = velcstrZ(2,l:l+2)*state.vec(l:l+2,k);
+    end
+
+    VcstrByVel2(k,:) = [0 velcstrY(1,:) * state.vec(:,k) ...
+                          velcstrZ(1,:) * state.vec(:,k) ...
+                        0 velcstrY(2,:) * state.vec(:,k) ...
+                          velcstrZ(2,:) * state.vec(:,k)];
+end
+clf; pelib.viz.plotXYZ(100, LVcstrByVel, VcstrByVel2(1:3,:));
