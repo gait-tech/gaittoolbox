@@ -36,5 +36,9 @@ function sensors = buildVelCstrDebug(sensors, body, state, algo, suffix)
         sensors.(sprintf('RKNEVel%s', suffix)) = RKNEVel';
         sensors.(sprintf('LVcstrByVel%s', suffix)) = LVcstrByVel;
         sensors.(sprintf('RVcstrByVel%s', suffix)) = RVcstrByVel;
+        
+        % == start ==
+        % copy paste parts of e23bVelCstrValidation.m here
+        % == end ==
     end
 end

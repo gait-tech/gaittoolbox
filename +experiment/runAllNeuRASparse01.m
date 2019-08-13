@@ -2,7 +2,7 @@
 %> Run experiment for all NeuRA data
 %> NS1: use yaw offset from ROM
 %> NS2: use yaw offset from Vicon
-%> writetable(results, 'neura-sparse01/explore-v2/results20190204.csv')
+%> writetable(results, 'neura-sparse01/explore-v2/results20190812.csv')
 % ======================================================================
 dir = 'neura-sparse01';
 % expDir = sprintf('%s/explore', dir);
@@ -70,11 +70,9 @@ for nsI = 1:length(nsList)
 %     end
 
 %     for sI = [struct('pI', 21, 'mI', 125), struct('pI', 23, 'mI', 121), struct('pI', 21, 'mI', 135), struct('pI', 23, 'mI', 131)]   
-    for sI = [struct('pI', 21, 'mI', 105, 'cI', 7), ...
-              struct('pI', 21, 'mI', 305, 'cI', 7), ...
-              struct('pI', 21, 'mI', 505, 'cI', 7), ...
-              struct('pI', 21, 'mI', 105, 'cI', 17), ...
-              struct('pI', 21, 'mI', 105, 'cI', 27)]   
+    for sI = [struct('pI', 21, 'mI', 135, 'cI', 7), ...
+              struct('pI', 21, 'mI', 535, 'cI', 7), ...
+              struct('pI', 21, 'mI', 135, 'cI', 27) ]   
         for sdI = {'av03'} 
             setups{end+1} = struct('est', 'lieekfv1', ...
                        'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
@@ -91,8 +89,8 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-%     for i = 1:dataN
-    for i = 15
+    for i = 1:dataN
+%     for i = 1:18
         n = table2struct(dataList(i, :));
         
 %         uwbDistSigma = 0.0;

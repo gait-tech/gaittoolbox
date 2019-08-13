@@ -148,6 +148,8 @@ R_vcstr2 = quatrotate(estBody.qRTH, W_v_RH2-W_v_RK2-cross(avel2.qRSK, estBody.RF
 clf; pelib.viz.plotXYZ(100, L_vcstr1, R_vcstr1); 
 
 %% equation testing
+% == start ==
+% copy paste to buildVelCstrDebug.m
 sensors, body, state        
 n = body.nSamples;
 compL1 = zeros(n,18); % sum components of LVcstr kane equation
@@ -231,3 +233,5 @@ for k=1:size(LVcstrByVel,1)
                           velcstrZ(2,:) * state.vec(:,k)];
 end
 clf; pelib.viz.plotXYZ(100, LVcstrByVel, VcstrByVel2(1:3,:));
+
+% == end ==

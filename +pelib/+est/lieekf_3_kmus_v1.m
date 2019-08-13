@@ -134,8 +134,6 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     knob.meas.velcstrZStep = bitshift(knob.amHunDig, -1) == 2;
 %     knob.meas.velcstrZAlways = 0;
 %     knob.meas.velcstrZStep = 0;
-%     knob.meas.velcstrY = bitand(knob.amTenDig, 4);
-%     knob.meas.velcstrZ = bitand(knob.amTenDig, 4);
     
     % Constraint
     knob.cstr.thighlength = bitand(knob.acModTen, 1);
