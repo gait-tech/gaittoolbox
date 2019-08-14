@@ -16,6 +16,8 @@
 %>          Y:   1st bit If 1 calculates acc and ang vel from state ori
 %>                       If 0 calculates acc and ang vel from sensor ori
 %>               2nd bit calculate angular velocity from orientation
+%>               3rd bit If 0, naive pos update (Omega = B_R_W W_v)
+%>                       If 1, pos update (Omega = Phi(B_w)^{-1} B_R_W W_v
 %>      applyMeas: 3 digit ZYX
 %>          X:   1st bit Zupt and Ankle zpos
 %>               2nd bit Update angular velocity
@@ -85,18 +87,16 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     knob.acTenDig = mod(idivide(int32(fOpt.applyCstr), 10, 'floor'), 10);
     knob.acHunDig = mod(idivide(int32(fOpt.applyCstr), 100, 'floor'), 10);
     
-    % Prediction
+    % Prediction knobs
     % zero velocity otherwise
     knob.pred.PosWithStateVel = bitand(knob.apModTen, 1); 
     % zero angular velocity otherwise
     knob.pred.OriWithStateAngVel = bitand(knob.apModTen, 2);
     knob.pred.useStateinWFrameConv = bitand(knob.apTenDig, 1);
     knob.pred.useAngvelFromOri = bitand(knob.apTenDig, 2);
-
-%>          Y:   1st bit If 1 calculates acc and ang vel from state ori
-%>                       If 0 calculates acc and ang vel from sensor ori
-%>               2nd bit calculate angular velocity from orientation
-
+    knob.pred.indepPosPred = bitand(knob.apTenDig, 4);
+    
+    % Measurement knobs
     knob.meas = struct('ori', bitand(knob.amModTen, 4), 'angvel', false, ...
         'zpos', struct('LS', false, 'RS', false, 'PV', false), ...
         'zupt', false, 'xyposPVLSRS', false, ...
@@ -181,6 +181,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         idx.(r3StateList2{i}) = (1:3) + ((i-1)*3) + N.se3State;
     end
     I_N = eye(N.state);
+    I_6 = eye(6); I_3 = eye(3);
     
     xhatPri = struct();     % prediction update state
     xhatPos = struct();     % measurement update state
@@ -437,7 +438,6 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
 
             if knob.pred.OriWithStateAngVel
                 xi(4:6) = B_R_W*xi(4:6);
-%                 xi(4:6) = B_w2_.(bname)(kPast,:)';
 
                 wname = sprintf('aVel%s', sname(end-1:end));
                 F.curlyC(idx.(sname)(4:6),idx.(wname)) = dt*B_R_W;
@@ -445,14 +445,26 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                 xi(4:6) = 0; 
             end
             
-            if knob.pred.PosWithStateVel
+            if knob.pred.PosWithStateVel && knob.pred.indepPosPred
 %                 xi(1:3) = B_R_W*xi(1:3);
                 J = vec2jac(xi(4:6)*dt);
-                B_R_W2 = J\xtilde.(sname)(1:3,1:3,kPast)';
+                Jinv = (I_3 - 0.5*hat(xi(4:6)*dt));
+%                 B_R_W2 = J\xtilde.(sname)(1:3,1:3,kPast)';
+                B_R_W2 = (I_3 - 0.5*hat(xi(4:6)*dt))*xtilde.(sname)(1:3,1:3,kPast)';
+                
                 xi(1:3) = B_R_W2*(xi(1:3) + 0.5*dt*u(se32vecIdxs{i}(1:3),kPast));
 %                 xi(1:3) = B_R_W2*(xi(1:3));
                 vname = sprintf('vel%s', sname(end-1:end));
+                wname = sprintf('aVel%s', sname(end-1:end));
                 F.curlyC(idx.(sname)(1:3),idx.(vname)) = dt*B_R_W2;
+                F.curlyC(idx.(sname)(1:3),idx.(wname)) = ...
+                    xtilde.(sname)(1:3,1:3,kPast)' * dt * ...
+                    hat(xtilde.vec(se32vecIdxs{i}(1:3),kPast));
+            elseif knob.pred.PosWithStateVel && ~knob.pred.indepPosPred
+                xi(1:3) = B_R_W*(xi(1:3) + 0.5*dt*u(se32vecIdxs{i}(1:3),kPast));
+%                 xi(1:3) = B_R_W*xi(1:3);
+                vname = sprintf('vel%s', sname(end-1:end));
+                F.curlyC(idx.(sname)(1:3),idx.(vname)) = dt*B_R_W;
             else
                 xi(1:3) = 0;
             end

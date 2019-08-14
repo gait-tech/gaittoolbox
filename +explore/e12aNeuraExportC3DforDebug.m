@@ -1,4 +1,5 @@
 % motion list
+dir = 'neura-sparse01';
 dataList = readtable(sprintf('%s/data-list-v2.csv', dir));
 
 list = {
@@ -11,11 +12,12 @@ list = {
 };
 
 listN = size(list, 1);
-for i = 1:18
+for i = [156]
     n = table2struct(dataList(i, :));
     name = sprintf("%s-%s", n.subj, n.act);
-    list{listN+1} = struct('file', name, 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P021+M535+C007");
-    listN = listN + 1;
+    list{listN+1} = struct('file', name, 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P021+M335+C007");
+    list{listN+2} = struct('file', name, 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P021+M135+C017");
+    listN = listN + 2;
 end
 
 addpath('btk');
