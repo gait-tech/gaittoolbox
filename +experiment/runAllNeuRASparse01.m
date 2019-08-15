@@ -45,14 +45,9 @@ for nsI = 1:length(nsList)
                'applyMeas', 76, 'applyCstr', 355, 'P', 0.5, ...
                'sigmaQAcc', 1e1);
 
-    for sI = [struct('pI', 23, 'mI', 131, 'cI', 7), ...
-              struct('pI', 21, 'mI', 135, 'cI', 7), ...
-              struct('pI', 63, 'mI', 131, 'cI', 7), ...
-              struct('pI', 61, 'mI', 135, 'cI', 7), ...
-              struct('pI', 21, 'mI', 125, 'cI', 7), ... % different pelvis constraints
-              struct('pI', 21, 'mI', 115, 'cI', 7), ... % different pelvis constraints
-              struct('pI', 63, 'mI', 121, 'cI', 7), ... % different pelvis constraints
-              struct('pI', 63, 'mI', 111, 'cI', 7)]     % different pelvis constraints
+    for sI = [struct('pI', 21, 'mI', 105, 'cI', 7), ... % part 2 different pelvis constraints
+              struct('pI', 21, 'mI', 115, 'cI', 7), ... % part 2 different pelvis constraints
+              struct('pI', 21, 'mI', 125, 'cI', 7)] % part 2 different pelvis constraints
         for sdI = {'av03'} 
             setups{end+1} = struct('est', 'lieekfv1', ...
                        'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
@@ -70,7 +65,6 @@ for nsI = 1:length(nsList)
     dataN = size(dataList, 1);
 
     for i = 1:dataN
-%     for i = 15
         n = table2struct(dataList(i, :));
         
 %         uwbDistSigma = 0.0;
