@@ -55,6 +55,42 @@ function sensors = buildSensorStructFromDebug(sensors, state, state2, algo, suff
             sname = sprintf('TAcc%s%s', idx{i}{1}, suffix);
             sensors.(sname) = state2.u(idx{i}{2}, :)';
         end
+    elseif strcmp(algo, 'lieekfv2')
+        idx = 0;
+        for i = ["Vel", "AVel"]
+            for j = ["PELV", "LANK", "RANK"]
+                k = sprintf("%s%s%s", i, j, suffix);
+                sensors.(k) = state.vec(idx+(1:3), :)';
+                idx = idx + 3;
+            end
+        end
+
+        idx = 0;         
+        [nState, ~, nSamples] = size(state2.Ptilde);
+        buf = zeros(nSamples, nState);
+        for i=1:nSamples
+            buf(i,:) = diag(state2.Ptilde(:,:,i));
+        end
+        for i = ["Ori", "Pos", "Vel", "AVel"]
+            for j = ["PV", "LS", "RS"]
+                k = sprintf("P%s%s%s", i, j, suffix);
+                sensors.(k) = buf(:,idx+(1:3));
+                
+                k = sprintf("vPos%s%s%s", i, j, suffix);
+                sensors.(k) = state2.measUptPos(idx+(1:3), :)';
+                
+                k = sprintf("vTilde%s%s%s", i, j, suffix);
+                sensors.(k) = state2.measUptTilde(idx+(1:3), :)';
+                idx = idx + 3;
+            end
+        end
+        
+        idx = 0;
+        for i = ["PV", "LS", "RS"]
+            k = sprintf("uAcc%s%s", i, suffix);
+            sensors.(k) = state2.u(idx+(1:3), :)';
+            idx = idx + 3;
+        end
     else
         idx = {{'PELV',  4: 6}, {'LANK', 14:16}, {'RANK', 24:26}};
         for i=1:3

@@ -243,7 +243,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
     H = {}; y = {}; R = {};
     
     % update orientation measurement
-    H.ori = [eye(9,9) zeros(9,36)];
+    H.ori = [eye(9,9) zeros(9,27)];
     R.ori = repelem([fOpt.sigma2ROriPV, fOpt.sigma2ROriLS, ...
                      fOpt.sigma2ROriRS], 3);
     % y.ori is variable and will be generated on the spot
@@ -392,9 +392,9 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
             H.comb(N.meas_k+1:N.meas_k+9, :) = H.ori;
             R.comb(N.meas_k+1:N.meas_k+9, :) = R.ori;
             dy(N.meas_k+1:N.meas_k+9, :) = [ ...
-                rot2vec(xhatPri.PV(:,:,k)' * W_R_.PV(:,:,kPast)) ...
-                rot2vec(xhatPri.LS(:,:,k)' * W_R_.LS(:,:,kPast)) ...
-                rot2vec(xhatPri.RS(:,:,k)' * W_R_.RS(:,:,kPast)) ];
+                rot2vec(xhatPri.W_R_PV(:,:,k)' * W_R_.PV(:,:,kPast)); ...
+                rot2vec(xhatPri.W_R_LS(:,:,k)' * W_R_.LS(:,:,kPast)); ...
+                rot2vec(xhatPri.W_R_RS(:,:,k)' * W_R_.RS(:,:,kPast)) ];
             N.meas_k = N.meas_k + 9;
         end
         
@@ -454,7 +454,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
                 xhatPos.(i)(:,:,k) = xhatPri.(i)(:,:,k)*vec2rot(measUpt(idx.(i)));
                 bigphi(idx.(i), idx.(i)) = vec2jac(-measUpt(idx.(i)));
             end
-            xhatPos.vec(:,k) = xhatPri.vec(:,k) + measUpt(idx.vec);
+            xhatPos.vec(:,k) = xhatPri.vec(:,k) + measUpt(idx.vecState);
             
             if knob.meas.covlim
                 H.comb2 = [H.comb; H.covlim];
@@ -577,7 +577,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
             for i=so3StateList
                 xtilde.(i)(:,:,k) = xhatPos.(i)(:,:,k)*vec2rot(measUpt(idx.(i)));
             end
-            xtilde.vec(:,k) = xhatPos.vec(:,k) + measUpt(idx.vec);
+            xtilde.vec(:,k) = xhatPos.vec(:,k) + measUpt(idx.vecState);
         else
             for i=so3StateList
                 xtilde.(i)(:,:,k) = xhatPos.(i)(:,:,k);

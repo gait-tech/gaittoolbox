@@ -61,6 +61,19 @@ function [bodyDebug, sensorsDebug] = buildgrBodyDebug(body, sensors, debugData, 
             bodyDebug.qLSK(2:3:n2, :) = rotm2quat(debugData.xhatPos.W_T_LS(1:3,1:3,:));
             bodyDebug.qRSK(1:3:n2, :) = rotm2quat(debugData.xhatPri.W_T_RS(1:3,1:3,:));
             bodyDebug.qRSK(2:3:n2, :) = rotm2quat(debugData.xhatPos.W_T_RS(1:3,1:3,:));
+        elseif strcmp(algo, 'lieekfv2')
+            bodyDebug.MIDPEL(1:3:n2, :) = debugData.xhatPri.vec(1:3,:)';
+            bodyDebug.MIDPEL(2:3:n2, :) = debugData.xhatPos.vec(1:3,:)';
+            bodyDebug.LTIO(1:3:n2, :) = debugData.xhatPri.vec(4:6,:)';
+            bodyDebug.LTIO(2:3:n2, :) = debugData.xhatPos.vec(4:6,:)';
+            bodyDebug.RTIO(1:3:n2, :) = debugData.xhatPri.vec(7:9,:)';
+            bodyDebug.RTIO(2:3:n2, :) = debugData.xhatPos.vec(7:9,:)';
+            bodyDebug.qRPV(1:3:n2, :) = rotm2quat(debugData.xhatPri.W_R_PV(1:3,1:3,:));
+            bodyDebug.qRPV(2:3:n2, :) = rotm2quat(debugData.xhatPos.W_R_PV(1:3,1:3,:));
+            bodyDebug.qLSK(1:3:n2, :) = rotm2quat(debugData.xhatPri.W_R_LS(1:3,1:3,:));
+            bodyDebug.qLSK(2:3:n2, :) = rotm2quat(debugData.xhatPos.W_R_LS(1:3,1:3,:));
+            bodyDebug.qRSK(1:3:n2, :) = rotm2quat(debugData.xhatPri.W_R_RS(1:3,1:3,:));
+            bodyDebug.qRSK(2:3:n2, :) = rotm2quat(debugData.xhatPos.W_R_RS(1:3,1:3,:));
         else
             bodyDebug.MIDPEL(1:3:n2, :) = debugData.predState(:,1:3);
             bodyDebug.MIDPEL(2:3:n2, :) = debugData.zuptState(:,1:3);
@@ -125,6 +138,17 @@ function [bodyDebug, sensorsDebug] = buildgrBodyDebug(body, sensors, debugData, 
                 sensorsDebug.(sname)(1:3:n2, :) = debugData.xhatPri.vec(idx{i}{2},:)';
                 sensorsDebug.(sname)(2:3:n2, :) = debugData.xhatPos.vec(idx{i}{2},:)';
                 sensorsDebug.(sname)(3:3:n2, :) = debugData.xtilde.vec(idx{i}{2},:)';
+            end
+        elseif strcmp(algo, 'lieekfv2')
+            idx = 0;
+            for i = ["Vel", "AVel"]
+                for j = ["PELV", "LANK", "RANK"]
+                    k = sprintf("%s%s%s", j, i, suffix);
+                    sensorsDebug.(k)(1:3:n2, :) = debugData.xhatPri.vec(idx+(1:3),:)';
+                    sensorsDebug.(k)(2:3:n2, :) = debugData.xhatPos.vec(idx+(1:3),:)';
+                    sensorsDebug.(k)(3:3:n2, :) = debugData.xtilde.vec(idx+(1:3),:)';
+                    idx = idx + 3;
+                end
             end
         else
             idx = {{'PELV',  4: 6}, {'LANK', 14:16}, {'RANK', 24:26}};
