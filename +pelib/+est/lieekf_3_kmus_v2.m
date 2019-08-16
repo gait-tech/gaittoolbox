@@ -56,11 +56,11 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
           'sigma2QAngVelPV', 0, 'sigma2QAngVelLS', 0, 'sigma2QAngVelRS', 0, ...
           'sigma2ROriPV', 1e-3, 'sigma2ROriLS', 1e-3, 'sigma2ROriRS', 1e-3, ...
           'sigma2RAngVelPV', 1e-3, 'sigma2RAngVelLS', 1e-3, 'sigma2RAngVelRS', 1e-3, ...
-          'sigma2RZPosPV', 1e-1, 'sigma2RZPosLS', 1e-4, 'sigma2RZPosRS', 1e-4, ...
+          'sigma2RZPosPV', 1e0, 'sigma2RZPosLS', 1e-4, 'sigma2RZPosRS', 1e-4, ...
           'sigma2RZuptLA', 1e-2, 'sigma2RZuptRA', 1e-2, ...
           'sigma2RVelCstrY', 1e0, 'sigma2RVelCstrZ', 1e0, ...
           'sigma2RXYPosPVLSRS', 1e2, ...
-          'sigma2RLimPos', 1e1, 'sigma2RLimOri', 1e1, ...
+          'sigma2RLimPos', 1e2, 'sigma2RLimOri', 1e1, ...
           'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
           'alphaRKmin', 0, 'alphaRKmax', pi*8/9 );
     optionFieldNames = fieldnames(options);
@@ -219,8 +219,15 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
                            fOpt.sigma2QGyrRS], 3));
     Q.vec = G.vec*Q.raw0*G.vec';
     Q.comb = zeros(N.state,N.state);
-    Q.comb(idx.so3State,idx.so3State) = diag(repelem( ...
-            [fOpt.sigma2QOriPV, fOpt.sigma2QOriLS, fOpt.sigma2QOriRS], 3));
+    if knob.pred.ori
+        Q.comb(idx.so3State,idx.so3State) = diag(repelem( ...
+                [fOpt.sigma2QAngVelPV*(dt.^2), ...
+                 fOpt.sigma2QAngVelLS*(dt.^2), ...
+                 fOpt.sigma2QAngVelRS*(dt.^2)], 3));
+    else
+        Q.comb(idx.so3State,idx.so3State) = diag(repelem( ...
+                [fOpt.sigma2QOriPV, fOpt.sigma2QOriLS, fOpt.sigma2QOriRS], 3));
+    end
     Q.comb(idx.vecState,idx.vecState) = Q.vec;
 
     if knob.pred.useAngvelFromOri
@@ -249,7 +256,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
     % y.ori is variable and will be generated on the spot
     
     % Angular velocity
-    H.angvel = [zeros(9,36) eye(9,9)];
+    H.angvel = [zeros(9,27) eye(9,9)];
     R.angvel = repelem([fOpt.sigma2RAngVelPV, fOpt.sigma2RAngVelLS, ...
                         fOpt.sigma2RAngVelRS], 3);
     % y.angvel is variable and will be generated on the spot
@@ -282,9 +289,10 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
         j = sprintf("sigma2RZPos%s", i);
         R.zpos.(i) = fOpt.(j);
     end
-    y.zpos.PV = xtilde.vec(idx.posPV(3),1);
-    y.zpos.LS =  min([xtilde.vec(idx.posLS(3),1), xtilde.vec(idx.posRS(3),1)]);
-    y.zpos.RS =  y.zpos.LS;
+    y.zpos.PV = xtilde.vec(idx.vec.posPV(3),1);
+    y.zpos.LS = min([xtilde.vec(idx.vec.posLS(3),1), ...
+                     xtilde.vec(idx.vec.posRS(3),1)]);
+    y.zpos.RS = y.zpos.LS;
     
     % pelvis = ankle x y pos
     H.xypos = [zeros(2,9) ...
@@ -414,8 +422,8 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
             H.comb(N.meas_k+1:N.meas_k+9, :) = H.angvel;
             R.comb(N.meas_k+1:N.meas_k+9, :) = R.angvel;
             dy(N.meas_k+1:N.meas_k+9, :) = [ ...
-                u(idx.u.avelPV,kPast) - xhatPri.vec(idx.vec.avelPV,k) ...
-                u(idx.u.avelLS,kPast) - xhatPri.vec(idx.vec.avelLS,k) ...
+                u(idx.u.avelPV,kPast) - xhatPri.vec(idx.vec.avelPV,k); ...
+                u(idx.u.avelLS,kPast) - xhatPri.vec(idx.vec.avelLS,k); ...
                 u(idx.u.avelRS,kPast) - xhatPri.vec(idx.vec.avelRS,k) ];
             N.meas_k = N.meas_k + 9;
         end
@@ -424,7 +432,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
         if knob.meas.xyposPVLSRS
             H.comb(N.meas_k+1:N.meas_k+2, :) = H.xypos;
             R.comb(N.meas_k+1:N.meas_k+2, :) = R.xypos;
-            dy(N.meas_k+1:N.meas_k+9, :) = y.xypos - ...
+            dy(N.meas_k+1:N.meas_k+2, :) = y.xypos - ...
                 H.xypos(:,idx.vecState)*xhatPri.vec(:,k);
             N.meas_k = N.meas_k + 2;
         end
@@ -433,13 +441,13 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
         if knob.meas.zupt && step.LS(kPast)
             H.comb(N.meas_k+1:N.meas_k+3, :) = H.lzupt;
             R.comb(N.meas_k+1:N.meas_k+3, :) = R.lzupt;
-            dy(N.meas_k+1:N.meas_k+3, :) = xhatPri.vec(idx.vec.velLS,k);
+            dy(N.meas_k+1:N.meas_k+3, :) = y.lzupt - xhatPri.vec(idx.vec.velLS,k);
             N.meas_k = N.meas_k + 3;
         end
         if knob.meas.zupt && step.RS(kPast)
             H.comb(N.meas_k+1:N.meas_k+3, :) = H.rzupt;
             R.comb(N.meas_k+1:N.meas_k+3, :) = R.rzupt;
-            dy(N.meas_k+1:N.meas_k+3, :) = xhatPri.vec(idx.vec.velRS,k);
+            dy(N.meas_k+1:N.meas_k+3, :) = y.rzupt - xhatPri.vec(idx.vec.velRS,k);
             N.meas_k = N.meas_k + 3;
         end
         
@@ -447,7 +455,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
         if N.meas_k > 0               
             K = PhatPri(:,:,k)*H.comb'/(H.comb*PhatPri(:,:,k)*H.comb' + diag(R.comb));
             bigphi = eye(N.state, N.state);
-            measUpt = K*(dy);
+            measUpt = K*dy;
             debug_dat.measUptPos(:,kPast) = measUpt;
             
             for i=so3StateList
@@ -458,7 +466,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
             
             if knob.meas.covlim
                 H.comb2 = [H.comb; H.covlim];
-                R.comb2 = [R.comb R.covlim];
+                R.comb2 = [R.comb' R.covlim];
                 K2 = PhatPri(:,:,k)*H.comb2'/(H.comb2*PhatPri(:,:,k)*H.comb2' + diag(R.comb2));
                 PhatPos(:,:,k) = bigphi*(I_N-K2*H.comb2)*PhatPri(:,:,k)*bigphi';
             else
@@ -534,7 +542,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
         if knob.cstr.kneerom
             if (alphaLK < fOpt.alphaLKmin) || (alphaLK > fOpt.alphaLKmax)
                 alphaLK2 = min(max(alphaLK, fOpt.alphaLKmin), fOpt.alphaLKmax);
-                a = [-sin(alphaLK2-pi/2); 0; cos(alphaLK2-pi/2); 0];
+                a = [-sin(alphaLK2-pi/2); 0; cos(alphaLK2-pi/2)];
                 i = xhatPos.W_R_LS(:,:,k) * a;
 
                 D.comb(N.cstr_k+1,idx.W_R_PV) = -i' * xhatPos.W_R_PV(:,:,k) * D.PV_phat_LH;
@@ -548,7 +556,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
             end
             if (alphaRK < fOpt.alphaRKmin) || (alphaRK > fOpt.alphaRKmax)
                 alphaRK2 = min(max(alphaRK, fOpt.alphaRKmin), fOpt.alphaRKmax);
-                a = [-sin(alphaRK2-pi/2); 0; cos(alphaRK2-pi/2); 0];
+                a = [-sin(alphaRK2-pi/2); 0; cos(alphaRK2-pi/2)];
                 i = xhatPos.W_R_RS(:,:,k) * a;
 
                 D.comb(N.cstr_k+1,idx.W_R_PV) = -i' * xhatPos.W_R_PV(:,:,k) * D.PV_phat_RH;

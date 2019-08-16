@@ -56,10 +56,10 @@ function sensors = buildSensorStructFromDebug(sensors, state, state2, algo, suff
             sensors.(sname) = state2.u(idx{i}{2}, :)';
         end
     elseif strcmp(algo, 'lieekfv2')
-        idx = 0;
+        idx = 9;
         for i = ["Vel", "AVel"]
             for j = ["PELV", "LANK", "RANK"]
-                k = sprintf("%s%s%s", i, j, suffix);
+                k = sprintf("%s%s%s", j, i, suffix);
                 sensors.(k) = state.vec(idx+(1:3), :)';
                 idx = idx + 3;
             end

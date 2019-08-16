@@ -15,7 +15,7 @@ listN = size(list, 1);
 for i = [15]
     n = table2struct(dataList(i, :));
     name = sprintf("%s-%s", n.subj, n.act);
-    for sI = [struct('pI', 1, 'mI', 0, 'cI', 0)] 
+    for sI = [struct('pI', 21, 'mI', 135, 'cI', 7)] 
          list{listN+1} = struct('file', name, ...
              'algo', sprintf("NS2+lieekfv2+Aw__sOw__sIw__v+Sav03+P%03d+M%03d+C%03d", ...
                      sI.pI, sI.mI, sI.cI));
@@ -170,7 +170,7 @@ for lIdx=1:length(list)
 %     estBodyS2S = estBodyRel.toWorldFrame(vb.MIDPEL, vb.qRPV);
 %     estBodyS2S = estBodyRel.toWorldFrame(estBody.MIDPEL, estBody.qRPV);
     viconBodyS2S = viconBodyRel.toWorldFrame(vb.MIDPEL+[0.5 0 0], vb.qRPV);
-%     estBody.exportc3d(sprintf('%s-SidebySide.c3d', targetname), sensors, viconBodyS2S, bIsStatLA, bIsStatRA, eMarkers);
+    estBody.exportc3d(sprintf('%s-SidebySide.c3d', targetname), sensors, viconBodyS2S, bIsStatLA, bIsStatRA, eMarkers);
     
     tmp = addAxis(quatmultiply(quatconj(estBody.qRPV), dataS.Pelvis.ori), ...
                   estBodyRel.MIDPEL, 'qRPVSens');
