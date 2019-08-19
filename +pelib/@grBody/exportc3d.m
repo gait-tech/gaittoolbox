@@ -102,7 +102,7 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     end
     
     % add sensor signals
-    analogLabels = fieldnames(sensors);
+    analogLabels = sort(fieldnames(sensors));
     for i = 1:length(analogLabels)
         analogName = analogLabels{i};
         if size(sensors.(analogName), 2) == 1

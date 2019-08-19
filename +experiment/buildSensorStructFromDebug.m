@@ -42,10 +42,10 @@ function sensors = buildSensorStructFromDebug(sensors, state, state2, algo, suff
             	sname = sprintf('P%s%s%s', idx2{j}, idx{i}{1}, suffix);
             	sensors.(sname) = buf(:,idx{i}{j+1});
                 
-                sname2 = sprintf('MeasUptPos%s%s%s', idx2{j}, idx{i}{1}, suffix);
+                sname2 = sprintf('vPos%s%s%s', idx2{j}, idx{i}{1}, suffix);
                 sensors.(sname2) = state2.measUptPos(idx{i}{j+1}, :)';
                 
-                sname3 = sprintf('MeasUptTilde%s%s%s', idx2{j}, idx{i}{1}, suffix);
+                sname3 = sprintf('vTilde%s%s%s', idx2{j}, idx{i}{1}, suffix);
                 sensors.(sname3) = state2.measUptTilde(idx{i}{j+1}, :)';
             end
         end

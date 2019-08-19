@@ -12,18 +12,20 @@ list = {
 };
 
 listN = size(list, 1);
-for i = [15]
+for i = 1:18
     n = table2struct(dataList(i, :));
     name = sprintf("%s-%s", n.subj, n.act);
-    for sI = [struct('pI', 21, 'mI', 135, 'cI', 7)] 
+    for sI = [struct('algo', 'lieekfv1', 'pI', 21, 'mI', 135, 'cI', 7)] 
          list{listN+1} = struct('file', name, ...
-             'algo', sprintf("NS2+lieekfv2+Aw__sOw__sIw__v+Sav03+P%03d+M%03d+C%03d", ...
-                     sI.pI, sI.mI, sI.cI));
+             'algo', sprintf("NS2+%s+Aw__sOw__sIw__v+Sav03+P%03d+M%03d+C%03d", ...
+                     sI.algo, sI.pI, sI.mI, sI.cI));
          listN = listN+1;
     end
 end
 
 addpath('btk');
+
+targetdir = "explore_output";
 
 for lIdx=1:length(list)
     dataSfname = sprintf('neura-sparse01/imu/%s', list{lIdx}.file);
@@ -31,7 +33,8 @@ for lIdx=1:length(list)
     
     load(sprintf('neura-sparse01/explore-v2/%s-%s-debug.mat', ns, list{lIdx}.file));
     load(sprintf('neura-sparse01/explore-v2/%s-%s-%s.mat', ns, list{lIdx}.file, list{lIdx}.algo));
-    targetname = sprintf('explore_output/%s-%s-%s', ns, list{lIdx}.file, list{lIdx}.algo);
+    targetname = sprintf("%s/%s-%s-%s", ...
+                         targetdir, ns, list{lIdx}.file, list{lIdx}.algo);
     
     if strcmp(cs.stepDetection, 'av03')
         revStepDetect = readtable(sprintf('neura-sparse01/step-detect/%s-revStepDetect.csv', list{lIdx}.file));
@@ -170,7 +173,7 @@ for lIdx=1:length(list)
 %     estBodyS2S = estBodyRel.toWorldFrame(vb.MIDPEL, vb.qRPV);
 %     estBodyS2S = estBodyRel.toWorldFrame(estBody.MIDPEL, estBody.qRPV);
     viconBodyS2S = viconBodyRel.toWorldFrame(vb.MIDPEL+[0.5 0 0], vb.qRPV);
-    estBody.exportc3d(sprintf('%s-SidebySide.c3d', targetname), sensors, viconBodyS2S, bIsStatLA, bIsStatRA, eMarkers);
+%     estBody.exportc3d(sprintf('%s-SidebySide.c3d', targetname), sensors, viconBodyS2S, bIsStatLA, bIsStatRA, eMarkers);
     
     tmp = addAxis(quatmultiply(quatconj(estBody.qRPV), dataS.Pelvis.ori), ...
                   estBodyRel.MIDPEL, 'qRPVSens');
