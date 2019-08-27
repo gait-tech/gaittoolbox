@@ -218,7 +218,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         F.curlyC(idx.(sname)(1:3),idx.(vname)) = dt*eye(3,3);
         if knob.pred.OriWithStateAngVel
             wname = sprintf('aVel%s', sname(end-1:end));
-            F.curlyC(idx.(sname)(4:6),idx.(wname)) = dt*eye(3,3);
+            F.curlyC(idx.(sname)(4:6),idx.(wname)) = -dt*eye(3,3);
         end
     end
     G.naive = zeros(N.state, 18);
@@ -436,13 +436,13 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                 B_R_W = W_R_.(bname)(:,:,kPast)';
             end
 
+            wname = sprintf('aVel%s', sname(end-1:end));
             if knob.pred.OriWithStateAngVel
                 xi(4:6) = B_R_W*xi(4:6);
-
-                wname = sprintf('aVel%s', sname(end-1:end));
                 F.curlyC(idx.(sname)(4:6),idx.(wname)) = dt*B_R_W;
             else
-                xi(4:6) = 0; 
+                xi(4:6) = 0;
+                F.curlyC(idx.(wname),idx.(wname)) = -eye(3,3);
             end
             
             if knob.pred.PosWithStateVel && knob.pred.indepPosPred
