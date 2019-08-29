@@ -2,7 +2,7 @@
 dir0 = 'neura-sparse01';
 dir = sprintf('%s/explore-v2', dir0);
 ns = 'NS2';
-outDir = 'C:/Users/z5151460/OneDrive - UNSW/Thesis - Sparse Mocap/Aim 1/Analysis - 20190312 - ckf results';
+outDir = 'C:/Users/z5151460/OneDrive - UNSW/Thesis - Sparse Mocap/Goal02-LGCEKF/c3d-viconvsxsens';
 clear results;
 rIdx = 1;
 % rIdx = size(results, 1) + 1;
@@ -47,49 +47,57 @@ for i = 1:dataN
 %     estBody.exportc3d(sprintf('%s.c3d', targetname), struct(), csActBody);
 end
 
-%% folder .mat rerun
-dataList = ls(sprintf('%s/%s-*+C*.mat', dir, ns));
-expression = 'NS.-(?<subj>\w+)-(?<act>[-a-zA-z0-9]+)-NS.\+A(?<acc>\w+)O(?<ori>\w+)I(?<initSrc>\w+)\+S(?<step>av\d+)\+M(?<meas>\d+)\+C(?<cstr>\d+)\.mat*';
-
-for i = 1:size(dataList, 1)
-    load(sprintf('%s/%s', dir, dataList(i, :)));
-    n = regexp(dataList(i, :), expression, 'names');
-    if strcmp(string(n.subj), ""), continue; end
-    
-    name = sprintf("%s-%s-%s", ns, n.subj, n.act);
-    load(sprintf("%s/%s-debug.mat", dir, name));
-    
-    if n.initSrc == 'w__v'
-        csActBody = W__viconBody;
-    elseif n.initSrc == 'v__v'
-        csActBody = V__viconBody;
-    else
-        csActBody = W__xsensBody;
-    end
-    nSamples = min(csActBody.nSamples, estBody.nSamples);
-    csActBody = csActBody.getSubset(1:nSamples);
-    estBody = estBody.getSubset(1:nSamples);
-    
-    csActBodyRel = csActBody.changeRefFrame('MIDPEL');
-    
-    estBodyRel = estBody.changeRefFrame('MIDPEL');
-    estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
-    csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
-    
-    results0a = estBody.diffRMSEandMean(csActBody);
-    results0 = estBody2.diffRMSEandMean(csActBody2);
-    
-    results0.dPosW = results0a.dPos;   
-    results0.name = name;
-    results0.label = sprintf("%s+A%sO%sI%s+S%s+M%02d+C%03d", ...
-        ns, n.acc, n.ori, n.initSrc, n.step, str2num(n.meas), str2num(n.cstr));
-    results0.runtime = runtime;
-    results(rIdx) = results0;
-    rIdx = rIdx + 1;
-    fprintf("%4d/%4d %s/%s-%s\n", i, size(dataList, 1), dir, name, results0.label);
-end
+% %% folder .mat rerun
+% dataList = ls(sprintf('%s/%s-*+C*.mat', dir, ns));
+% expression = 'NS.-(?<subj>\w+)-(?<act>[-a-zA-z0-9]+)-NS.\+A(?<acc>\w+)O(?<ori>\w+)I(?<initSrc>\w+)\+S(?<step>av\d+)\+M(?<meas>\d+)\+C(?<cstr>\d+)\.mat*';
+% 
+% for i = 1:size(dataList, 1)
+%     load(sprintf('%s/%s', dir, dataList(i, :)));
+%     n = regexp(dataList(i, :), expression, 'names');
+%     if strcmp(string(n.subj), ""), continue; end
+%     
+%     name = sprintf("%s-%s-%s", ns, n.subj, n.act);
+%     load(sprintf("%s/%s-debug.mat", dir, name));
+%     
+%     if n.initSrc == 'w__v'
+%         csActBody = W__viconBody;
+%     elseif n.initSrc == 'v__v'
+%         csActBody = V__viconBody;
+%     else
+%         csActBody = W__xsensBody;
+%     end
+%     nSamples = min(csActBody.nSamples, estBody.nSamples);
+%     csActBody = csActBody.getSubset(1:nSamples);
+%     estBody = estBody.getSubset(1:nSamples);
+%     
+%     csActBodyRel = csActBody.changeRefFrame('MIDPEL');
+%     
+%     estBodyRel = estBody.changeRefFrame('MIDPEL');
+%     estBody2 = estBodyRel.toWorldFrame(csActBody.MIDPEL, estBody.qRPV);
+%     csActBody2 = csActBodyRel.toWorldFrame(csActBody.MIDPEL, csActBody.qRPV);
+%     
+%     results0a = estBody.diffRMSEandMean(csActBody);
+%     results0 = estBody2.diffRMSEandMean(csActBody2);
+%     
+%     results0.dPosW = results0a.dPos;   
+%     results0.name = name;
+%     results0.label = sprintf("%s+A%sO%sI%s+S%s+M%02d+C%03d", ...
+%         ns, n.acc, n.ori, n.initSrc, n.step, str2num(n.meas), str2num(n.cstr));
+%     results0.runtime = runtime;
+%     results(rIdx) = results0;
+%     rIdx = rIdx + 1;
+%     fprintf("%4d/%4d %s/%s-%s\n", i, size(dataList, 1), dir, name, results0.label);
+% end
 
 results = struct2table(results);
+% dataPath = sprintf("%s/results.mat", dir);
+% if exist(dataPath, 'file')
+%     newResults = results;
+%     load(dataPath);
+%     [C, ia, ib] = intersect(results(:,{'name', 'label'}), newResults(:,{'name', 'label'}));
+%     results(ia,:) = [];
+%     results = [results; newResults];
+% end
 save(sprintf("%s/results.mat", dir), 'results')
 
 function label = getLabel(ns, setup)

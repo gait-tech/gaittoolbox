@@ -60,7 +60,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
           'sigma2QOriPV', 1e3, 'sigma2QOriLS', 1e3, 'sigma2QOriRS', 1e3, ...
           'sigma2QVelMP', 1, 'sigma2QVelLA', 1, 'sigma2QVelRA', 1, ...
           'sigma2QAngVelPV', 0, 'sigma2QAngVelLS', 0, 'sigma2QAngVelRS', 0, ...
-          'sigma2ROriPV', 1e-3, 'sigma2ROriLS', 1e-3, 'sigma2ROriRS', 1e-3, ...
+          'sigma2ROriPV', 1e-2, 'sigma2ROriLS', 1e-2, 'sigma2ROriRS', 1e-2, ...
           'sigma2RAngVelPV', 1e-3, 'sigma2RAngVelLS', 1e-3, 'sigma2RAngVelRS', 1e-3, ...
           'sigma2RZPosPV', 1e-1, 'sigma2RZPosLS', 1e-4, 'sigma2RZPosRS', 1e-4, ...
           'sigma2RZuptLA', 1e-2, 'sigma2RZuptRA', 1e-2, ...
@@ -168,14 +168,19 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     se3StateList = {'W_T_PV', 'W_T_LS', 'W_T_RS'};
     N.se3StateList = length(se3StateList);
     N.se3State = N.se3StateList*6;
-    if knob.pred.skipangvel, N.r3State = 9;
-    else, N.r3State = 18; end
+    if knob.pred.skipangvel
+        N.r3State = 9;
+    else
+        N.r3State = 18;
+    end
     
     N.state = N.se3State + N.r3State;
     
     idx = struct('se3state', 1:18, ...
                  'W_T_PV', 1:6, 'W_T_LS', 7:12, 'W_T_RS', 13:18, ...
-                 'vec', (N.se3State+1):N.state);
+                 'vec', (N.se3State+1):N.state, ...
+                 'vec0', 1:N.r3State, ...
+                 'avelState', (N.se3State+10):N.state);
     r3StateList = {'vecVelPV', 'vecVelLS', 'vecVelRS', ...
                    'vecAVelPV', 'vecAVelLS', 'vecAVelRS'};
     r3StateList2 = {'velPV', 'velLS', 'velRS', ...
@@ -212,7 +217,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     F = struct(); G = struct(); Q = struct();
     if knob.pred.skipangvel
         F.vec = eye(9,9);
-        G.vec = dt*eye(9,9);
+        G.vec = [dt*eye(9,9) zeros(9,9)];
     else
         F.vec = [eye(9,9) zeros(9,9);
                  zeros(9,18)];
@@ -434,7 +439,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     debug_dat.measUptTilde = zeros(N.state, N.samples);
     
     %% Iteration
-    se32vecIdxs = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
+    se32vecIdxs = {1:3, 4:6, 7:9};
     u = zeros(18, N.samples);
     for k=2:(N.samples+1)
         kPast = k-1;
@@ -458,12 +463,14 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         F.AdG = eye(N.state, N.state);
         bigphi = eye(N.state, N.state);
         F.curlyC = zeros(N.state, N.state);
-        
+        if ~knob.pred.skipangvel
+            F.curlyC(idx.avelState, idx.avelState) = -eye(9,9);
+        end
         for i=1:N.se3StateList
             sname = se3StateList{i};
             bname = sname(end-1:end);
 
-            xi = xtilde.vec(se32vecIdxs{i},kPast);
+            xi = [xtilde.vec(se32vecIdxs{i},kPast) ; B_w2_.(bname)(kPast,:)'];
             % convert W_vel to B_vel
             if knob.pred.useStateinWFrameConv
                 B_R_W = xtilde.(sname)(1:3,1:3,kPast)';
@@ -472,18 +479,14 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
             end
 
             wname = sprintf('aVel%s', sname(end-1:end));
-            if knob.pred.OriWithStateAngVel
-                xi(4:6) = B_R_W*xi(4:6);
-                F.curlyC(idx.(sname)(4:6),idx.(wname)) = dt*B_R_W;
-            else
-                xi(4:6) = 0;
-                F.curlyC(idx.(wname),idx.(wname)) = -eye(3,3);
+            if ~knob.pred.OriWithStateAngVel
+                xi(4:6) = 0;                
             end
             
             if knob.pred.PosWithStateVel && knob.pred.indepPosPred
 %                 xi(1:3) = B_R_W*xi(1:3);
-                J = vec2jac(xi(4:6)*dt);
-                Jinv = (I_3 - 0.5*hat(xi(4:6)*dt));
+%                 J = vec2jac(xi(4:6)*dt);
+%                 Jinv = (I_3 - 0.5*hat(xi(4:6)*dt));
 %                 B_R_W2 = J\xtilde.(sname)(1:3,1:3,kPast)';
                 B_R_W2 = (I_3 - 0.5*hat(xi(4:6)*dt))*xtilde.(sname)(1:3,1:3,kPast)';
                 
