@@ -1,5 +1,5 @@
 % motion list
-ds = struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv2+Aw__sOw__sIw__v+Sav03+P001+M105+C007");
+ds = struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P101+M125+C007");
 
 dataSfname = sprintf('neura-sparse01/imu/%s', ds.file);
 ns = extractBetween(ds.algo, 1, 3);
@@ -38,7 +38,8 @@ tmpBody1 = estBodyDebug;
 tmpBody2 = false;
 tmpBody1Limits = [tmpBody1.xlim() tmpBody1.ylim() tmpBody1.zlim()];
 samplePlotN = 1000;
-for i=3:3*5:estBodyDebug.nSamples
+% for i=3:3*5:estBodyDebug.nSamples
+for i=1
     [az, el] = view;
     clf; grid; axis equal;
     xlabel('x'); ylabel('y'); zlabel('z');

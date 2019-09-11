@@ -10,13 +10,13 @@ body.lnSymbol = '-';
 body.ptSymbol = 'o';
         
 % body position
-body.MIDPEL = [0 0 0.6];
-body.LFEP = [0 0.15 0.6];
-body.LFEO = [0.05 0.15 0.3];
-body.LTIO = [0 0.15 0];
-body.RFEP = [0 -0.15 0.6];
-body.RFEO = [0.05 -0.15 0.6];
-body.RTIO = [0 -0.15 0];
+body.MIDPEL = [0 0 0.4];
+body.LFEP = [0 0.2 0.4];
+body.LFEO = [0.05 0.2 0.2];
+body.LTIO = [0 0.2 0];
+body.RFEP = [0 -0.2 0.4];
+body.RFEO = [0.05 -0.2 0.2];
+body.RTIO = [0 -0.2 0];
 
 % body orientation
 body.qRPV = rotm2quat(eye(3));
