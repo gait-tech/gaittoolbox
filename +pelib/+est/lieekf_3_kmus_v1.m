@@ -18,6 +18,7 @@
 %>               2nd bit calculate angular velocity from orientation
 %>               3rd bit If 0, naive pos update (Omega = B_R_W W_v)
 %>                       If 1, pos update (Omega = Phi(B_w)^{-1} B_R_W W_v
+%>          Z:   1st bit Skip angular velocity tracking
 %>      applyMeas: 3 digit ZYX
 %>          X:   1st bit Zupt and Ankle zpos
 %>               2nd bit Update angular velocity
@@ -59,7 +60,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
           'sigma2QOriPV', 1e3, 'sigma2QOriLS', 1e3, 'sigma2QOriRS', 1e3, ...
           'sigma2QVelMP', 1, 'sigma2QVelLA', 1, 'sigma2QVelRA', 1, ...
           'sigma2QAngVelPV', 0, 'sigma2QAngVelLS', 0, 'sigma2QAngVelRS', 0, ...
-          'sigma2ROriPV', 1e-3, 'sigma2ROriLS', 1e-3, 'sigma2ROriRS', 1e-3, ...
+          'sigma2ROriPV', 1e-2, 'sigma2ROriLS', 1e-2, 'sigma2ROriRS', 1e-2, ...
           'sigma2RAngVelPV', 1e-3, 'sigma2RAngVelLS', 1e-3, 'sigma2RAngVelRS', 1e-3, ...
           'sigma2RZPosPV', 1e-1, 'sigma2RZPosLS', 1e-4, 'sigma2RZPosRS', 1e-4, ...
           'sigma2RZuptLA', 1e-2, 'sigma2RZuptRA', 1e-2, ...
@@ -80,6 +81,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     knob = struct();
     knob.apModTen = mod(fOpt.applyPred, 10);
     knob.apTenDig = mod(idivide(int32(fOpt.applyPred), 10, 'floor'), 10);
+    knob.apHunDig = mod(idivide(int32(fOpt.applyPred), 100, 'floor'), 10);
     knob.amModTen = mod(fOpt.applyMeas, 10);
     knob.amTenDig = mod(idivide(int32(fOpt.applyMeas), 10, 'floor'), 10);
     knob.amHunDig = mod(idivide(int32(fOpt.applyMeas), 100, 'floor'), 10);
@@ -95,6 +97,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     knob.pred.useStateinWFrameConv = bitand(knob.apTenDig, 1);
     knob.pred.useAngvelFromOri = bitand(knob.apTenDig, 2);
     knob.pred.indepPosPred = bitand(knob.apTenDig, 4);
+    knob.pred.skipangvel = bitand(knob.apHunDig, 1);
     
     % Measurement knobs
     knob.meas = struct('ori', bitand(knob.amModTen, 4), 'angvel', false, ...
@@ -164,14 +167,20 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     bodyList = {'RPV', 'LSK', 'RSK'};
     se3StateList = {'W_T_PV', 'W_T_LS', 'W_T_RS'};
     N.se3StateList = length(se3StateList);
-    N.se3State = N.se3StateList*6;    
-    N.r3State = 18;
+    N.se3State = N.se3StateList*6;
+    if knob.pred.skipangvel
+        N.r3State = 9;
+    else
+        N.r3State = 18;
+    end
     
     N.state = N.se3State + N.r3State;
     
     idx = struct('se3state', 1:18, ...
                  'W_T_PV', 1:6, 'W_T_LS', 7:12, 'W_T_RS', 13:18, ...
-                 'vec', (N.se3State+1):N.state);
+                 'vec', (N.se3State+1):N.state, ...
+                 'vec0', 1:N.r3State, ...
+                 'avelState', (N.se3State+10):N.state);
     r3StateList = {'vecVelPV', 'vecVelLS', 'vecVelRS', ...
                    'vecAVelPV', 'vecAVelLS', 'vecAVelRS'};
     r3StateList2 = {'velPV', 'velLS', 'velRS', ...
@@ -206,10 +215,15 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     Ptilde(:,:,1) = P0;
     
     F = struct(); G = struct(); Q = struct();
-    F.vec = [eye(9,9) zeros(9,9);
-             zeros(9,18)];
-    G.vec = [dt*eye(9,9) zeros(9,9);
-         zeros(9,9) eye(9,9)];
+    if knob.pred.skipangvel
+        F.vec = eye(9,9);
+        G.vec = [dt*eye(9,9) zeros(9,9)];
+    else
+        F.vec = [eye(9,9) zeros(9,9);
+                 zeros(9,18)];
+        G.vec = [dt*eye(9,9) zeros(9,9);
+             zeros(9,9) eye(9,9)];
+    end
     F.curlyC = zeros(N.state, N.state);
     for i=1:N.se3StateList
         sname = se3StateList{i};
@@ -218,7 +232,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         F.curlyC(idx.(sname)(1:3),idx.(vname)) = dt*eye(3,3);
         if knob.pred.OriWithStateAngVel
             wname = sprintf('aVel%s', sname(end-1:end));
-            F.curlyC(idx.(sname)(4:6),idx.(wname)) = dt*eye(3,3);
+            F.curlyC(idx.(sname)(4:6),idx.(wname)) = -dt*eye(3,3);
         end
     end
     G.naive = zeros(N.state, 18);
@@ -244,27 +258,49 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     if knob.pred.OriWithStateAngVel
         Q.naive = G.naive * Q0 * G.naive';
     else
-        Q.naive = G.naive * Q0 * G.naive' + ...
-            diag(repelem([0, fOpt.sigma2QOriPV, 0, fOpt.sigma2QOriLS, ...
-                      0, fOpt.sigma2QOriRS, 0 0 0 0 0 0], 3));
+        if knob.pred.skipangvel
+            Q.naive = G.naive * Q0 * G.naive' + ...
+                diag(repelem([0, fOpt.sigma2QOriPV, 0, fOpt.sigma2QOriLS, ...
+                          0, fOpt.sigma2QOriRS, 0 0 0], 3));
+        else
+            Q.naive = G.naive * Q0 * G.naive' + ...
+                diag(repelem([0, fOpt.sigma2QOriPV, 0, fOpt.sigma2QOriLS, ...
+                          0, fOpt.sigma2QOriRS, 0 0 0 0 0 0], 3));
+        end
     end   
     Q.vec = G.vec*Q0*G.vec';
-    if knob.pred.OriWithStateAngVel
-        Q.comb = diag(repelem([fOpt.sigma2QAccPV*dt2, fOpt.sigma2QAngVelPV*dt, ...
-                          fOpt.sigma2QAccLS*dt2, fOpt.sigma2QAngVelLS*dt, ...
-                          fOpt.sigma2QAccRS*dt2, fOpt.sigma2QAngVelRS*dt, ...
-                          fOpt.sigma2QVelMP*dt, fOpt.sigma2QVelLA*dt, ...
-                          fOpt.sigma2QVelRA*dt, ...
-                          fOpt.sigma2QAngVelPV, fOpt.sigma2QAngVelLS, ...
-                          fOpt.sigma2QAngVelRS ], 3));
+    if knob.pred.skipangvel
+        if knob.pred.OriWithStateAngVel
+            Q.comb = diag(repelem([fOpt.sigma2QAccPV*dt2, fOpt.sigma2QAngVelPV*dt, ...
+                              fOpt.sigma2QAccLS*dt2, fOpt.sigma2QAngVelLS*dt, ...
+                              fOpt.sigma2QAccRS*dt2, fOpt.sigma2QAngVelRS*dt, ...
+                              fOpt.sigma2QVelMP*dt, fOpt.sigma2QVelLA*dt, ...
+                              fOpt.sigma2QVelRA*dt], 3));
+        else
+            Q.comb = diag(repelem([fOpt.sigma2QAccPV*dt2, fOpt.sigma2QOriPV, ...
+                              fOpt.sigma2QAccLS*dt2, fOpt.sigma2QOriLS, ...
+                              fOpt.sigma2QAccRS*dt2, fOpt.sigma2QOriRS, ...
+                              fOpt.sigma2QVelMP*dt, fOpt.sigma2QVelLA*dt, ...
+                              fOpt.sigma2QVelRA*dt], 3));
+        end
     else
-        Q.comb = diag(repelem([fOpt.sigma2QAccPV*dt2, fOpt.sigma2QOriPV, ...
-                          fOpt.sigma2QAccLS*dt2, fOpt.sigma2QOriLS, ...
-                          fOpt.sigma2QAccRS*dt2, fOpt.sigma2QOriRS, ...
-                          fOpt.sigma2QVelMP*dt, fOpt.sigma2QVelLA*dt, ...
-                          fOpt.sigma2QVelRA*dt, ...
-                          fOpt.sigma2QAngVelPV, fOpt.sigma2QAngVelLS, ...
-                          fOpt.sigma2QAngVelRS ], 3));
+        if knob.pred.OriWithStateAngVel
+            Q.comb = diag(repelem([fOpt.sigma2QAccPV*dt2, fOpt.sigma2QAngVelPV*dt, ...
+                              fOpt.sigma2QAccLS*dt2, fOpt.sigma2QAngVelLS*dt, ...
+                              fOpt.sigma2QAccRS*dt2, fOpt.sigma2QAngVelRS*dt, ...
+                              fOpt.sigma2QVelMP*dt, fOpt.sigma2QVelLA*dt, ...
+                              fOpt.sigma2QVelRA*dt, ...
+                              fOpt.sigma2QAngVelPV, fOpt.sigma2QAngVelLS, ...
+                              fOpt.sigma2QAngVelRS ], 3));
+        else
+            Q.comb = diag(repelem([fOpt.sigma2QAccPV*dt2, fOpt.sigma2QOriPV, ...
+                              fOpt.sigma2QAccLS*dt2, fOpt.sigma2QOriLS, ...
+                              fOpt.sigma2QAccRS*dt2, fOpt.sigma2QOriRS, ...
+                              fOpt.sigma2QVelMP*dt, fOpt.sigma2QVelLA*dt, ...
+                              fOpt.sigma2QVelRA*dt, ...
+                              fOpt.sigma2QAngVelPV, fOpt.sigma2QAngVelLS, ...
+                              fOpt.sigma2QAngVelRS ], 3));
+        end
     end
 
     %% Prepare input
@@ -294,7 +330,11 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         xtilde.(sname)(1:3,4,1) = x0(offset+(1:3));
     end
     % R state initialization (i.e., velocity and angular velocity)
-    xtilde.vec(:,1) = [x0([4:6 14:16 24:26]); zeros(9,1)];
+    if knob.pred.skipangvel
+        xtilde.vec(:,1) = x0([4:6 14:16 24:26]);
+    else
+        xtilde.vec(:,1) = [x0([4:6 14:16 24:26]); zeros(9,1)];
+    end
     
     %% H matrix initialization
     H0 = {}; y0 = {}; R0 = {};
@@ -399,7 +439,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     debug_dat.measUptTilde = zeros(N.state, N.samples);
     
     %% Iteration
-    se32vecIdxs = {[1:3 10:12] [4:6 13:15] [7:9 16:18]};
+    se32vecIdxs = {1:3, 4:6, 7:9};
     u = zeros(18, N.samples);
     for k=2:(N.samples+1)
         kPast = k-1;
@@ -423,12 +463,14 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         F.AdG = eye(N.state, N.state);
         bigphi = eye(N.state, N.state);
         F.curlyC = zeros(N.state, N.state);
-        
+        if ~knob.pred.skipangvel
+            F.curlyC(idx.avelState, idx.avelState) = -eye(9,9);
+        end
         for i=1:N.se3StateList
             sname = se3StateList{i};
             bname = sname(end-1:end);
 
-            xi = xtilde.vec(se32vecIdxs{i},kPast);
+            xi = [xtilde.vec(se32vecIdxs{i},kPast) ; B_w2_.(bname)(kPast,:)'];
             % convert W_vel to B_vel
             if knob.pred.useStateinWFrameConv
                 B_R_W = xtilde.(sname)(1:3,1:3,kPast)';
@@ -436,19 +478,15 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
                 B_R_W = W_R_.(bname)(:,:,kPast)';
             end
 
-            if knob.pred.OriWithStateAngVel
-                xi(4:6) = B_R_W*xi(4:6);
-
-                wname = sprintf('aVel%s', sname(end-1:end));
-                F.curlyC(idx.(sname)(4:6),idx.(wname)) = dt*B_R_W;
-            else
-                xi(4:6) = 0; 
+            wname = sprintf('aVel%s', sname(end-1:end));
+            if ~knob.pred.OriWithStateAngVel
+                xi(4:6) = 0;                
             end
             
             if knob.pred.PosWithStateVel && knob.pred.indepPosPred
 %                 xi(1:3) = B_R_W*xi(1:3);
-                J = vec2jac(xi(4:6)*dt);
-                Jinv = (I_3 - 0.5*hat(xi(4:6)*dt));
+%                 J = vec2jac(xi(4:6)*dt);
+%                 Jinv = (I_3 - 0.5*hat(xi(4:6)*dt));
 %                 B_R_W2 = J\xtilde.(sname)(1:3,1:3,kPast)';
                 B_R_W2 = (I_3 - 0.5*hat(xi(4:6)*dt))*xtilde.(sname)(1:3,1:3,kPast)';
                 

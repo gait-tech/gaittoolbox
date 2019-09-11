@@ -21,7 +21,7 @@ function sensors = buildVelCstrDebug(sensors, body, state, algo, suffix)
     sensors.(sprintf('LVcstrByPos%s', suffix)) = quatrotate(body.qLTH, vel.LFEP-vel.LFEO-cross(avel.qLSK, body.LFEP-body.LFEO));
     sensors.(sprintf('RVcstrByPos%s', suffix)) = quatrotate(body.qRTH, vel.RFEP-vel.RFEO-cross(avel.qRSK, body.RFEP-body.RFEO));
         
-    if strcmp(algo, 'lieekfv1')
+    if strcmp(algo, 'lieekfv1') && size(state.vec, 1) > 9
         %% calculate difference from vel and angvel states
         LHIPVel = state.vec(1:3, :) + cross(state.vec(10:12, :), (body.LFEP-body.MIDPEL)');
         RHIPVel = state.vec(1:3, :) + cross(state.vec(10:12, :), (body.RFEP-body.MIDPEL)');

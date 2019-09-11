@@ -22,16 +22,22 @@ function sensors = buildSensorStructFromDebug(sensors, state, state2, algo, suff
             sensors.(sname) = state.vec(idx{i}{2}, :)';
         end
         
-        idx = {{'PELV', 10:12}, {'LANK', 13:15}, {'RANK', 16:18}};
-        for i=1:3
-            sname = sprintf('%sAVel%s', idx{i}{1}, suffix);
-            sensors.(sname) = state.vec(idx{i}{2}, :)';
+        if size(state.vec, 1) > 9
+            idx = {{'PELV', 10:12}, {'LANK', 13:15}, {'RANK', 16:18}};
+            for i=1:3
+                sname = sprintf('%sAVel%s', idx{i}{1}, suffix);
+                sensors.(sname) = state.vec(idx{i}{2}, :)';
+            end
         end
         
         idx = {{'PV',  1: 3,  4: 6, 19:21, 28:30}, ...
                {'LS',  7: 9, 10:12, 22:24, 31:33}, ...
                {'RS', 13:15, 16:18, 25:27, 34:36}};
-        idx2 = {'Pos', 'Ori', 'Vel', 'AVel'};
+        if size(state.vec, 1) > 9
+            idx2 = {'Pos', 'Ori', 'Vel', 'AVel'};
+        else
+            idx2 = {'Pos', 'Ori', 'Vel'};
+        end
         [nState, ~, nSamples] = size(state2.Ptilde);
         for i=1:3
             buf = zeros(nSamples, nState);
