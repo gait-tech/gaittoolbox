@@ -25,6 +25,7 @@ function out = diffRMSEandMean(obj1, obj2)
         
         for i=1:length(oriFields)
             out.(sprintf('%sRMSE', oriFields{i})) = [nan nan nan];
+            out.(sprintf('%sRMSEnobias', oriFields{i})) = [nan nan nan];
             out.(sprintf('%sStd', oriFields{i})) = [nan nan nan];
             out.(sprintf('%sMean', oriFields{i})) = [nan nan nan];
             out.(sprintf('%sCorrCoef', oriFields{i})) = [nan nan nan];
@@ -69,6 +70,7 @@ function out = diffRMSEandMean(obj1, obj2)
         end      
         nOriFields = length(oriFields);
         valRMSE = zeros(nOriFields, 3);
+        valRMSEnobias = zeros(nOriFields, 3);
         valMean = zeros(nOriFields, 3);
         valStd =  zeros(nOriFields, 3);
         valCorrCoef = zeros(nOriFields, 3);
@@ -76,6 +78,7 @@ function out = diffRMSEandMean(obj1, obj2)
             d = rawDiff.(oriFields{i});
             valMean(i,:) = nanmean(d, 1);
             valRMSE(i,:) = sqrt(nanmean(d.^2, 1));
+            valRMSEnobias(i,:) = sqrt(nanmean((d-valMean(i,:)).^2, 1));
             valStd(i,:) = nanstd(d, 1);
             theta1 = buf{1}.(oriFields{i});
             theta2 = buf{2}.(oriFields{i});
@@ -87,6 +90,7 @@ function out = diffRMSEandMean(obj1, obj2)
             end
             valCorrCoef(i,:) = squeeze(R(2,1,:));
             out.(sprintf('%sRMSE', oriFields{i})) = valRMSE(i, :);
+            out.(sprintf('%sRMSEnobias', oriFields{i})) = valRMSEnobias(i, :);
             out.(sprintf('%sStd',  oriFields{i})) = valStd(i, :);
             out.(sprintf('%sMean', oriFields{i})) = valMean(i,:);
             out.(sprintf('%sCorrCoef', oriFields{i})) = valCorrCoef(i,:);
