@@ -39,22 +39,22 @@ for nsI = 1:length(nsList)
     
     setups = {
     };
-    for sI = [ struct('algo', 'ekfv3', 'pI', -1, 'mI', 76, 'cI', 355)] %, ...
-%                struct('algo', 'lieekfv1', 'pI', 101, 'mI', 125, 'cI', 7)] 
+    for sI = [ struct('algo', 'ekfv3', 'pI', -1, 'mI', 76, 'cI', 355) , ...
+               struct('algo', 'lieekfv1', 'pI', 101, 'mI', 125, 'cI', 7) ] 
         for sdI = {'av03'}
-            for initI = {'w__v'}
+            for initI = {'w__v', 'w__x'}
                 setups{end+1} = struct('est', sI.algo, ...
                            'accData', 'w__s', 'oriData', 'w__s', 'accDataNoise', 0, ...
                            'initSrc', initI, 'stepDetection', sdI, ...
                            'applyPred', sI.pI, 'applyMeas', sI.mI, ...
                            'applyCstr', sI.cI, 'P', 0.5, ...
                            'sigmaQAcc', 1e1, 'sigmaQAngVel', 1e2);
-%                 setups{end+1} = struct('est', sI.algo, ...
-%                            'accData', initI, 'oriData', initI, 'accDataNoise', 0, ...
-%                            'initSrc', initI, 'stepDetection', sdI, ...
-%                            'applyPred', sI.pI, 'applyMeas', sI.mI, ...
-%                            'applyCstr', sI.cI, 'P', 0.5, ...
-%                            'sigmaQAcc', 1e1, 'sigmaQAngVel', 1e2);
+                setups{end+1} = struct('est', sI.algo, ...
+                           'accData', initI, 'oriData', initI, 'accDataNoise', 0, ...
+                           'initSrc', initI, 'stepDetection', sdI, ...
+                           'applyPred', sI.pI, 'applyMeas', sI.mI, ...
+                           'applyCstr', sI.cI, 'P', 0.5, ...
+                           'sigmaQAcc', 1e1, 'sigmaQAngVel', 1e2);
             end
         end
     end
@@ -65,8 +65,7 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-%     for i = 1:dataN
-    for i = 15
+    for i = 1:dataN
         n = table2struct(dataList(i, :));
         
 %         uwbDistSigma = 0.0;
@@ -87,9 +86,9 @@ for nsI = 1:length(nsList)
 
         name = sprintf("%s-%s-%s", ns, n.subj, n.act);
         dataPath = sprintf('%s/mat/%s-%s-%s.mat', dir, ns(1:3), n.subj, n.act);
-        if exist(dataPath, 'file')
-            load(dataPath, 'data');
-        else
+%         if exist(dataPath, 'file')
+%             load(dataPath, 'data');
+%         else
             data = struct('name', name, ...
                 'fnameV', sprintf('%s/vicon/%s-%s.mat', dir, n.subj, n.act), ...
                 'fnameX', sprintf('%s/xsens/%s-%s.bvh', dir, n.subj, n.act), ...
@@ -161,10 +160,14 @@ for nsI = 1:length(nsList)
                 W__dataV = data.dataV.toWorldFrame(data.calibV2W);
                 W__dataV.changePosUnit('m', true);
                 data.calibYawFix = data.dataS.calcCalibAnkleSensorW2PelvisWFromVicon(W__dataV);
-            else % if strcmp(ns(1:3), 'NS2')
+            elseif strcmp(ns(1:3), 'NS3')
                 W__dataX = data.dataX;
-                W__dataX.changePosUnit('m', true);
                 data.calibYawFix = data.dataS.calcCalibAnkleSensorW2PelvisWFromVicon(W__dataX);
+            else
+                data.calibYawFix = struct();
+                data.calibYawFix.Pelvis.ori = [1 0 0 0];
+                data.calibYawFix.L_LowLeg.ori = [1 0 0 0];
+                data.calibYawFix.R_LowLeg.ori = [1 0 0 0];
             end
 
             if exist(data.calibFnameSensorW2V, 'file')
@@ -219,7 +222,7 @@ for nsI = 1:length(nsList)
             data.revStepDetect = readtable(data.fnameRevStepDetect);
             
             save(dataPath, 'data');
-        end
+%         end
 
         uwbDistSigma = 0.0;
         if strcmp(ns(1:3), 'NS2') && (size(ns, 2) > 3)

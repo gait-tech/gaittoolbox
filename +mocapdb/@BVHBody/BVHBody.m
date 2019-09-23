@@ -117,6 +117,8 @@ classdef BVHBody < matlab.mixin.Copyable
     methods
         obj = toWorldFrame(obj, qR)
         out = getSubset(obj, idx)
+        out = getStartIndex(obj)
+        out = getEndIndex(obj)
         out = changePosUnit(obj, newUnit, update)
     end
 end

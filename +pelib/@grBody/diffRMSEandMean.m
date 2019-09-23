@@ -33,6 +33,7 @@ function out = diffRMSEandMean(obj1, obj2)
         out.oriMeanRMSE = nan;
         out.oriMeanMean = nan;
         out.dOri = nan;
+        out.dOrinobias = nan;
         out.dPos = nan;
     else
         rawDiff = obj1.diff(obj2, seq);
@@ -99,6 +100,7 @@ function out = diffRMSEandMean(obj1, obj2)
         out.oriMeanMean = mean(valMean(:));
         
         out.dOri = nanmean(obj1.calcDOri(obj2));
+        out.dOrinobias = nanmean(obj1.calcDOrinobias(obj2));
         out.dPos = nanmean(obj1.calcDPos(obj2));
     end
     out.trialDuration = obj1.nSamples;

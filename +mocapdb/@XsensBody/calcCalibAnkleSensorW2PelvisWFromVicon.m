@@ -16,7 +16,7 @@ function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
     
     nSamples = min(dataV.nSamples, obj.nSamples);
     sIdx = max(dataV.getStartIndex()+1, 100);
-    eIdx = min(length(dataV.PELV(:,1))-1, obj.nSamples-1);
+    eIdx = min(dataV.getEndIndex()-1, obj.nSamples-1);
     idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
 
     viconBody = dataV.togrBody(1:nSamples, {'name', 'act', 'oriUnit', 'deg', ...

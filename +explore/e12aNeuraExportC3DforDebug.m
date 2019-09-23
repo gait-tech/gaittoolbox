@@ -12,13 +12,18 @@ list = {
 };
 
 listN = size(list, 1);
-for i = 15
+for i = 35
     n = table2struct(dataList(i, :));
     name = sprintf("%s-%s", n.subj, n.act);
-    for sI = [struct('algo', 'lieekfv1', 'pI', 101, 'mI', 125, 'cI', 7)] 
-         list{listN+1} = struct('file', name, ...
-             'algo', sprintf("NS2+%s+Aw__sOw__sIw__v+Sav03+P%03d+M%03d+C%03d", ...
-                     sI.algo, sI.pI, sI.mI, sI.cI));
+    for sI = [ struct('algo', 'ekfv3', 'pI', -1, 'mI', 76, 'cI', 355) ] %struct('algo', 'lieekfv1', 'pI', 101, 'mI', 125, 'cI', 7)] 
+         list{listN+1} = struct('file', name);
+         if strcmp(sI.algo, 'ekfv3')
+             list{listN+1}.algo = sprintf("NS4+Aw__sOw__sIw__x+Sav03+M%02d+C%03d", ...
+                 sI.mI, sI.cI);
+         else
+%            list{listN+1}.algo = sprintf("NS2+%s+Aw__sOw__sIw__v+Sav03+P%03d+M%03d+C%03d", ...
+%                      sI.algo, sI.pI, sI.mI, sI.cI);
+         end
          listN = listN+1;
     end
 end

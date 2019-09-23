@@ -64,6 +64,7 @@ classdef ViconBody < matlab.mixin.Copyable
         
         out = togrBody(obj, idx, args);
         startIdx = getStartIndex(obj);
+        endIdx = getEndIndex(obj);
         out = getSubset(obj, idx);
         out = changePosUnit(obj, newUnit, update);
     end
