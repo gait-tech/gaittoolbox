@@ -3,6 +3,7 @@
 %> NS1: use yaw offset from ROM
 %> NS2: use yaw offset from Vicon
 %> writetable(results, 'neura-sparse01/explore-v2/results20190812.csv')
+%> writetable(results, 'C:/Users/z5151460/OneDrive - UNSW/Thesis - Sparse Mocap/Goal02-LGCEKF/Analysis-20190924-SE3xR6v3+techpaper/results20190925.csv')
 % ======================================================================
 dir = 'neura-sparse01';
 % expDir = sprintf('%s/explore', dir);

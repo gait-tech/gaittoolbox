@@ -11,21 +11,24 @@
 %> @param obj this grBody
 %> @param ref reference grBody to be compared with
 %>
-%> @retval out array of d_ori with respect to time
+%> @retval out1 array of d_ori no bias with respect to time
+%> @retval out2 array of bias
 % ======================================================================
-function out = calcDOrinobias(obj, ref)
+function [out1, out2] = calcDOrinobias(obj, ref)
     nameList = {'qLTH', 'qRTH'};
     doriList = {};
     rN = size(obj.qLTH, 1); cN = length(nameList);
     dori = zeros(rN, cN);
-    
+    bias = zeros(cN, 3);
     for i=1:cN
         n = nameList{i};
         buf = calcEul(quat2rotm(quatmultiply(obj.(n), quatconj(ref.(n)))));
         bmean = mean(buf, 1);
-        dori(:, i) = vecnorm(rad2deg(buf-bmean), 2, 2);
+        bias(i, :) = mean(buf, 1);
+        dori(:, i) = vecnorm(rad2deg(buf-bias(i, :)), 2, 2);
     end
-    out = mean(dori, 2);
+    out1 = mean(dori, 2);
+    out2 = mean(bias, 1);
 end
 
 function eul = calcEul(R)
