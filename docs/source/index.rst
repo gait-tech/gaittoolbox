@@ -11,6 +11,7 @@ Welcome to Gait Reconstruction Toolbox's documentation!
    :maxdepth: 4
 
    mocapdb
+   pelib
    
 .. toctree::
    :caption: Estimators

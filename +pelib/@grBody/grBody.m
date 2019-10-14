@@ -279,6 +279,7 @@ classdef grBody < matlab.mixin.Copyable
         out = diffRMSEandMean(obj1, obj2);
         out = toWorldFrame(obj, pos, ori);
         out = changePosUnit(obj, newUnit, update);
+		out = changeRefFrame(obj, ref)
         out = getSubset(obj, idx);
         out = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
                         extraMarkers, oriMode, spevents);

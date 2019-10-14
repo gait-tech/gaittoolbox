@@ -1,4 +1,4 @@
-function out = changeRefFrame(obj, pos, ori)
+function out = toWorldFrame(obj, pos, ori)
 	% Change reference frame of grBody from MIDPEL frame to world frame
 	% Supported changes are vicon -> MIDPEL
 	%
