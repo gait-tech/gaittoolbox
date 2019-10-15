@@ -1,0 +1,1119 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Pose Estimator Library &mdash; Gait Reconstruction Toolbox v 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="mocapdb" href="mocapdb.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Gait Reconstruction Toolbox
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">MoCap DB Processor</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="mocapdb.html">mocapdb</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pose Estimator Library</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-+pelib.&#64;grBody">grBody</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-+pelib.+est">est</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Gait Reconstruction Toolbox</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Pose Estimator Library</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/pelib.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pose-estimator-library">
+<h1>Pose Estimator Library<a class="headerlink" href="#pose-estimator-library" title="Permalink to this headline">¶</a></h1>
+<p>Input to estimator are loaded and processed by <a class="reference internal" href="mocapdb.html#module-+mocapdb" title="+mocapdb"><code class="xref mat mat-mod docutils literal notranslate"><span class="pre">+mocapdb</span></code></a>.</p>
+<span class="target" id="module-+pelib"></span><div class="section" id="module-+pelib.&#64;grBody">
+<span id="grbody"></span><h2>grBody<a class="headerlink" href="#module-+pelib.@grBody" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcDOri">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcDOri</code><span class="sig-paren">(</span><em>obj</em>, <em>ref</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDOri" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate d_ori of lower body grBody as defined in the Marcard paper</p>
+<p>T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
+Sparse Inertial Poser: Automatic 3D Human Pose Estimation from Sparse IMUs. 
+Eurographics, 36(2)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this grBody</li>
+<li><strong>ref</strong> – reference grBody to be compared with</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out - array of d_ori with respect to time</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcDOrinobias">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcDOrinobias</code><span class="sig-paren">(</span><em>obj</em>, <em>ref</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDOrinobias" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate d_ori of lower body grBody as defined in the Marcard paper</p>
+<p>T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
+Sparse Inertial Poser: Automatic 3D Human Pose Estimation from Sparse IMUs. 
+Eurographics, 36(2)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this grBody</li>
+<li><strong>ref</strong> – reference grBody to be compared with</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">out1 - array of d_ori no bias with respect to time</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out2 - array of bias</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcDPos">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcDPos</code><span class="sig-paren">(</span><em>obj</em>, <em>ref</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDPos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate d_pos of lower body grBody as defined in the Marcard paper</p>
+<p>T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
+Sparse Inertial Poser: Automatic 3D Human Pose Estimation from Sparse IMUs. 
+Eurographics, 36(2)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this grBody</li>
+<li><strong>ref</strong> – reference grBody to be compared with</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out - array of d_pos with respect to time</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcDistRotm">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcDistRotm</code><span class="sig-paren">(</span><em>prox</em>, <em>angles</em>, <em>seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDistRotm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the distal segment orientation rotation matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prox</strong> – quaternion orientation (n x 4) of the proximal segment</li>
+<li><strong>angles</strong> – joint angles in seq order</li>
+<li><strong>seq</strong> – (default: YX’Z’’)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dist - quaternion orientation (n x 4) of the distal segment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcJointAcc">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcJointAcc</code><span class="sig-paren">(</span><em>obj</em>, <em>pts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcJointAcc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the joint acceleration of grBody</p>
+<dl class="docutils">
+<dt>Example: </dt>
+<dd>out = obj.calcJointVel(100, {‘LTIO’, ‘RFEO’})
+out = struct(‘LTIO’, n x 3, ‘RFEO’, n x 3)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this grBody</li>
+<li><strong>pts</strong> – cell array of joints to be calculated (if blank: all joints)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out struct of velocities</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcJointAngles">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcJointAngles</code><span class="sig-paren">(</span><em>prox</em>, <em>dist</em>, <em>seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcJointAngles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate distal segment rotation matric from proximal segment and joint angle</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prox</strong> – quaternion orientation (n x 4) of the proximal segment</li>
+<li><strong>theta</strong> – joint angle in X, Y, Z axis</li>
+<li><strong>seq</strong> – (default: YX’Z’’)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">theta [x y z] radians</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcJointVel">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcJointVel</code><span class="sig-paren">(</span><em>obj</em>, <em>pts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcJointVel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the joint velocity of grBody</p>
+<dl class="docutils">
+<dt>Example: </dt>
+<dd>out = obj.calcJointVel(100, {‘LTIO’, ‘RFEO’})
+out = struct(‘LTIO’, n x 3, ‘RFEO’, n x 3)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this grBody</li>
+<li><strong>pts</strong> – cell array of joints to be calculated (if blank: all joints)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out - struct of velocities</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcKneeAnglesFromMPLARADist">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcKneeAnglesFromMPLARADist</code><span class="sig-paren">(</span><em>PELV_CS</em>, <em>LTIB_CS</em>, <em>RTIB_CS</em>, <em>dPelvis</em>, <em>dLFemur</em>, <em>dRFemur</em>, <em>dLTibia</em>, <em>dRTibia</em>, <em>dMPLADist</em>, <em>dMPRADist</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcKneeAnglesFromMPLARADist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate knee angle from 3P dist</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prox</strong> – quaternion orientation (n x 4) of the proximal segment</li>
+<li><strong>angles</strong> – joint angles in seq order</li>
+<li><strong>seq</strong> – (default: YX’Z’’)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dist quaternion orientation (n x 4) of the distal segment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcMPLARAdist">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcMPLARAdist</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcMPLARAdist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the midpelvis, left ankle, and right ankle distances of grBody</p>
+<dl class="docutils">
+<dt>Example: </dt>
+<dd>out = obj.calcMPLARAdist(100)
+out = struct(‘MPLA’, n x 1, ‘MPRA’, n x 1, ‘LARA’, n x 1)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – this grBody</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">out struct of distances</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcProxRotm">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcProxRotm</code><span class="sig-paren">(</span><em>dist</em>, <em>angles</em>, <em>seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcProxRotm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the proximal segment orientation rotation matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dist</strong> – quaternion orientation (n x 4) of the distal segment</li>
+<li><strong>angles</strong> – joint angles in seq order</li>
+<li><strong>seq</strong> – (default: YX’Z’’)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dist quaternion orientation (n x 4) of the distal segment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.calcSegAngVel">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">calcSegAngVel</code><span class="sig-paren">(</span><em>obj</em>, <em>segs</em>, <em>frame</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcSegAngVel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the segment angular velocity of grBody</p>
+<dl class="docutils">
+<dt>Example: </dt>
+<dd>out = obj.calcSegAngVel({‘LTIB’, ‘RTIB’})
+out = struct(‘LTIB’, n x 3, ‘RTIB’, n x 3)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this grBody</li>
+<li><strong>seg</strong> – cell array of segments to be calculated (if blank: all joints)</li>
+<li><strong>frame</strong> – out is expressed in this frame. B=body (default) or W=world</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out struct of velocities</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.changePosUnit">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">changePosUnit</code><span class="sig-paren">(</span><em>obj</em>, <em>newUnit</em>, <em>update</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.changePosUnit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change position unit of grBody</p>
+<dl class="docutils">
+<dt>Example:</dt>
+<dd>out = obj.getSubset(5:100, segAlias);</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – class grBody (self)</li>
+<li><strong>newUnit</strong> – new unit</li>
+<li><strong>update</strong> – If true, update this body, else crease new grBody</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out - grBody class whose data only includes the rows in idx</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.changeRefFrame">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">changeRefFrame</code><span class="sig-paren">(</span><em>obj</em>, <em>ref</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.changeRefFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change reference frame of grBody
+Supported changes are vicon -&gt; MIDPEL</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – grBody (self)</li>
+<li><strong>ref</strong> – reference frame</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out - struct with the difference of pos and ori parameters</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.diff">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">diff</code><span class="sig-paren">(</span><em>obj1</em>, <em>obj2</em>, <em>seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.diff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the difference between grBody1 and grBody2</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj1</strong> – grBody 1 (self)</li>
+<li><strong>obj2</strong> – grBody 2 (other)</li>
+<li><strong>seq</strong> – orientation sequence</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out - struct with the difference of pos and ori parameters</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.diffRMSE">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">diffRMSE</code><span class="sig-paren">(</span><em>obj1</em>, <em>obj2</em>, <em>ref</em>, <em>seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.diffRMSE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the RMSE difference between grBody1 and grBody2</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj1</strong> – grBody 1 (self)</li>
+<li><strong>obj1</strong> – grBody 2 (other)</li>
+<li><strong>ref</strong> – reference. default: MIDPEL</li>
+<li><strong>seq</strong> – orientation sequence. default: YXZ</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out - struct with the difference of pos and ori parameters</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.diffRMSEandMean">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">diffRMSEandMean</code><span class="sig-paren">(</span><em>obj1</em>, <em>obj2</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.diffRMSEandMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the RMSE and Mean difference between grBody1 and grBody2</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj1</strong> – grBody 1 (self)</li>
+<li><strong>obj1</strong> – grBody 2 (other)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out - struct with the difference of pos and ori parameters</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.exportc3d">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">exportc3d</code><span class="sig-paren">(</span><em>obj</em>, <em>fname</em>, <em>sensors</em>, <em>refBody</em>, <em>lsteps</em>, <em>rsteps</em>, <em>extraMarkers</em>, <em>oriMode</em>, <em>spevents</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.exportc3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate c3d file</p>
+<dl class="docutils">
+<dt>Example:</dt>
+<dd><p class="first">fname = ‘test.c3d’;
+sensors = {‘PELVAccX’: (n x 1), ‘PELVAccY’: (n x 1), … };
+refBody = actBody;</p>
+<p class="last">out = obj.exportc3d(fname, sensors, refBody);</p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – grBody (self)</li>
+<li><strong>fname</strong> – output file name</li>
+<li><strong>sensors</strong> – [Optional] struct {‘label’: (n x 1) values to be saved as analog
+signals … } (e.g. raw acc, gyro, magnetometer)</li>
+<li><strong>refBody</strong> – [Optional] reference grBody class</li>
+<li><strong>lsteps</strong> – [Optional] (n x 1) logical where it is true during left foot step detection</li>
+<li><strong>rsteps</strong> – [Optional] (n x 1) logical where it is true during right foot step detection</li>
+<li><strong>extraMarkers</strong> – [Optional] extra markers of format struct 
+{‘label’: (n x 3) position values</li>
+<li><strong>oriMode</strong> – [Optional] 01: refBody axis on refBody. obj axis on obj.
+02: refBody and obj axis on obj.
+03: refBody and obj axis on refBody.</li>
+<li><strong>spevents</strong> – (Optional) (n x 1) logical where special event happens</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">acq - handle pointer to new btk c3d</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.generateBodyFromJointAngles">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">generateBodyFromJointAngles</code><span class="sig-paren">(</span><em>posMP</em>, <em>qOriMP</em>, <em>anglesLT</em>, <em>anglesRT</em>, <em>angleLK</em>, <em>angleRK</em>, <em>dPelvis</em>, <em>dLFemur</em>, <em>dRFemur</em>, <em>dLTibia</em>, <em>dRTibia</em>, <em>seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.generateBodyFromJointAngles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate grBody from pelvis pos, ori and joint angles</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>posMP</strong> – pelvis (root) position</li>
+<li><strong>qOriMP</strong> – pelvis (root) orientation</li>
+<li><strong>anglesLT</strong> – left  thigh/femur joint angles (X, Y, Z axis)</li>
+<li><strong>anglesRT</strong> – right thigh/femur joint angles (X, Y, Z axis)</li>
+<li><strong>angleLK</strong> – left  knee angle (X, Y, Z axis)</li>
+<li><strong>angleRK</strong> – right knee angle (X, Y, Z axis)</li>
+<li><strong>dPelvis</strong> – pelvis length</li>
+<li><strong>dLFemur</strong> – left  femur length</li>
+<li><strong>dRFemur</strong> – right femur length</li>
+<li><strong>dLTibia</strong> – left  tibia length</li>
+<li><strong>dRTibia</strong> – right tibia length</li>
+<li><strong>seq</strong> – (default: YX’Z’’)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out new grBody in world frame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.getSubset">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">getSubset</code><span class="sig-paren">(</span><em>obj</em>, <em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.getSubset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get subset of grBody</p>
+<dl class="docutils">
+<dt>Example:</dt>
+<dd>out = obj.getSubset(5:100, segAlias);</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – class grBody (self)</li>
+<li><strong>idx</strong> – indices of data to be included in out</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out grBody class whose data only includes the rows in idx</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="+pelib.&#64;grBody.grBody">
+<em class="property">class </em><code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">grBody</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref mat mat-class docutils literal notranslate"><span class="pre">matlab.mixin.Copyable</span></code></p>
+<p>Body class used to animate body and obtain gait parameters</p>
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.MIDPEL">
+<code class="descname">MIDPEL</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.MIDPEL" title="Permalink to this definition">¶</a></dt>
+<dd><p>pelvis orientation (n x 4)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.axisScale">
+<code class="descname">axisScale</code><em class="property"> = u'0.25'</em><a class="headerlink" href="#+pelib.@grBody.grBody.axisScale" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcJointAnglesLHip">
+<code class="descname">calcJointAnglesLHip</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesLHip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate left hip joint angles (seq: YXZ)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this object class</li>
+<li><strong>idx</strong> – [OPTIONAL] index to be calculated (default: all)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">theta - joint angles (n x 3)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcJointAnglesLKnee">
+<code class="descname">calcJointAnglesLKnee</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesLKnee" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate left knee joint angles (seq: YXZ)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this object class</li>
+<li><strong>idx</strong> – [OPTIONAL] index to be calculated (default: all)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">theta - joint angles (n x 3)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcJointAnglesRHip">
+<code class="descname">calcJointAnglesRHip</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesRHip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate right hip joint angles (seq: YXZ)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this object class</li>
+<li><strong>idx</strong> – [OPTIONAL] index to be calculated (default: all)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">theta - joint angles (n x 3)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcJointAnglesRKnee">
+<code class="descname">calcJointAnglesRKnee</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesRKnee" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate right knee joint angles (seq: YXZ)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this object class</li>
+<li><strong>idx</strong> – [OPTIONAL] index to be calculated (default: all)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">theta - joint angles (n x 3)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcLFemurLength">
+<code class="descname">calcLFemurLength</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcLFemurLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate left femur length</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this object class</li>
+<li><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">d - body segment length (n x 1)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcRFemurLength">
+<code class="descname">calcRFemurLength</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcRFemurLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate right femur length</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this object class</li>
+<li><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">d - body segment length (n x 1)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.frame">
+<code class="descname">frame</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot specifications</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.fs">
+<code class="descname">fs</code><em class="property"> = u'60'</em><a class="headerlink" href="#+pelib.@grBody.grBody.fs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.getLShankLength">
+<code class="descname">getLShankLength</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.getLShankLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate left shank length</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this object class</li>
+<li><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">d - body segment length (n x 1)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.getPelvisLength">
+<code class="descname">getPelvisLength</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.getPelvisLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate pelvis length</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this object class</li>
+<li><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">d - body segment length (n x 1)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.getRShankLength">
+<code class="descname">getRShankLength</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.getRShankLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate right shank length</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – this object class</li>
+<li><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">d - body segment length (n x 1)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.grBody">
+<code class="descname">grBody</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.grBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class constructor</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>varargin</strong> – param1 (string), val1, param2 (string), val2, …</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">instance of Body class.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.groundCoordinates">
+<code class="descname">groundCoordinates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.groundCoordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>xVector = obj.RTIO(1,:) - obj.LTIO(1,:);
+xVector = xVector / norm(xVector);</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.lnSymbol">
+<code class="descname">lnSymbol</code><em class="property"> = u&quot;'-'&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.lnSymbol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.nSamples">
+<code class="descname">nSamples</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.nSamples" title="Permalink to this definition">¶</a></dt>
+<dd><p>sampling frequency</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.name">
+<code class="descname">name</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of samples</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.oriList">
+<code class="descname">oriList</code><em class="property"> = u&quot;{'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.oriList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.oriUnit">
+<code class="descname">oriUnit</code><em class="property"> = u&quot;'deg'&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.oriUnit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.posList">
+<code class="descname">posList</code><em class="property"> = u&quot;{'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'RFEP', 'RFEO',                    'RTIO'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.posList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.posUnit">
+<code class="descname">posUnit</code><em class="property"> = u&quot;'mm'&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.posUnit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.ptSymbol">
+<code class="descname">ptSymbol</code><em class="property"> = u&quot;'.'&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.ptSymbol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.qLFT">
+<code class="descname">qLFT</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qLFT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.qLSK">
+<code class="descname">qLSK</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qLSK" title="Permalink to this definition">¶</a></dt>
+<dd><p>right foot orientation (n x 4)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.qLTH">
+<code class="descname">qLTH</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qLTH" title="Permalink to this definition">¶</a></dt>
+<dd><p>right tibia orientation (n x 4)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.qRFT">
+<code class="descname">qRFT</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRFT" title="Permalink to this definition">¶</a></dt>
+<dd><p>left foot orientation (n x 4)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.qRPV">
+<code class="descname">qRPV</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRPV" title="Permalink to this definition">¶</a></dt>
+<dd><p>right femur orientation (n x 4)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.qRSK">
+<code class="descname">qRSK</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRSK" title="Permalink to this definition">¶</a></dt>
+<dd><p>left tibia orientation (n x 4)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.qRTH">
+<code class="descname">qRTH</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRTH" title="Permalink to this definition">¶</a></dt>
+<dd><p>left femur orientation (n x 4)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.rplColor">
+<code class="descname">rplColor</code><em class="property"> = u&quot;{'r', 'g', 'b'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.rplColor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.xlim">
+<code class="descname">xlim</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.xlim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.xyzColor">
+<code class="descname">xyzColor</code><em class="property"> = u&quot;{'r', 'g', 'b'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.xyzColor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.ylim">
+<code class="descname">ylim</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.ylim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.zlim">
+<code class="descname">zlim</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.zlim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.&#64;grBody.toWorldFrame">
+<code class="descclassname">+pelib.&#64;grBody.</code><code class="descname">toWorldFrame</code><span class="sig-paren">(</span><em>obj</em>, <em>pos</em>, <em>ori</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.toWorldFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change reference frame of grBody from MIDPEL frame to world frame
+Supported changes are vicon -&gt; MIDPEL</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – grBody (self)</li>
+<li><strong>pos</strong> – pelvis (root) position</li>
+<li><strong>ori</strong> – pelvis (root) orientation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">out - new grBody in world frame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-+pelib.+est">
+<span id="est"></span><h2>est<a class="headerlink" href="#module-+pelib.+est" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="+pelib.+est.ckf_3imus">
+<code class="descclassname">+pelib.+est.</code><code class="descname">ckf_3imus</code><span class="sig-paren">(</span><em>x0</em>, <em>P0</em>, <em>gfrAccMP</em>, <em>bIsStatMP</em>, <em>qMP</em>, <em>gfrAccLA</em>, <em>bIsStatLA</em>, <em>qLA</em>, <em>gfrAccRA</em>, <em>bIsStatRA</em>, <em>qRA</em>, <em>dPelvis</em>, <em>dLFemur</em>, <em>dRFemur</em>, <em>dLTibia</em>, <em>dRTibia</em>, <em>options</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+est.ckf_3imus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constrained Kalman Filter for performing sensor fusion on the trajectory of
+three KMUs presumably worn on the body in the following configuration: mid
+pelvis, left ankle, right ankle
+In this state space model, the position and velocity of each kinematic
+measurement unit (KMU) is estimated in 3D space by combining the
+information from each KMU in a kalman filter. NOTE: pay special attention 
+to units:;
+position (meters)
+velocity (m/s)
+acceleration (m/2^2)</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param x0:</th><td class="field-body">the initial state in the GFR</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param gfrAccMP:</th><td class="field-body">the acceleration of the mid-pelvis in the GFR</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param gfrAccLA:</th><td class="field-body">the acceleration of the left ankle in the GFR</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param gfrAccRA:</th><td class="field-body">the acceleration of the right ankle in the GFR</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param bIsStatMP:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">a boolean vector, for whichever timepoints, n(i) are true,
+i.e., bMoving_MP(i) == 1, a zero velocity update will be 
+performed by using psuedo-zero velocity measurements</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">param bIsStatLA:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">a boolean vector, for whichever timepoints, n(i) are true,
+i.e., bMoving_LA(i) == 1, a zero velocity update will be 
+performed by using psuedo-zero velocity measurements</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param bIsStatRA:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">a boolean vector, for whichever timepoints, n(i) are true,
+i.e., bMoving_RA(i) == 1, a zero velocity update will be 
+performed by using psuedo-zero velocity measurements</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param qMP:</th><td class="field-body">mid  pelvis orientation in the GFR (quaternion)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param qLA:</th><td class="field-body">left  ankle orientation in the GFR (quaternion)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param qRA:</th><td class="field-body">right ankle orientation in the GFR (quaternion)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param dPelvis:</th><td class="field-body">pelvis width</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param dRFemur:</th><td class="field-body">right femur length</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param dLFemur:</th><td class="field-body">left femur length</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param dRTibia:</th><td class="field-body">right tibia length</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param dLTibia:</th><td class="field-body">left tibia length</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="mocapdb.html" class="btn btn-neutral float-left" title="mocapdb" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Luke Sy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
