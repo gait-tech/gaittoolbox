@@ -31,9 +31,9 @@ copyright = u'2019, Luke Sy'
 author = u'Luke Sy'
 
 # The short X.Y version
-version = u''
+version = u'v 1.0'
 # The full version, including alpha/beta/rc tags
-release = u'v 0.1'
+release = u'v 1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -55,6 +55,7 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinxcontrib.matlab',
     'sphinx.ext.autosummary',
+    'sphinxcontrib.bibtex',
 ]
 
 autodoc_default_flags = ['members', 'undoc-members']
@@ -136,7 +137,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'GaitReconstructionToolboxdoc'
+htmlhelp_basename = 'GaitReconToolboxdoc'
 html_domain_indices = True
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -163,7 +164,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'GaitReconstructionToolbox.tex', u'Gait Reconstruction Toolbox Documentation',
+    (master_doc, 'GaitReconToolbox.tex', u'Gait Reconstruction Toolbox Documentation',
      u'Luke Sy', 'manual'),
 ]
 
@@ -173,7 +174,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'gaitreconstructiontoolbox', u'Gait Reconstruction Toolbox Documentation',
+    (master_doc, 'gaitrecontoolbox', u'Gait Reconstruction Toolbox Documentation',
      [author], 1)
 ]
 

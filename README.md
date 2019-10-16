@@ -18,7 +18,7 @@ Refer to the [documentation](https://gait-tech.github.io/gaittoolbox/) for more 
 1. Pull this repository and submodules
 	```
 	git pull
-	git submodule update --recursive
+	git submodule update --remote --merge
 	```
 
 ## Documentation and Tutorial

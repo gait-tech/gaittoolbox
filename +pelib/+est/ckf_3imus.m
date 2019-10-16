@@ -8,34 +8,40 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
 % pelvis, left ankle, right ankle
 % In this state space model, the position and velocity of each kinematic
 % measurement unit (KMU) is estimated in 3D space by combining the
-% information from each KMU in a kalman filter. NOTE: pay special attention 
-% to units:;
-% position (meters)
-% velocity (m/s)
-% acceleration (m/2^2)
-%
-%   :param x0: the initial state in the GFR
-%   :param gfrAccMP: the acceleration of the mid-pelvis in the GFR
-%   :param gfrAccLA: the acceleration of the left ankle in the GFR
-%   :param gfrAccRA: the acceleration of the right ankle in the GFR
-%   :param bIsStatMP: a boolean vector, for whichever timepoints, n(i) are true,
+% information from each KMU in a kalman filter.
+% 
+% :param x0: the initial state in the GFR
+% :param gfrAccMP: the acceleration of the mid-pelvis in the GFR
+% :param gfrAccLA: the acceleration of the left ankle in the GFR
+% :param gfrAccRA: the acceleration of the right ankle in the GFR
+% :param bIsStatMP: a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_MP(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-%   :param bIsStatLA: a boolean vector, for whichever timepoints, n(i) are true,
+% :param bIsStatLA: a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_LA(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-%   :param bIsStatRA: a boolean vector, for whichever timepoints, n(i) are true,
+% :param bIsStatRA: a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_RA(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-%   :param qMP:		mid  pelvis orientation in the GFR (quaternion)
-%   :param qLA:		left  ankle orientation in the GFR (quaternion)
-%   :param qRA:		right ankle orientation in the GFR (quaternion)
-%   :param dPelvis:	pelvis width
-%   :param dRFemur:	right femur length
-%   :param dLFemur:	left femur length
-%   :param dRTibia:	right tibia length
-%   :param dLTibia:	left tibia length
+% :param qMP:		mid  pelvis orientation in the GFR (quaternion)
+% :param qLA:		left  ankle orientation in the GFR (quaternion)
+% :param qRA:		right ankle orientation in the GFR (quaternion)
+% :param dPelvis:	pelvis width
+% :param dRFemur:	right femur length
+% :param dLFemur:	left femur length
+% :param dRTibia:	right tibia length
+% :param dLTibia:	left tibia length
 % 
+% :return: 
+%	* xhat_pri - Prior state estimate
+%	* xhat_con - Constrained state estimate
+%	* debug_dat -	Additional debug data
+%
+% NOTE:
+%	* Pay special attention to units: position (:math:`m`), 
+% 	  velocity (:math:`m/s`), acceleration (:math:`m/s^2`)
+%	* Refer to :cite:`sy2019ckf` for details.
+%
 % .. Author: - Luke Wicent Sy, Michael Del Rosario
     fOpt = struct('fs', 60, 'applyMeas', 76, 'applyCstr', 355, ...
         'sigma2QAccMP', 0.5^2, 'sigma2QAccLA', 0.5^2, 'sigma2QAccRA', 0.5^2, ...
