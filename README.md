@@ -14,6 +14,13 @@ Refer to the [documentation](https://gait-tech.github.io/gaittoolbox/) for more 
 	```
 3. *OPTIONAL but required library to generate c3d files.* Download the btk toolbox for MATLAB [here](https://code.google.com/archive/p/b-tk/downloads) (e.g., btk-0.3.0_Win7_MatlabR2009b_64bit.zip). Export to a directory and add the said directory to the MATLAB path [tutorial here](https://au.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html).
 
+## Update
+1. Pull this repository and submodules
+	```
+	git pull
+	git submodule update --recursive
+	```
+
 ## Documentation and Tutorial
 
 * [Documentation](https://gait-tech.github.io/gaittoolbox/)
