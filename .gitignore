@@ -1,3 +1,5 @@
 *.asv
 data/neura-sparse01/*
+data/sample/output/*.mat
+data/sample/mat/*.mat
 docs/build/*
