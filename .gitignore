@@ -1,1 +1,3 @@
-neura-sparse01/*
+*.asv
+data/neura-sparse01/*
+docs/build/*
