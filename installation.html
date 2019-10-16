@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MATLAB Module Index &mdash; Gait Reconstruction Toolbox v 1.0 documentation</title>
+  <title>Installation &mdash; Gait Reconstruction Toolbox v 1.0 documentation</title>
   
 
   
@@ -36,9 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
- 
-
-
+    <link rel="next" title="Data Set" href="data.html" />
+    <link rel="prev" title="Welcome to Gait Toolbox’s documentation!" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,8 +85,13 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#enable-c3d-export">Enable C3D Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minimal-example">Minimal Example</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data Set</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cite.html">Citation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paper.html">Papers</a></li>
@@ -138,10 +142,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>MATLAB Module Index</li>
+      <li>Installation</li>
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -153,61 +161,54 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-
-   <h1>MATLAB Module Index</h1>
-
-   <div class="modindex-jumpbox">
-   <a href="#cap-+"><strong>+</strong></a>
-   </div>
-
-   <table class="indextable modindextable">
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-+"><td></td><td>
-       <strong>+</strong></td><td></td></tr>
-     <tr>
-       <td><img src="_static/minus.png" class="toggler"
-              id="toggle-1" style="display: none" alt="-" /></td>
-       <td>
-       <a href="functions/mocapdb.html#module-+mocapdb"><code class="xref">+mocapdb</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="functions/mocapdb.html#module-+mocapdb.@BVHBody"><code class="xref">+mocapdb.@BVHBody</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="functions/mocapdb.html#module-+mocapdb.@ViconBody"><code class="xref">+mocapdb.@ViconBody</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="functions/mocapdb.html#module-+mocapdb.@XsensBody"><code class="xref">+mocapdb.@XsensBody</code></a></td><td>
-       <em></em></td></tr>
-     <tr>
-       <td><img src="_static/minus.png" class="toggler"
-              id="toggle-2" style="display: none" alt="-" /></td>
-       <td>
-       <a href="functions/pelib.html#module-+pelib"><code class="xref">+pelib</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-2">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="functions/pelib.html#module-+pelib.+est"><code class="xref">+pelib.+est</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-2">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="functions/pelib.html#module-+pelib.@grBody"><code class="xref">+pelib.@grBody</code></a></td><td>
-       <em></em></td></tr>
-   </table>
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="core">
+<h2>Core<a class="headerlink" href="#core" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Clone this repository</dt><dd><p><code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/gait-tech/gaittoolbox.git</span>
+<span class="pre">`</span></code></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Run the following command to initialize submodules</dt><dd><p><code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">git</span> <span class="pre">submodule</span> <span class="pre">update</span> <span class="pre">--init</span> <span class="pre">--recursive</span>
+<span class="pre">`</span></code></p>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+<div class="section" id="enable-c3d-export">
+<h2>Enable C3D Export<a class="headerlink" href="#enable-c3d-export" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Download the btk toolbox for MATLAB [here](<a class="reference external" href="https://code.google.com/archive/p/b-tk/downloads">https://code.google.com/archive/p/b-tk/downloads</a>) (e.g., btk-0.3.0_Win7_MatlabR2009b_64bit.zip).</p></li>
+<li><p>Export to a directory and add the said directory to the MATLAB path [tutorial here](<a class="reference external" href="https://au.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html">https://au.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html</a>).</p></li>
+</ol>
+</div>
+<div class="section" id="minimal-example">
+<h2>Minimal Example<a class="headerlink" href="#minimal-example" title="Permalink to this headline">¶</a></h2>
+<p>See [sample code](<a class="reference external" href="https://github.com/gait-tech/gaittoolbox/tree/master/%2Bexamples">https://github.com/gait-tech/gaittoolbox/tree/master/%2Bexamples</a>).</p>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="data.html" class="btn btn-neutral float-right" title="Data Set" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Gait Toolbox’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

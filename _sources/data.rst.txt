@@ -1,0 +1,14 @@
+Data Set
+============
+
+Neura Sparse Dataset
+--------------------
+
+Refer to the following papers for description:
+:cite:`sy2019ckf`
+:cite:`sy2019lgcekf`.
+
+Installation
+~~~~~~~~~~~~
+#. Download `neura-sparse01.zip` from [some link]().
+#. Extract to `data/neura-sparse01`

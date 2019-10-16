@@ -1,0 +1,1077 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MoCap DB Processing &mdash; Gait Reconstruction Toolbox v 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Pose Estimator Library" href="pelib.html" />
+    <link rel="prev" title="Functions" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Gait Reconstruction Toolbox
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v 1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cite.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../paper.html">Papers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Functions</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">MoCap DB Processing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-+mocapdb.&#64;ViconBody">ViconBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-+mocapdb.&#64;XsensBody">XsensBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-+mocapdb.&#64;BVHBody">BVHBody</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pelib.html">Pose Estimator Library</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Gait Reconstruction Toolbox</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Functions</a> &raquo;</li>
+        
+      <li>MoCap DB Processing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/functions/mocapdb.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="mocap-db-processing">
+<h1>MoCap DB Processing<a class="headerlink" href="#mocap-db-processing" title="Permalink to this headline">¶</a></h1>
+<p>Module to load motion capture data.</p>
+<span class="target" id="module-+mocapdb"></span><dl class="function">
+<dt id="+mocapdb.loadPendulumCompassMat">
+<code class="sig-prename descclassname">+mocapdb.</code><code class="sig-name descname">loadPendulumCompassMat</code><span class="sig-paren">(</span><em class="sig-param">pendulumFName</em>, <em class="sig-param">compassFName</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.loadPendulumCompassMat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate rotation matrix of world frame with respect vicon frame
+from the pendulum and compass mat files generated by parseViconCSV.py</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pendulumFName</strong> – pendulum mat file name</p></li>
+<li><p><strong>compassFName</strong> – compass mat file name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>R - rotation matrix of world in vicon frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="module-+mocapdb.&#64;ViconBody">
+<span id="viconbody"></span><h2>ViconBody<a class="headerlink" href="#module-+mocapdb.@ViconBody" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody">
+<em class="property">class </em><code class="sig-prename descclassname">+mocapdb.&#64;ViconBody.</code><code class="sig-name descname">ViconBody</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref mat mat-class docutils literal notranslate"><span class="pre">matlab.mixin.Copyable</span></code></p>
+<p>Body class from Vicon csv export</p>
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.LFEO">
+<code class="sig-name descname">LFEO</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.LFEO" title="Permalink to this definition">¶</a></dt>
+<dd><p>left ankle position</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.LFEP">
+<code class="sig-name descname">LFEP</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.LFEP" title="Permalink to this definition">¶</a></dt>
+<dd><p>left knee position</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.LTIO">
+<code class="sig-name descname">LTIO</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.LTIO" title="Permalink to this definition">¶</a></dt>
+<dd><p>left toe position</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.LTOE">
+<code class="sig-name descname">LTOE</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.LTOE" title="Permalink to this definition">¶</a></dt>
+<dd><p>right hip position</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.PELV">
+<code class="sig-name descname">PELV</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.PELV" title="Permalink to this definition">¶</a></dt>
+<dd><p>left hip position</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.RFEO">
+<code class="sig-name descname">RFEO</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.RFEO" title="Permalink to this definition">¶</a></dt>
+<dd><p>right ankle position</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.RFEP">
+<code class="sig-name descname">RFEP</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.RFEP" title="Permalink to this definition">¶</a></dt>
+<dd><p>right knee position</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.RTIO">
+<code class="sig-name descname">RTIO</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.RTIO" title="Permalink to this definition">¶</a></dt>
+<dd><p>right toe position</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.RTOE">
+<code class="sig-name descname">RTOE</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.RTOE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Orientation:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.ViconBody">
+<code class="sig-name descname">ViconBody</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.ViconBody" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.frame">
+<code class="sig-name descname">frame</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>sampling rate</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.fs">
+<code class="sig-name descname">fs</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.fs" title="Permalink to this definition">¶</a></dt>
+<dd><p>position unit</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.nSamples">
+<code class="sig-name descname">nSamples</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.nSamples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Positions:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.posUnit">
+<code class="sig-name descname">posUnit</code><em class="property"> = &quot;'mm'&quot;</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.posUnit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.qLFT">
+<code class="sig-name descname">qLFT</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.qLFT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.qLSK">
+<code class="sig-name descname">qLSK</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.qLSK" title="Permalink to this definition">¶</a></dt>
+<dd><p>right foot orientation (n x 4 OR 3 x 3 x n)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.qLTH">
+<code class="sig-name descname">qLTH</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.qLTH" title="Permalink to this definition">¶</a></dt>
+<dd><p>right tibia orientation (n x 4 OR 3 x 3 x n)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.qRFT">
+<code class="sig-name descname">qRFT</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.qRFT" title="Permalink to this definition">¶</a></dt>
+<dd><p>left foot orientation (n x 4 OR 3 x 3 x n)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.qRPV">
+<code class="sig-name descname">qRPV</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.qRPV" title="Permalink to this definition">¶</a></dt>
+<dd><p>right femur orientation (n x 4 OR 3 x 3 x n)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.qRSK">
+<code class="sig-name descname">qRSK</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.qRSK" title="Permalink to this definition">¶</a></dt>
+<dd><p>left tibia orientation (n x 4 OR 3 x 3 x n)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.qRTH">
+<code class="sig-name descname">qRTH</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.qRTH" title="Permalink to this definition">¶</a></dt>
+<dd><p>left femur orientation (n x 4 OR 3 x 3 x n)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;ViconBody.ViconBody.srcFileName">
+<code class="sig-name descname">srcFileName</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@ViconBody.ViconBody.srcFileName" title="Permalink to this definition">¶</a></dt>
+<dd><p>data are in this frame of reference (Vicon or IMU)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;ViconBody.changeFS">
+<code class="sig-prename descclassname">+mocapdb.&#64;ViconBody.</code><code class="sig-name descname">changeFS</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">fs</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.changeFS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;ViconBody.changePosUnit">
+<code class="sig-prename descclassname">+mocapdb.&#64;ViconBody.</code><code class="sig-name descname">changePosUnit</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">newUnit</em>, <em class="sig-param">update</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.changePosUnit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change position unit of vicon body</p>
+<dl class="simple">
+<dt>Example:</dt><dd><p>out = obj.getSubset(5:100, segAlias);</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – class ViconBody (self)</p></li>
+<li><p><strong>newUnit</strong> – new unit</p></li>
+<li><p><strong>update</strong> – If true, update this vicon body, else crease new ViconBody</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - ViconBody class whose data only includes the rows in idx</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;ViconBody.getEndIndex">
+<code class="sig-prename descclassname">+mocapdb.&#64;ViconBody.</code><code class="sig-name descname">getEndIndex</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.getEndIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get end index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>endIdx - last index</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;ViconBody.getStartIndex">
+<code class="sig-prename descclassname">+mocapdb.&#64;ViconBody.</code><code class="sig-name descname">getStartIndex</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.getStartIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get first valid index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>startIdx - first valid index</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;ViconBody.getSubset">
+<code class="sig-prename descclassname">+mocapdb.&#64;ViconBody.</code><code class="sig-name descname">getSubset</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.getSubset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get subset of vicon body</p>
+<dl class="simple">
+<dt>Example:</dt><dd><p>out = obj.getSubset(5:100, segAlias);</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – class ViconBody (self)</p></li>
+<li><p><strong>idx</strong> – indices of data to be included in out</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out ViconBody class whose data only includes the rows in idx</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;ViconBody.loadViconMat">
+<code class="sig-prename descclassname">+mocapdb.&#64;ViconBody.</code><code class="sig-name descname">loadViconMat</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.loadViconMat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load mat file generated by parseViconCSV.py and return an instance of ViconBody class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fname</strong> – mat file name</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>instance of ViconBody class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;ViconBody.toWorldFrame">
+<code class="sig-prename descclassname">+mocapdb.&#64;ViconBody.</code><code class="sig-name descname">toWorldFrame</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">qR</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.toWorldFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform BVHBody from vicon frame (default) to world frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this ViconBody</p></li>
+<li><p><strong>qR</strong> – transformation quaternion (1 x 4) from vicon frame to world frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out BVHBody in world frame.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;ViconBody.togrBody">
+<code class="sig-prename descclassname">+mocapdb.&#64;ViconBody.</code><code class="sig-name descname">togrBody</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">idx</em>, <em class="sig-param">args</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@ViconBody.togrBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export ViconBody class to grBody class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idx</strong> – index to be copied to grBody class</p></li>
+<li><p><strong>args</strong> – arguments to be passed to grBody constructor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - instance of grBody class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-+mocapdb.&#64;XsensBody">
+<span id="xsensbody"></span><h2>XsensBody<a class="headerlink" href="#module-+mocapdb.@XsensBody" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="+mocapdb.&#64;XsensBody.XsensBody">
+<em class="property">class </em><code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">XsensBody</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.XsensBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref mat mat-class docutils literal notranslate"><span class="pre">matlab.mixin.Copyable</span></code></p>
+<p>Xsens Body class for the TCD dataset</p>
+<dl class="attribute">
+<dt id="+mocapdb.&#64;XsensBody.XsensBody.Head">
+<code class="sig-name descname">Head</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@XsensBody.XsensBody.Head" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="+mocapdb.&#64;XsensBody.XsensBody.XsensBody">
+<code class="sig-name descname">XsensBody</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.XsensBody.XsensBody" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;XsensBody.XsensBody.frame">
+<code class="sig-name descname">frame</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@XsensBody.XsensBody.frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of samples</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;XsensBody.XsensBody.fs">
+<code class="sig-name descname">fs</code><em class="property"> = '100'</em><a class="headerlink" href="#+mocapdb.@XsensBody.XsensBody.fs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;XsensBody.XsensBody.nSamples">
+<code class="sig-name descname">nSamples</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@XsensBody.XsensBody.nSamples" title="Permalink to this definition">¶</a></dt>
+<dd><p>sampling frequency</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;XsensBody.XsensBody.segList">
+<code class="sig-name descname">segList</code><em class="property"> = &quot;{'Head', 'Sternum', 'Pelvis', 'L_UpArm', 'R_UpArm',             'L_LowArm', 'R_LowArm', 'L_UpLeg', 'R_UpLeg',             'L_LowLeg', 'R_LowLeg', 'L_Foot', 'R_Foot'}&quot;</em><a class="headerlink" href="#+mocapdb.@XsensBody.XsensBody.segList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;XsensBody.XsensBody.srcFileName">
+<code class="sig-name descname">srcFileName</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@XsensBody.XsensBody.srcFileName" title="Permalink to this definition">¶</a></dt>
+<dd><p>data are in this frame of reference (Vicon or World or Calib)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.calcCalibAnkleSensorW2PelvisWFromVicon">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">calcCalibAnkleSensorW2PelvisWFromVicon</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">dataV</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.calcCalibAnkleSensorW2PelvisWFromVicon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate yaw offset from vicon data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>obj</strong> – this XsensBody</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out XsensBody class with adjustment sensor data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.calcCalibSB">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">calcCalibSB</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">refBody</em>, <em class="sig-param">sIdx</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.calcCalibSB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the calibration between sensor frame to body frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>refBody</strong> – grBody class in world frame. (use data at index 1)</p></li>
+<li><p><strong>sIdx</strong> – index of obj to be used</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - Xsens with calibration data from sensor frame to body frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.exportRawMeasurementAsStruct">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">exportRawMeasurementAsStruct</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">seg</em>, <em class="sig-param">segAlias</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.exportRawMeasurementAsStruct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export raw xsens measurements as struct</p>
+<dl>
+<dt>Example:</dt><dd><p>seg = {‘Pelvis’, ‘L_LowLeg’, ‘R_LowLeg’};</p>
+<p>segAlias = {‘PELV’, ‘LANK’, ‘RANK’};</p>
+<p>out = obj.exportRawMeasurementAsStruct(seg, segAlias);</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – class XsensBody (self)</p></li>
+<li><p><strong>seg</strong> – cell array of sensors to be exported</p></li>
+<li><p><strong>segAlias</strong> – cell array of sensor aliases</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - {‘PELVAccX’: n x 1, PELVAccY: n x 1, … }
+for Acc, Gyr, Mag on the X, Y, Z axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.getSubset">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">getSubset</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.getSubset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get subset of xsens measurements</p>
+<dl class="simple">
+<dt>Example:</dt><dd><p>out = obj.getSubset(5:100, segAlias);</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – class XsensBody (self)</p></li>
+<li><p><strong>idx</strong> – indices of data to be included in out</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - XsensBody class whose data only includes the rows in idx</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.initializetoIdentity">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">initializetoIdentity</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.initializetoIdentity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize this XsensBody such that each rotation matrix is identity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>obj</strong> – this XsensBody</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.loadCalib">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">loadCalib</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.loadCalib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load calibration files (calib_*.txt)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fname</strong> – .sensors filename</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>output TCDBody with calibration data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.loadCalibCSV">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">loadCalibCSV</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.loadCalibCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save calibration as CSV file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this XsensBody</p></li>
+<li><p><strong>fname</strong> – filename of file to be saved</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.loadCalibSensorW2V">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">loadCalibSensorW2V</code><span class="sig-paren">(</span><em class="sig-param">viconFName</em>, <em class="sig-param">xsensFName</em>, <em class="sig-param">options</em>, <em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.loadCalibSensorW2V" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate rotation matrix of sensor world frame with respect vicon frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>viconFName</strong> – vicon calib mat file name</p></li>
+<li><p><strong>xsensFName</strong> – xsens MT export file name</p></li>
+<li><p><strong>options</strong> – XsensBody load configuration (see loadMTExport)</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index of xsens ori to be used in calculation
+(default = 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>obj - XsensBody class qOri world to vicon frame of each sensor ({}^V_W q)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.loadMTExport">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">loadMTExport</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">options</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.loadMTExport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load exported files from XSens MT manager (v4.8)
+Pelvis, L_UpLeg, R_UpLeg, L_LowLeg, R_LowLeg, L_Foot, R_Foot</p>
+<dl class="simple">
+<dt>Example:</dt><dd><dl class="simple">
+<dt>options = struct(‘Pelvis’, ‘00B40B91’, …</dt><dd><p>‘L_UpLeg’, ‘00B40C45’, ‘R_UpLeg’, ‘00B40C3C’, …
+‘L_LowLeg’, ‘00B40BA5’, ‘R_LowLeg’, ‘00B40C35’, …
+‘L_Foot’, ‘00B40C55’, ‘R_Foot’, ‘00B40C48’);</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Returns a struch with each field has a table with dimensions N x 13. 
+The column of each row are quaternions[4], accelerometer [3], 
+gyroscope [3], magnetometer [3]</p>
+<p>Accelerometer, gyroscope, magnetometer are in the sensor frame. 
+Quaternions tell the orientation relationship between sensor and world frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – session name</p></li>
+<li><p><strong>options</strong> – struct (body segment &lt;-&gt; sensor id)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>obj - XsensBody</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.loadMVNX">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">loadMVNX</code><span class="sig-paren">(</span><em class="sig-param">fname</em>, <em class="sig-param">options</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.loadMVNX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load exported files from XSens MT manager (v4.8)
+Pelvis, L_UpLeg, R_UpLeg, L_LowLeg, R_LowLeg, L_Foot, R_Foot</p>
+<dl class="simple">
+<dt>Example:</dt><dd><dl class="simple">
+<dt>options = struct(‘Pelvis’, ‘00B40B91’, …</dt><dd><p>‘L_UpLeg’, ‘00B40C45’, ‘R_UpLeg’, ‘00B40C3C’, …
+‘L_LowLeg’, ‘00B40BA5’, ‘R_LowLeg’, ‘00B40C35’, …
+‘L_Foot’, ‘00B40C55’, ‘R_Foot’, ‘00B40C48’);</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Returns a struch with each field has a table with dimensions N x 13. 
+The column of each row are quaternions[4], accelerometer [3], 
+gyroscope [3], magnetometer [3]</p>
+<p>Accelerometer, gyroscope, magnetometer are in the sensor frame. 
+Quaternions tell the orientation relationship between sensor and world frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – session name</p></li>
+<li><p><strong>options</strong> – struct (body segment &lt;-&gt; sensor id)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>obj - XsensBody</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.loadSensorFile">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">loadSensorFile</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.loadSensorFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load .sensors file and returns struct with fields:
+Head, Sternum, Pelvis, L_UpArm, R_UpArm, L_LowArm, R_LowArm, L_UpLeg, 
+R_UpLeg, L_LowLeg, R_LowLeg, L_Foot, R_Foot</p>
+<p>Each field has a table with dimensions N x 13. The column of each row 
+are quaternions[4], accelerometer [3], gyroscope [3], magnetometer [3]</p>
+<p>Accelerometer, gyroscope, magnetometer are in the sensor frame. 
+Quaternions tell the orientation relationship between sensor and world frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fname</strong> – .sensors filename</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>obj - XsensBody</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.load_mvnx">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">load_mvnx</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.load_mvnx" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Taken from MVN Studio Developer Toolkit 1.0.2</strong>
+mvnx = load_mvnx(filename)
+loads a mvnx file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – is name of file (including path)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>mvnx is result struct containing all data of the mvnx file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.saveCalibCSV">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">saveCalibCSV</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">fname</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.saveCalibCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save calibration as CSV file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this XsensBody</p></li>
+<li><p><strong>fname</strong> – filename of file to be saved</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;XsensBody.toViconFrame">
+<code class="sig-prename descclassname">+mocapdb.&#64;XsensBody.</code><code class="sig-name descname">toViconFrame</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">qR</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@XsensBody.toViconFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform XsensBody from world frame (default) to vicon frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this XsensBody</p></li>
+<li><p><strong>qR</strong> – XsensBody containing transformation quaternion (1 x 4) 
+from world frame to vicon frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - XsensBody in vicon frame.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-+mocapdb.&#64;BVHBody">
+<span id="bvhbody"></span><h2>BVHBody<a class="headerlink" href="#module-+mocapdb.@BVHBody" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody">
+<em class="property">class </em><code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">BVHBody</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref mat mat-class docutils literal notranslate"><span class="pre">matlab.mixin.Copyable</span></code></p>
+<p>a class for BVH body</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>srcFileName</strong> – body is loaded from this source file name</p></li>
+<li><p><strong>frame</strong> – data are in this frame of reference (Vicon or IMU)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.BVHBody">
+<code class="sig-name descname">BVHBody</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.BVHBody" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.Hips">
+<code class="sig-name descname">Hips</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.Hips" title="Permalink to this definition">¶</a></dt>
+<dd><p>similar to RFEP</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.LeftFoot">
+<code class="sig-name descname">LeftFoot</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.LeftFoot" title="Permalink to this definition">¶</a></dt>
+<dd><p>hip orientation (n x 4)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.LeftLeg">
+<code class="sig-name descname">LeftLeg</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.LeftLeg" title="Permalink to this definition">¶</a></dt>
+<dd><p>similar to LTIO</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.LeftUpLeg">
+<code class="sig-name descname">LeftUpLeg</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.LeftUpLeg" title="Permalink to this definition">¶</a></dt>
+<dd><p>similar to LFEO</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.RightFoot">
+<code class="sig-name descname">RightFoot</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.RightFoot" title="Permalink to this definition">¶</a></dt>
+<dd><p>similar to LFEP</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.RightLeg">
+<code class="sig-name descname">RightLeg</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.RightLeg" title="Permalink to this definition">¶</a></dt>
+<dd><p>similar to RTIO</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.RightUpLeg">
+<code class="sig-name descname">RightUpLeg</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.RightUpLeg" title="Permalink to this definition">¶</a></dt>
+<dd><p>similar to RFEO</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.frame">
+<code class="sig-name descname">frame</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>position unit</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.fs">
+<code class="sig-name descname">fs</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.fs" title="Permalink to this definition">¶</a></dt>
+<dd><p>similar to MIDPEL</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.nSamples">
+<code class="sig-name descname">nSamples</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.nSamples" title="Permalink to this definition">¶</a></dt>
+<dd><p>sampling frequency</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.posUnit">
+<code class="sig-name descname">posUnit</code><em class="property"> = &quot;'mm'&quot;</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.posUnit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.qHips">
+<code class="sig-name descname">qHips</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.qHips" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="+mocapdb.&#64;BVHBody.BVHBody.srcFileName">
+<code class="sig-name descname">srcFileName</code><em class="property"> = None</em><a class="headerlink" href="#+mocapdb.@BVHBody.BVHBody.srcFileName" title="Permalink to this definition">¶</a></dt>
+<dd><p>data are in this frame of reference (Vicon or IMU)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.changePosUnit">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">changePosUnit</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">newUnit</em>, <em class="sig-param">update</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.changePosUnit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change position unit of BVH body</p>
+<dl class="simple">
+<dt>Example:</dt><dd><p>out = obj.changePosUnit(‘m’, false);</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – class BVHBody (self)</p></li>
+<li><p><strong>newUnit</strong> – new unit</p></li>
+<li><p><strong>update</strong> – If true, update this bvh body, else crease new BVHBody</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - BVHBody class whose data only includes the rows in idx</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.getEndIndex">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">getEndIndex</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.getEndIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get end index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>endIdx - last index</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.getStartIndex">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">getStartIndex</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.getStartIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get first valid index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>startIdx - first valid index</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.getSubset">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">getSubset</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.getSubset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get subset of bvh body</p>
+<dl class="simple">
+<dt>Example:</dt><dd><p>out = obj.getSubset(5:100);</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – class BVHBody (self)</p></li>
+<li><p><strong>idx</strong> – indices of data to be included in out</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - BVHBody class whose data only includes the rows in idx</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.loadBVHFile">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">loadBVHFile</code><span class="sig-paren">(</span><em class="sig-param">fname</em>, <em class="sig-param">unit</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.loadBVHFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load BVH file and return an instance of BVHBody class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> – BVH file name</p></li>
+<li><p><strong>unit</strong> – data position unit (mm or inch)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>instance of BVHBody class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.loadOriPosFile">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">loadOriPosFile</code><span class="sig-paren">(</span><em class="sig-param">fname_ori</em>, <em class="sig-param">fname_pos</em>, <em class="sig-param">unit</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.loadOriPosFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load BVH file and return an instance of BVHBody class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname_ori</strong> – orientation file name</p></li>
+<li><p><strong>fname_pos</strong> – position file name</p></li>
+<li><p><strong>data</strong> (<em>unit</em>) – position unit (mm or inch)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>instance of BVHBody class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.loadXsensBVHFile">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">loadXsensBVHFile</code><span class="sig-paren">(</span><em class="sig-param">fname</em>, <em class="sig-param">unit</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.loadXsensBVHFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load BVH file and return an instance of BVHBody class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> – BVH file name</p></li>
+<li><p><strong>unit</strong> – data position unit (mm or inch)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>instance of BVHBody class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.loadbvh">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">loadbvh</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.loadbvh" title="Permalink to this definition">¶</a></dt>
+<dd><p>LOADBVH  Load a .bvh (Biovision) file.</p>
+<p>Loads BVH file specified by FNAME (with or without .bvh extension)
+and parses the file, calculating joint kinematics and storing the
+output in SKELETON.</p>
+<p>Some details on the BVH file structure are given in “Motion Capture File
+Formats Explained”: <a class="reference external" href="http://www.dcs.shef.ac.uk/intranet/research/resmes/CS0111.pdf">http://www.dcs.shef.ac.uk/intranet/research/resmes/CS0111.pdf</a>
+But most of it is fairly self-evident.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.toWorldFrame">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">toWorldFrame</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">qR</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.toWorldFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform BVHBody from vicon frame (default) to world frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this BVHBody</p></li>
+<li><p><strong>qR</strong> – transformation quaternion (1 x 4) from vicon frame to world frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - BVHBody in world frame.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+mocapdb.&#64;BVHBody.togrBody">
+<code class="sig-prename descclassname">+mocapdb.&#64;BVHBody.</code><code class="sig-name descname">togrBody</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">idx</em>, <em class="sig-param">args</em><span class="sig-paren">)</span><a class="headerlink" href="#+mocapdb.@BVHBody.togrBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export BVHBody class to grBody class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idx</strong> – index to be copied to grBody class</p></li>
+<li><p><strong>args</strong> – arguments to be passed to grBody constructor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - instance of grBody class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pelib.html" class="btn btn-neutral float-right" title="Pose Estimator Library" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Luke Sy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

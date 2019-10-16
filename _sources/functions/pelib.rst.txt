@@ -1,5 +1,6 @@
 Pose Estimator Library
 ======================
+
 Input to estimator are loaded and processed by :mod:`+mocapdb`.
 
 .. automodule:: +pelib

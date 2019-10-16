@@ -1,5 +1,6 @@
-mocapdb
-==========
+MoCap DB Processing
+===================
+
 Module to load motion capture data.
 
 .. automodule:: +mocapdb
