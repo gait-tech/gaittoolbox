@@ -21,8 +21,7 @@ function [out1, out2] = calcDOrinobias(obj, ref)
     for i=1:cN
         n = nameList{i};
         buf = calcEul(quat2rotm(quatmultiply(obj.(n), quatconj(ref.(n)))));
-        bmean = mean(buf, 1);
-        bias(i, :) = mean(buf, 1);
+        bias(i, :) = nanmean(buf, 1);
         dori(:, i) = vecnorm(rad2deg(buf-bias(i, :)), 2, 2);
     end
     out1 = mean(dori, 2);
