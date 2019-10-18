@@ -1,25 +1,27 @@
-% ======================================================================
-%> @brief Load exported files from XSens MVN Studio 4.4 (.mvnx)
-%>
-%> Load exported files from XSens MT manager (v4.8)
-%> Pelvis, L_UpLeg, R_UpLeg, L_LowLeg, R_LowLeg, L_Foot, R_Foot
-%> 
-%> options = struct('Pelvis', 'Pelvis', ...
-%> 'L_UpLeg', 'LeftUpperLeg', 'R_UpLeg', 'RightUpperLeg', ...
-%> 'L_LowLeg', 'prop', 'R_LowLeg', 'prop_1', ...
-%> 'L_Foot', 'LeftFoot', 'R_Foot', 'RightFoot');
-%> Each field has a table with dimensions N x 13. The column of each row 
-%> are quaternions[4], accelerometer [3], gyroscope [3], magnetometer [3]
-%> 
-%> Accelerometer, gyroscope, magnetometer are in the sensor frame. 
-%> Quaternions tell the orientation relationship between sensor and world frame.
-%>
-%> @param fname file name
-%> @param options struct (body segment <-> sensor id)
-%>
-%> @retval XsensBody
-% ======================================================================
 function obj = loadMVNX(fname, options)
+	% Load exported files from XSens MT manager (v4.8)
+	% Pelvis, L_UpLeg, R_UpLeg, L_LowLeg, R_LowLeg, L_Foot, R_Foot
+	% 
+	% Example:
+	% 	options = struct('Pelvis', '00B40B91', ...
+	% 				'L_UpLeg', '00B40C45', 'R_UpLeg', '00B40C3C', ...
+	% 				'L_LowLeg', '00B40BA5', 'R_LowLeg', '00B40C35', ...
+	% 				'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
+	% 
+	% Returns a struch with each field has a table with dimensions N x 13. 
+	% The column of each row are quaternions[4], accelerometer [3], 
+	% gyroscope [3], magnetometer [3]
+	% 
+	% Accelerometer, gyroscope, magnetometer are in the sensor frame. 
+	% Quaternions tell the orientation relationship between sensor and world frame.
+	%
+	% :param name: session name
+	% :param options: struct (body segment <-> sensor id)
+	%
+	% :return: obj - XsensBody
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if nargin <= 1
         options = struct('Pelvis', 'Pelvis', ...
             'L_UpLeg', 'LeftUpperLeg', 'R_UpLeg', 'RightUpperLeg', ...

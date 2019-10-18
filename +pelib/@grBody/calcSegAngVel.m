@@ -1,17 +1,17 @@
-% ======================================================================
-%> @brief Calculate the segment angular velocity of grBody
-%> @author Luke Sy (UNSW GSBME)
-%> @date 5 June 2019
-%>
-%> Example: out = obj.calcSegAngVel({'LTIB', 'RTIB'})
-%> out = struct('LTIB', n x 3, 'RTIB', n x 3)
-%>
-%> @param obj this grBody
-%> @param seg cell array of segments to be calculated (if blank: all joints)
-%> @param frame out is expressed in this frame. B=body (default) or W=world
-%> @retval out struct of velocities
-% ======================================================================
 function out = calcSegAngVel(obj, segs, frame)
+	% Calculate the segment angular velocity of grBody
+	% 
+	% Example: 
+	%		out = obj.calcSegAngVel({'LTIB', 'RTIB'})
+	% 		out = struct('LTIB', n x 3, 'RTIB', n x 3)
+	%
+	% :param obj: this grBody
+	% :param seg: cell array of segments to be calculated (if blank: all joints)
+	% :param frame: out is expressed in this frame. B=body (default) or W=world
+	% :return: out struct of velocities
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 6/05/19
+
     if nargin <= 1
         segs = obj.oriList;
     end

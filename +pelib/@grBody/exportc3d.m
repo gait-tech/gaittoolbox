@@ -1,32 +1,31 @@
-% ======================================================================
-%> @brief generate c3d file
-%> @author Luke Sy (UNSW GSBME)
-%> @date 09 Sept 2018
-%>
-%> Example:
-%>      fname = 'test.c3d';
-%>      sensors = {'PELVAccX': (n x 1), 'PELVAccY': (n x 1), ... };
-%>      refBody = actBody;
-%>      
-%>      out = obj.exportc3d(fname, sensors, refBody);
-%>
-%> @param obj grBody (self)
-%> @param fname output file name
-%> @param sensors [Optional] struct {'label': (n x 1) values to be saved as analog
-%>        signals ... } (e.g. raw acc, gyro, magnetometer) 
-%> @param refBody [Optional] reference grBody class
-%> @param lsteps [Optional] (n x 1) logical where it is true during left foot step detection
-%> @param rsteps [Optional] (n x 1) logical where it is true during right foot step detection
-%> @param extraMarkers [Optional] extra markers of format struct 
-%>                      {'label': (n x 3) position values
-%> @param oriMode [Optional] 01: refBody axis on refBody. obj axis on obj.
-%>                           02: refBody and obj axis on obj.
-%>                           03: refBody and obj axis on refBody.
-%> @param spevents (Optional) (n x 1) logical where special event happens
-%> @retval acq handle pointer to new btk c3d
-% ======================================================================
 function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
                          extraMarkers, oriMode, spevents)
+	% Generate c3d file
+	%
+	% Example:
+	%      fname = 'test.c3d';
+	%      sensors = {'PELVAccX': (n x 1), 'PELVAccY': (n x 1), ... };
+	%      refBody = actBody;
+	%      
+	%      out = obj.exportc3d(fname, sensors, refBody);
+	%
+	% :param obj: grBody (self)
+	% :param fname: output file name
+	% :param sensors: [Optional] struct {'label': (n x 1) values to be saved as analog
+	%        signals ... } (e.g. raw acc, gyro, magnetometer) 
+	% :param refBody: [Optional] reference grBody class
+	% :param lsteps: [Optional] (n x 1) logical where it is true during left foot step detection
+	% :param rsteps: [Optional] (n x 1) logical where it is true during right foot step detection
+	% :param extraMarkers: [Optional] extra markers of format struct 
+	%                      {'label': (n x 3) position values
+	% :param oriMode: [Optional] 01: refBody axis on refBody. obj axis on obj.
+	%                           02: refBody and obj axis on obj.
+	%                           03: refBody and obj axis on refBody.
+	% :param spevents: (Optional) (n x 1) logical where special event happens
+	% :return: acq - handle pointer to new btk c3d
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 9/09/18
+	
     if nargin <= 2, sensors = struct(); 
     else, validateattributes(sensors, {'struct', 'logical'}, {}); end
     if nargin <= 3, refBody = false; 

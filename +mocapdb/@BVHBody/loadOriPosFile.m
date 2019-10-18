@@ -1,13 +1,14 @@
-% ======================================================================
-%> @brief Load BVH file and return an instance of BVHBody class
-%>
-%> @param fname_ori orientation file name
-%> @param fname_pos position file name
-%> @param unit data position unit (mm or inch)
-%>
-%> @return instance of BVHBody class.
-% ======================================================================
 function obj = loadOriPosFile(fname_ori, fname_pos, unit)
+	% Load BVH file and return an instance of BVHBody class
+	%
+	% :param fname_ori: orientation file name
+	% :param fname_pos: position file name
+	% :param unit data: position unit (mm or inch)
+	%
+	% :return: instance of BVHBody class.
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
+
     %% Check function input
     if nargin == 1
         fname = fname_ori;

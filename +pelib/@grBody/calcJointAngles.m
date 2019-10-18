@@ -1,13 +1,14 @@
-% ======================================================================
-%> @brief Calculate distal segment rotation matric from proximal segment and joint angle
-%>
-%> @param prox quaternion orientation (n x 4) of the proximal segment
-%> @param theta joint angle in X, Y, Z axis
-%> @param seq (default: YX'Z'')
-%>
-%> @retval theta [x y z] radians 
-% ======================================================================
 function theta = calcJointAngles(prox, dist, seq)
+	% Calculate distal segment rotation matric from proximal segment and joint angle
+	%
+	% :param prox: quaternion orientation (n x 4) of the proximal segment
+	% :param theta: joint angle in X, Y, Z axis
+	% :param seq: (default: YX'Z'')
+	%
+	% :return: theta [x y z] radians 
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if nargin <= 2
         seq = 'YXZ';
     end

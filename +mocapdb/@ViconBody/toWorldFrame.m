@@ -1,14 +1,13 @@
-% ======================================================================
-%> @brief Transform BVHBody from vicon frame (default) to world frame
-%> @author Luke Sy (UNSW GSBME)
-%> @date 24 Sept 2018
-%>
-%> @param obj this BVHBody
-%> @param qR transformation quaternion (1 x 4) from vicon frame to world frame
-%>
-%> @retval out BVHBody in world frame.
-% ======================================================================
 function out = toWorldFrame(obj, qR)
+	% Transform BVHBody from vicon frame (default) to world frame
+	%
+	% :param obj: this ViconBody
+	% :param qR: transformation quaternion (1 x 4) from vicon frame to world frame
+	%
+	% :return: out BVHBody in world frame.
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 9/24/18
+
     out = obj.copy();
     out.frame = 'world';
         

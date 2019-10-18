@@ -1,17 +1,16 @@
-% ======================================================================
-%> @brief Calculate rotation matrix of sensor world frame with respect vicon frame
-%> @author Luke Sy (UNSW GSBME)
-%> @date 24 Sept 2018
-%>
-%> @param viconFName vicon calib mat file name
-%> @param xsensFName xsens MT export file name
-%> @param options XsensBody load configuration (see loadMTExport)
-%> @param idx [OPTIONAL] index of xsens ori to be used in calculation
-%>            (default = 1)
-%>
-%> @return obj XsensBody class qOri world to vicon frame of each sensor ({}^V_W q)
-% ======================================================================
 function obj = loadCalibSensorW2V(viconFName, xsensFName, options, idx)
+	% Calculate rotation matrix of sensor world frame with respect vicon frame
+	% 
+	% :param viconFName: vicon calib mat file name
+	% :param xsensFName: xsens MT export file name
+	% :param options: XsensBody load configuration (see loadMTExport)
+	% :param idx: [OPTIONAL] index of xsens ori to be used in calculation
+	%            (default = 1)
+	%
+	% :return: obj - XsensBody class qOri world to vicon frame of each sensor ({}^V_W q)
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 9/24/18
+
     if nargin <= 3, idx = 5; end
     
     obj = mocapdb.XsensBody();

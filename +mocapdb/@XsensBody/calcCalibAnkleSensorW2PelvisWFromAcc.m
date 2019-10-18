@@ -1,18 +1,17 @@
-% ======================================================================
-%> @brief Calculate yaw offset from accelerometer data
-%> @author Luke Sy (UNSW GSBME)
-%> @date 18 Oct 2018
-%>
-%> Run localization Kalman filter on the pelvis and ankle IMUs
-%> Assume the position vector (from origin) of each IMU should point to the
-%> same direction, and the yaw angle between vectors is the yaw offset.
-%>
-%> @param obj this XsensBody
-%> @param idx index of data to be used
-%>
-%> @return out XsensBody class with adjustment sensor data
-% ======================================================================
 function out = calcCalibAnkleSensorW2PelvisWFromAcc(obj, idx)
+	% Calculate yaw offset from accelerometer data
+	%
+	% Run localization Kalman filter on the pelvis and ankle IMUs
+	% Assume the position vector (from origin) of each IMU should point to the
+	% same direction, and the yaw angle between vectors is the yaw offset.
+	%
+	% :param obj: this XsensBody
+	% :param idx: index of data to be used
+	%
+	% :return: out - XsensBody class with adjustment sensor data
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 8/18/18
+	
     out = mocapdb.XsensBody();
     
     segList = {'Pelvis', 'L_LowLeg', 'R_LowLeg'};

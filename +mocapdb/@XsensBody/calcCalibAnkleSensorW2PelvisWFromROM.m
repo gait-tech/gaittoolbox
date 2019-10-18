@@ -1,14 +1,13 @@
-% ======================================================================
-%> @brief Calculate yaw offset from high RoM on sagital plane
-%> @author Luke Sy (UNSW GSBME)
-%> @date 22 Oct 2018
-%>
-%> @param obj this XsensBody
-%> @param calibS2B XsensBody that transforms sensor frame to body frame
-%>
-%> @return out XsensBody class with adjustment sensor data
-% ======================================================================
 function out = calcCalibAnkleSensorW2PelvisWFromROM(obj, calibS2B, DEGRANGE)
+	% Calculate yaw offset from high RoM on sagital plane
+	%
+	% :param obj: this XsensBody
+	% :param calibS2B: XsensBody that transforms sensor frame to body frame
+	%
+	% :return: out XsensBody class with adjustment sensor data
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 8/22/18
+
     if nargin <= 2, DEGRANGE = (0:1:359) - 180; end
     
     out = mocapdb.XsensBody();

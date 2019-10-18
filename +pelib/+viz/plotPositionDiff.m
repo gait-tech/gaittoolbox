@@ -1,12 +1,12 @@
-% ======================================================================
-%> @brief plot body position difference (body2 - body1)
-%>
-%> @param body1 Base Body instance
-%> @param body2 Body instance(s) to be compared to
-%> @param parts String(s) of body point(s) to be plotted.
-%>
-% ======================================================================
 function plotPositionDiff(body1, body2, parts)
+	% Plot body position difference (body2 - body1)
+	%
+	% :param body1: Base Body instance
+	% :param body2: Body instance(s) to be compared to
+	% :param parts: String(s) of body point(s) to be plotted.
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if ~iscell(body2)
         body2 = {body2};
     end

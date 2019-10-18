@@ -1,11 +1,10 @@
-% ======================================================================
-%> @brief Plot s0 s1 s2 s3 of quaternion
-%> @author Luke Sy
-%>
-%> @param inputs array of n x 4's to be plotted
-% ======================================================================
-
 function plotQuaternion(varargin)   
+	% Plot s0 s1 s2 s3 of quaternion
+	% 
+	% :param inputs: array of n x 4's to be plotted
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     sp = [];
     lnames = arrayfun(@inputname, 1:nargin, 'UniformOutput', false);
     

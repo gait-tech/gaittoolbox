@@ -1,9 +1,10 @@
-% ======================================================================
-%> @brief Get first valid index
-%>
-%> @retval startIdx first valid index
-% ======================================================================
 function startIdx = getStartIndex(obj)
+	% Get first valid index
+	%
+	% :return: startIdx - first valid index
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     startIdx = 1;
     for i=1:length(obj.posList)
         idx = find(~any(isnan(obj.(obj.posList{i})), 2), 1);

@@ -1,13 +1,13 @@
-% ======================================================================
-%> @brief Returns the difference between angle A and angle B
-%>
-%> Returns min(|angle A - angle B|, |angle A + angle B|)
-%>
-%> @param A angle input 1 
-%> @param B angle input 2 
-%>
-%> @retval ret difference between angle A and B
-% ======================================================================
+% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
+% @brief Returns the difference between angle A and angle B
+%
+% Returns min(|angle A - angle B|, |angle A + angle B|)
+%
+% :param A angle input 1 
+% :param B angle input 2 
+%
+% :return: ret difference between angle A and B
+% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
 function ret = anglediff(A, B)
     validateattributes(A, {'numeric'}, {'2d'})
     validateattributes(B, {'numeric'}, {'2d'})

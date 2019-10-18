@@ -1,16 +1,16 @@
-% ======================================================================
-%> @brief Get subset of grBody
-%> @author Luke Sy (UNSW GSBME)
-%> @date 22 Sept 2018
-%>
-%> Example:
-%>      out = obj.getSubset(5:100, segAlias);
-%>
-%> @param obj class grBody (self)
-%> @param idx indices of data to be included in out
-%> @retval out grBody class whose data only includes the rows in idx
-% ======================================================================
 function out = getSubset(obj, idx)
+	% Get subset of grBody
+	%
+	% Example:
+	%      out = obj.getSubset(5:100, segAlias);
+	%
+	% :param obj: class grBody (self)
+	% :param idx: indices of data to be included in out
+	%
+	% :return: out grBody class whose data only includes the rows in idx
+	% 
+	% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
+
     validateattributes(idx, {'numeric'}, {});
     
     out = obj.copy();

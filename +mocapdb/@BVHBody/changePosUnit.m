@@ -1,18 +1,17 @@
-% ======================================================================
-%> @brief change position unit of BVH body
-%> @author Luke Sy (UNSW GSBME)
-%> @date 14 Nov 2018
-%>
-%> Example:
-%>      out = obj.changePosUnit('m', false);
-%>
-%> @param obj class BVHBody (self)
-%> @param newUnit new unit
-%> @param update If true, update this bvh body, else crease new BVHBody
-%>
-%> @retval out BVHBody class whose data only includes the rows in idx
-% ======================================================================
 function out = changePosUnit(obj, newUnit, update)
+	% Change position unit of BVH body
+	% 
+	% Example:
+	%      out = obj.changePosUnit('m', false);
+	%
+	% :param obj: class BVHBody (self)
+	% :param newUnit: new unit
+	% :param update: If true, update this bvh body, else crease new BVHBody
+	%
+	% :return: out - BVHBody class whose data only includes the rows in idx
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 11/14/18
+
     validateattributes(newUnit, {'string', 'char'}, {});
     if nargin <=2, update=false; end
     

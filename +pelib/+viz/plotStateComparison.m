@@ -1,14 +1,12 @@
-% ======================================================================
-%> @brief Compare the state across time
-%> @author Luke Sy
-%>
-%> 
-%> @param estStateData estimated state data (n_samples x n_state)
-%> @param actStateData actual (basis) state data (n_samples x n_state)
-%> @param stateIdx compare state number stateIdx: stateIdx+2
-% ======================================================================
-
 function plotStateComparison(estStateData, actStateData, stateIdx, fs)
+	% Compare the state across time
+	% 
+	% :param estStateData: estimated state data (n_samples x n_state)
+	% :param actStateData: actual (basis) state data (n_samples x n_state)
+	% :param stateIdx: compare state number stateIdx: stateIdx+2
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     plotIndex = 1;
     target = stateIdx:stateIdx+2;
     sp = [];

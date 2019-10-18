@@ -1,13 +1,12 @@
-% ======================================================================
-%> @brief Load calib_*.txt file
-%>
-%> Load the calibration file
-%>
-%> @param fname .sensors filename
-%>
-%> @retval output TCDBody with calibration data
-% ======================================================================
 function obj = loadCalib(fname)
+	% Load calibration files (calib_*.txt)
+	%
+	% :param fname: .sensors filename
+	%
+	% :return: output TCDBody with calibration data
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     %% Check function input
     validateattributes(fname, {'char'}, {});
 

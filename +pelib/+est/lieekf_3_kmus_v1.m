@@ -1,50 +1,50 @@
-%> @brief Constrained Lie group based extended Kalman filter implementation
-%> @author Luke Wicent Sy
-%> @date 14 May 2019
-%>
-%> EKF using Lie group/algebra representation
-%> 3 KMUs presumably worn on the body in the following configuration: 
-%> mid pelvis, left ankle, right ankle
-%> 
-%> Coding notation based on <a href="http://paulfurgale.info/news/2014/6/9/representing-robot-pose-the-good-the-bad-and-the-ugly">link</a>
-%>
-%> More detail about options
-%>      fs: sampling frequency of the magnetic and inertial measurement units
-%>      applyPred: 3 digit 0YX
-%>          X:   1st bit use velocity to predict position
-%>               2nd bit use angular velocity to predict orientation
-%>          Y:   1st bit If 1 calculates acc and ang vel from state ori
-%>                       If 0 calculates acc and ang vel from sensor ori
-%>               2nd bit calculate angular velocity from orientation
-%>               3rd bit If 0, naive pos update (Omega = B_R_W W_v)
-%>                       If 1, pos update (Omega = Phi(B_w)^{-1} B_R_W W_v
-%>          Z:   1st bit Skip angular velocity tracking
-%>      applyMeas: 3 digit ZYX
-%>          X:   1st bit Zupt and Ankle zpos
-%>               2nd bit Update angular velocity
-%>               3rd bit Orientation update
-%>          Y:   1st bit Pelvis xy=ankle average
-%>               2nd bit Pelvis z=initial height
-%>          Z:   1st bit covariance limiter
-%>               2nd3rd bit If 1, vel cstr Y and Z always on
-%>                          If 2, vel cstr Y and Z only on during step detect
-%>      applyCstr: 3 digit ZYX
-%>          X:   1st bit enforce thigh length
-%>               2nd bit enforce hinge knee joint
-%>               3rd bit enforce knee range of motion
-%>          Y:   1st2nd bit If 1, vel cstr Y and Z always on
-%>                          If 2, vel cstr Y and Z only on during step detect
-%>          Z:   1st bit do P update
-%>
-%> @param x0 initial state in the GFR
-%> @param P0 initial covariance
-%> @param bodyAcc acceleration of PV, LS, RS in the body frame
-%> @param step boolean vector of PV, LS, RS indicating step detection
-%> @param qOri PV, LS, RS orientation in the GFR (rotm)
-%> @param wbody PV, LS, RS angular velocity in the body frame
-%> @param body Length of PV_d (pelvis), RT_d and LT_d (r/l femur), RS_d and LS_d (r/l tibia)
-%> @param uwb_mea a structure containing the range measurements (m) between
-%> @param options struct containing the estimator settings:
+% @brief Constrained Lie group based extended Kalman filter implementation
+% @author Luke Wicent Sy
+% @date 14 May 2019
+%
+% EKF using Lie group/algebra representation
+% 3 KMUs presumably worn on the body in the following configuration: 
+% mid pelvis, left ankle, right ankle
+% 
+% Coding notation based on <a href="http://paulfurgale.info/news/2014/6/9/representing-robot-pose-the-good-the-bad-and-the-ugly">link</a>
+%
+% More detail about options
+%      fs: sampling frequency of the magnetic and inertial measurement units
+%      applyPred: 3 digit 0YX
+%          X:   1st bit use velocity to predict position
+%               2nd bit use angular velocity to predict orientation
+%          Y:   1st bit If 1 calculates acc and ang vel from state ori
+%                       If 0 calculates acc and ang vel from sensor ori
+%               2nd bit calculate angular velocity from orientation
+%               3rd bit If 0, naive pos update (Omega = B_R_W W_v)
+%                       If 1, pos update (Omega = Phi(B_w)^{-1} B_R_W W_v
+%          Z:   1st bit Skip angular velocity tracking
+%      applyMeas: 3 digit ZYX
+%          X:   1st bit Zupt and Ankle zpos
+%               2nd bit Update angular velocity
+%               3rd bit Orientation update
+%          Y:   1st bit Pelvis xy=ankle average
+%               2nd bit Pelvis z=initial height
+%          Z:   1st bit covariance limiter
+%               2nd3rd bit If 1, vel cstr Y and Z always on
+%                          If 2, vel cstr Y and Z only on during step detect
+%      applyCstr: 3 digit ZYX
+%          X:   1st bit enforce thigh length
+%               2nd bit enforce hinge knee joint
+%               3rd bit enforce knee range of motion
+%          Y:   1st2nd bit If 1, vel cstr Y and Z always on
+%                          If 2, vel cstr Y and Z only on during step detect
+%          Z:   1st bit do P update
+%
+% :param x0 initial state in the GFR
+% :param P0 initial covariance
+% :param bodyAcc acceleration of PV, LS, RS in the body frame
+% :param step boolean vector of PV, LS, RS indicating step detection
+% :param qOri PV, LS, RS orientation in the GFR (rotm)
+% :param wbody PV, LS, RS angular velocity in the body frame
+% :param body Length of PV_d (pelvis), RT_d and LT_d (r/l femur), RS_d and LS_d (r/l tibia)
+% :param uwb_mea a structure containing the range measurements (m) between
+% :param options struct containing the estimator settings:
 
 function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     B_a_, step, W_R_, B_w_, body, uwb_mea, options)
@@ -104,9 +104,9 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
         'zpos', struct('LS', false, 'RS', false, 'PV', false), ...
         'zupt', false, 'xyposPVLSRS', false, ...
         'velcstrY', false, 'velcstrZ', false);   
-%>          X: Ori always on
-%>               1st bit Zupt and Ankle zpos
-%>               2nd bit Update angular velocity
+%          X: Ori always on
+%               1st bit Zupt and Ankle zpos
+%               2nd bit Update angular velocity
     if bitand(knob.amModTen, 1)
         knob.meas.zupt = true;
         knob.meas.zpos.LS = true;
@@ -117,8 +117,8 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
     end
     knob.meas.angvel = bitand(knob.amModTen, 2);
     knob.meas.covlim = knob.amHunDig;
-%>          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
-%>               2nd bit Vel cstr Y and Z
+%          Y:   1st bit Pelvis assumption (xy=ankle average, z=initial height)
+%               2nd bit Vel cstr Y and Z
 
     knob.meas.xyposPVLSRS = bitand(knob.amTenDig, 1);
     if bitand(knob.amTenDig, 2)

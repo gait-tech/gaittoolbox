@@ -1,11 +1,11 @@
-% ======================================================================
-%> @brief Plot joint angles
-%>
-%> @param bodys Body instance(s) to be plotted
-%> @param parts String(s) of body point(s) to be plotted (LHip, RHip, LKnee, RKnee).
-%>
-% ======================================================================
 function plotJointAngles(bodys, parts)
+	% Plot joint angles
+	%
+	% :param bodys: Body instance(s) to be plotted
+	% :param parts: String(s) of body point(s) to be plotted (LHip, RHip, LKnee, RKnee).
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if ~iscell(bodys)
         bodys = {bodys};
     end

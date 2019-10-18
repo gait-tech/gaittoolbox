@@ -15,36 +15,30 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 % acceleration (m/2^2)
 % uwb_mea (meters)
 %
-% Author: Luke Wicent Sy, Michael Del Rosario
 %
-% Inputs::
-%   fs - sampling frequency of the magnetic and inertial measurement units
-%   sigma_acc - user specified process noise, i.e., the standard deviation
-%               in the accelerometer measurements when subjected to a known
-%               acceleration
-%   x0        - the initial state in the GFR
-%   gfrAccMP - the acceleration of the mid-pelvis in the GFR
-%   gfrAccLA - the acceleration of the left ankle in the GFR
-%   gfrAccRA - the acceleration of the right ankle in the GFR
-%   bIsStatMP  - a boolean vector, for whichever timepoints, n(i) are true,
+%   :param x0: the initial state in the GFR
+%   :param gfrAccMP: the acceleration of the mid-pelvis in the GFR
+%   :param gfrAccLA: the acceleration of the left ankle in the GFR
+%   :param gfrAccRA: the acceleration of the right ankle in the GFR
+%   :param bIsStatMP: a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_MP(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-%   bIsStatLA  - a boolean vector, for whichever timepoints, n(i) are true,
+%   :param bIsStatLA: a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_LA(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-%   bIsStatRA  - a boolean vector, for whichever timepoints, n(i) are true,
+%   :param bIsStatRA: a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_RA(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-%   qMP       - mid  pelvis orientation in the GFR (quaternion)
-%   qLA       - left  ankle orientation in the GFR (quaternion)
-%   qRA       - right ankle orientation in the GFR (quaternion)
-%   dPelvis   - pelvis width
-%   dRFemur   - right femur length
-%   dLFemur   - left femur length
-%   dRTibia   - right tibia length
-%   dLTibia   - left tibia length
-%   uwb_mea    - a structure containing the range measurements (m) between
-%   options   - struct containing the ff. settings:
+%   :param qMP:		mid  pelvis orientation in the GFR (quaternion)
+%   :param qLA:		left  ankle orientation in the GFR (quaternion)
+%   :param qRA:		right ankle orientation in the GFR (quaternion)
+%   :param dPelvis:	pelvis width
+%   :param dRFemur:	right femur length
+%   :param dLFemur:	left femur length
+%   :param dRTibia:	right tibia length
+%   :param dLTibia:	left tibia length
+%   :param uwb_mea:	a structure containing the range measurements (m) between
+%   :param options:	struct containing the following settings:
 %       applyMeas - turn on/off zero velocity update. boolean
 %           X=0: normal measurement update
 %           X=1: add 3 point dist
@@ -282,7 +276,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = kf_3_kmus_v3(x0, P0, ...
 %                     + static foot step (x,y pos)
 %                X=9: foot step (z pos) = floor (step detect and < floorZ)
 %                     + zero sigma for foot x,y pos
-%         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...
+% 
+% .. Author: - Luke Wicent Sy, Michael Del Rosario
     fOpt = struct('fs', 60, 'applyMeas', false, 'applyUwb', false, ...
         'applyAccBias', false, 'applyCstr', 0, ...
         'sigmaQAccMP', 0.5, 'sigmaQAccLA', 0.5, 'sigmaQAccRA', 0.5, ...

@@ -1,12 +1,13 @@
-% ======================================================================
-%> @brief Transform BVHBody from vicon frame (default) to world frame
-%>
-%> @param obj this BVHBody
-%> @param qR transformation quaternion (1 x 4) from vicon frame to world frame
-%>
-%> @retval out BVHBody in world frame.
-% ======================================================================
 function out = toWorldFrame(obj, qR)
+	% Transform BVHBody from vicon frame (default) to world frame
+	%
+	% :param obj: this BVHBody
+	% :param qR: transformation quaternion (1 x 4) from vicon frame to world frame
+	%
+	% :return: out - BVHBody in world frame.
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     out = mocapdb.BVHBody();
     out.srcFileName = obj.srcFileName;
     out.frame = 'world';

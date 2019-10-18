@@ -1,11 +1,10 @@
-% ======================================================================
-%> @brief Plot rotation matrix column basis
-%> @author Luke Sy
-%> @date 11 Oct 2018
-%>
-%> @param R rotation matrix
-% ======================================================================
 function plotR(R, origin, color)
+	% Plot rotation matrix column basis
+	% 
+	% :param R: rotation matrix
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 10/11/18
+
     if nargin <= 1, origin = [0 0 0]; end
     if nargin <= 2, color = 'rgb'; end
     

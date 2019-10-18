@@ -1,14 +1,15 @@
-% ======================================================================
-%> @brief Returns the RMSE difference between grBody1 and grBody2
-%>
-%> @param obj1 grBody 1 (self)
-%> @param obj1 grBody 2 (other)
-%> @param ref reference. default: MIDPEL
-%> @param seq orientation sequence. default: YXZ
-%>
-%> @retval out struct with the difference of pos and ori parameters
-% ======================================================================
 function out = diffRMSE(obj1, obj2, ref, seq)
+	% Returns the RMSE difference between grBody1 and grBody2
+	%
+	% :param obj1: grBody 1 (self)
+	% :param obj1: grBody 2 (other)
+	% :param ref: reference. default: MIDPEL
+	% :param seq: orientation sequence. default: YXZ
+	%
+	% :return: out - struct with the difference of pos and ori parameters
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+	
     if nargin <= 2
         ref = 'MIDPEL';
         seq = 'YXZ';

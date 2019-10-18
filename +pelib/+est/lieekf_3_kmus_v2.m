@@ -1,44 +1,44 @@
-%> @brief Constrained Lie group based extended Kalman filter implementation
-%> @author Luke Wicent Sy
-%> @date 15 Aug 2019
-%>
-%> EKF using Lie group/algebra representation
-%> Representation: SO(3)^3 + R^27
-%> 3 KMUs presumably worn on the body in the following configuration: 
-%> mid pelvis, left ankle, right ankle
-%> 
-%> Coding notation based on <a href="http://paulfurgale.info/news/2014/6/9/representing-robot-pose-the-good-the-bad-and-the-ugly">link</a>
-%>
-%> More detail about options
-%>      fs: sampling frequency of the magnetic and inertial measurement units
-%>      applyPred: 3 digit 0YX
-%>          X:   1st bit predict position, velocity, angular velocity
-%>               2nd bit predict orientation
-%>          Y:   1st bit If 1 calculates acc and ang vel from state ori
-%>                       If 0 calculates acc and ang vel from sensor ori
-%>               2nd bit calculate angular velocity from orientation
-%>      applyMeas: 3 digit ZYX
-%>          X:   1st bit Zupt and ankle zpos
-%>               2nd bit apply angular velocity measurement
-%>               3rd bit apply orientation measurement
-%>          Y:   1st bit Pelvis xy=ankle average
-%>               2nd bit Pelvis z=initial height
-%>          Z:   1st bit covariance limiter
-%>      applyCstr: 3 digit ZYX
-%>          X:   1st bit enforce thigh length
-%>               2nd bit enforce hinge knee joint
-%>               3rd bit enforce knee range of motion
-%>          Z:   1st bit do P update
-%>
-%> @param x0 initial state in the GFR
-%> @param P0 initial covariance
-%> @param B_a_ acceleration of PV, LS, RS in the body frame
-%> @param step boolean vector of PV, LS, RS indicating step detection
-%> @param W_R_ PV, LS, RS orientation in the GFR (rotm)
-%> @param B_w_ PV, LS, RS angular velocity in the body frame
-%> @param body Length of PV_d (pelvis), RT_d and LT_d (r/l femur), RS_d and LS_d (r/l tibia)
-%> @param uwb_mea a structure containing the range measurements (m) between
-%> @param options struct containing the estimator settings:
+% @brief Constrained Lie group based extended Kalman filter implementation
+% @author Luke Wicent Sy
+% @date 15 Aug 2019
+%
+% EKF using Lie group/algebra representation
+% Representation: SO(3)^3 + R^27
+% 3 KMUs presumably worn on the body in the following configuration: 
+% mid pelvis, left ankle, right ankle
+% 
+% Coding notation based on <a href="http://paulfurgale.info/news/2014/6/9/representing-robot-pose-the-good-the-bad-and-the-ugly">link</a>
+%
+% More detail about options
+%      fs: sampling frequency of the magnetic and inertial measurement units
+%      applyPred: 3 digit 0YX
+%          X:   1st bit predict position, velocity, angular velocity
+%               2nd bit predict orientation
+%          Y:   1st bit If 1 calculates acc and ang vel from state ori
+%                       If 0 calculates acc and ang vel from sensor ori
+%               2nd bit calculate angular velocity from orientation
+%      applyMeas: 3 digit ZYX
+%          X:   1st bit Zupt and ankle zpos
+%               2nd bit apply angular velocity measurement
+%               3rd bit apply orientation measurement
+%          Y:   1st bit Pelvis xy=ankle average
+%               2nd bit Pelvis z=initial height
+%          Z:   1st bit covariance limiter
+%      applyCstr: 3 digit ZYX
+%          X:   1st bit enforce thigh length
+%               2nd bit enforce hinge knee joint
+%               3rd bit enforce knee range of motion
+%          Z:   1st bit do P update
+%
+% :param x0 initial state in the GFR
+% :param P0 initial covariance
+% :param B_a_ acceleration of PV, LS, RS in the body frame
+% :param step boolean vector of PV, LS, RS indicating step detection
+% :param W_R_ PV, LS, RS orientation in the GFR (rotm)
+% :param B_w_ PV, LS, RS angular velocity in the body frame
+% :param body Length of PV_d (pelvis), RT_d and LT_d (r/l femur), RS_d and LS_d (r/l tibia)
+% :param uwb_mea a structure containing the range measurements (m) between
+% :param options struct containing the estimator settings:
 
 function [ xtilde, debug_dat ] = lieekf_3_kmus_v2(x0, P0, ...
     B_a_, step, W_R_, B_w_, body, uwb_mea, options)

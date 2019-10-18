@@ -1,19 +1,19 @@
-% ======================================================================
-%> @brief Plot lower body segment length error
-%> @author Luke Sy
-%> 
-%> @param body Body instance to be plotted
-%> @param hips left and right hip distance
-%> @param lfemur left femur length
-%> @param rfemer right femur length
-%> @param ltibia left tibia length
-%> @param rtibia right tibia length
-%>
-%> @retval p plot object
-% ======================================================================
 function plotLowerBodySegmentLengthError(body, ...
     hips, lfemur, rfemur, ltibia, rtibia)
     
+	% Plot lower body segment length error
+	% 
+	% :param body: Body instance to be plotted
+	% :param hips: left and right hip distance
+	% :param lfemur: left femur length
+	% :param rfemer: right femur length
+	% :param ltibia: left tibia length
+	% :param rtibia: right tibia length
+	%
+	% :return: p - plot object
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+	
     errHips   = vecnorm(body.LFEP-body.RFEP, 2, 2) - hips;
     errLFemur = vecnorm(body.LFEP-body.LFEO, 2, 2) - lfemur;
     errRFemur = vecnorm(body.RFEP-body.RFEO, 2, 2) - rfemur;

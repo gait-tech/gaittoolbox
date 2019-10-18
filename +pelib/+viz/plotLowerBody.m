@@ -1,16 +1,15 @@
-% ======================================================================
-%> @brief Plot the lower body using the joint positions
-%> @author Luke Sy
-%>
-%> Plot the lower body
-%> 
-%> @param body Body instance to be plotted
-%> @param t time point to be plotted
-%> @param showOrientation show coordinate system of each body segment
-%> @param showGround show ground
-%> @retval p plot object
-% ======================================================================
 function p = plotLowerBody(body, t, showOrientation, showGround)    
+	% Plot the lower body using the joint positions
+	% 
+	% :param body: Body instance to be plotted
+	% :param t: time point to be plotted
+	% :param showOrientation: [Optional] show coordinate system of each body segment
+	% :param showGround: [Optional] show ground
+	%
+	% :return: p - plot object
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if nargin <= 2
         showOrientation = false;
         showGround = false;

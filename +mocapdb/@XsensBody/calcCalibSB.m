@@ -1,14 +1,13 @@
-% ======================================================================
-%> @brief Calculate the calibration between sensor frame to body frame
-%>
-%>
-%> @param refBody grBody class in world frame. (use data at index 1)
-%> @param sIdx index of obj to be used
-%>
-%> @retval output Xsens with calibration data from sensor frame to body
-% frame
-% ======================================================================
 function out = calcCalibSB(obj, refBody, sIdx)
+	% Calculate the calibration between sensor frame to body frame
+	%
+	% :param refBody: grBody class in world frame. (use data at index 1)
+	% :param sIdx: index of obj to be used
+	%
+	% :return: out - Xsens with calibration data from sensor frame to body frame
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
+
     if nargin <= 2
         sIdx = 1;
     end

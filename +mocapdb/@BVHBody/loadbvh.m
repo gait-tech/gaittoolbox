@@ -16,7 +16,11 @@ function [skeleton,time] = loadbvh(fname)
 % until the line "MOTION", so we're being a bit inefficient here and
 % loading the entire file into memory. Oh well.
 
-% add a file extension if necessary:
+% add a file extension if necessary
+% ** Note that this is not my code and was obtained from [link](https://github.com/wspr/bvh-matlab)**
+%
+% :param fname: file name
+
 if ~strncmpi(fliplr(fname),'hvb.',4)
   fname = [fname,'.bvh'];
 end

@@ -1,14 +1,13 @@
-% ======================================================================
-%> @file load_mvnx.m
-%> @brief Taken from MVN Studio Developer Toolkit 1.0.2
-% ======================================================================
-
 function mvnx = load_mvnx(filename)
-% mvnx = load_mvnx(filename)
-% loads a mvnx file
-% filename is name of file (including path)
-% mvnx is result struct containing all data of the mvnx file
-% Xsens Technologies BV 28-05-2015
+	% **Taken from MVN Studio Developer Toolkit 1.0.2**
+	% mvnx = load_mvnx(filename)
+	% loads a mvnx file
+	%
+	% :param filename: is name of file (including path)
+	%
+	% :return: mvnx is result struct containing all data of the mvnx file
+	%
+	% .. Author: - Xsens Technologies BV - 5/28/18
 
 %% check filename
 if isempty(strfind(filename,'mvnx'))

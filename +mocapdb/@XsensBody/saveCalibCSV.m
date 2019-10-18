@@ -1,10 +1,11 @@
-% ======================================================================
-%> @brief Save calibration as CSV file
-%>
-%> @param obj this XsensBody
-%> @param fname filename of file to be saved
-% ======================================================================
 function saveCalibCSV(obj, fname)
+	% Save calibration as CSV file
+	%
+	% :param obj: this XsensBody
+	% :param fname: filename of file to be saved
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     t = table;
     for i=1:length(obj.segList)
         n = obj.segList{i};

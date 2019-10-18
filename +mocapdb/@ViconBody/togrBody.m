@@ -1,12 +1,13 @@
-% ======================================================================
-%> @brief Export ViconBody class to grBody class
-%>
-%> @param idx index to be copied to grBody class
-%> @param args arguments to be passed to grBody constructor
-%>
-%> @retval out instance of grBody class.
-% ======================================================================
 function out = togrBody(obj, idx, args)
+	% Export ViconBody class to grBody class
+	%
+	% :param idx: index to be copied to grBody class
+	% :param args: arguments to be passed to grBody constructor
+	%
+	% :return: out - instance of grBody class.
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+	
     out = pelib.grBody(args{:});
     
     key1 = {'RFEP', 'RFEO', 'RTIO', 'RTOE', 'LFEP', 'LFEO', 'LTIO', 'LTOE'};

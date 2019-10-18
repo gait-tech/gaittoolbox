@@ -1,21 +1,22 @@
-% ======================================================================
-%> @file TCDBody.m
-%> @brief Body class for the TCD dataset
-% ======================================================================
-
 classdef BVHBody < matlab.mixin.Copyable
+	% a class for BVH body
+    %
+    % :param srcFileName: body is loaded from this source file name
+	% :param frame: data are in this frame of reference (Vicon or IMU)
+	
     properties
-        %> body is loaded from this source file name
+        % body is loaded from this source file name
         srcFileName
-        %> data are in this frame of reference (Vicon or IMU)
+        % data are in this frame of reference (Vicon or IMU)
         frame
+		% position unit
         posUnit = 'mm'
-        %> number of samples
+        % number of samples
         nSamples
-        %> sampling frequency
+        % sampling frequency
         fs
         
-        %> similar to MIDPEL
+        % similar to MIDPEL
         Hips
         Spine
         Spine1
@@ -31,22 +32,22 @@ classdef BVHBody < matlab.mixin.Copyable
         LeftArm
         LeftForeArm
         LeftHand
-        %> similar to RFEP
+        % similar to RFEP
         RightUpLeg
-        %> similar to RFEO
+        % similar to RFEO
         RightLeg
-        %> similar to RTIO
+        % similar to RTIO
         RightFoot
         RightToe
-        %> similar to LFEP
+        % similar to LFEP
         LeftUpLeg
-        %> similar to LFEO
+        % similar to LFEO
         LeftLeg
-        %> similar to LTIO
+        % similar to LTIO
         LeftFoot
         LeftToe
         
-        %> hip orientation (n x 4)
+        % hip orientation (n x 4)
         qHips
         qSpine
         qSpine1
@@ -73,12 +74,14 @@ classdef BVHBody < matlab.mixin.Copyable
     end
     
     properties (Hidden)
+		% position property list
         posList = {'Hips', 'Spine', 'Spine1', 'Spine2', 'Spine3', ...
             'Neck', 'Head', ...
             'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', ...
             'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', ...
             'RightUpLeg', 'RightLeg', 'RightFoot', 'RightToe', ...
             'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToe' };
+		% orientation property list
         oriList = {'qHips', 'qSpine', 'qSpine1', 'qSpine2', 'qSpine3', ...
             'qNeck', 'qHead', ...
             'qRightShoulder', 'qRightArm', 'qRightForeArm', 'qRightHand', ...
@@ -88,13 +91,14 @@ classdef BVHBody < matlab.mixin.Copyable
     end
     
     methods
-        % ======================================================================
-        %> @brief Class constructor
-        %>
-        %> @param varargin param1 (string), val1, param2 (string), val2, ...
-        %>
-        %> @return instance of BVHBody class.
-        % ======================================================================
+        % Class constructor
+        %
+        % :param varargin: param1 (string), val1, param2 (string), val2, ...
+        %
+        % :return: instance of BVHBody class.
+		%
+        % .. Author: - Luke Sy (UNSW GSBME)
+		
         function obj = BVHBody(varargin)
             for i = 1:2:nargin
                obj.(varargin{i}) = varargin{i+1};

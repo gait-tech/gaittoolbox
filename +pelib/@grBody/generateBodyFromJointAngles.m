@@ -1,24 +1,25 @@
-% ======================================================================
-%> @brief generate grBody from pelvis pos, ori and joint angles
-%>
-%> @param posMP  pelvis (root) position
-%> @param qOriMP pelvis (root) orientation
-%> @param anglesLT left  thigh/femur joint angles (X, Y, Z axis)
-%> @param anglesRT right thigh/femur joint angles (X, Y, Z axis)
-%> @param angleLK left  knee angle (X, Y, Z axis)
-%> @param angleRK right knee angle (X, Y, Z axis)
-%> @param dPelvis pelvis length
-%> @param dLFemur left  femur length
-%> @param dRFemur right femur length
-%> @param dLTibia left  tibia length
-%> @param dRTibia right tibia length
-%> @param seq (default: YX'Z'')
-%>
-%> @retval out new grBody in world frame
-% ======================================================================
 function out = generateBodyFromJointAngles(posMP, qOriMP, ...
     anglesLT, anglesRT, angleLK, angleRK, ...
     dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, seq)
+	% Generate grBody from pelvis pos, ori and joint angles
+	%
+	% :param posMP:  pelvis (root) position
+	% :param qOriMP: pelvis (root) orientation
+	% :param anglesLT: left  thigh/femur joint angles (X, Y, Z axis)
+	% :param anglesRT: right thigh/femur joint angles (X, Y, Z axis)
+	% :param angleLK: left  knee angle (X, Y, Z axis)
+	% :param angleRK: right knee angle (X, Y, Z axis)
+	% :param dPelvis: pelvis length
+	% :param dLFemur: left  femur length
+	% :param dRFemur: right femur length
+	% :param dLTibia: left  tibia length
+	% :param dRTibia: right tibia length
+	% :param seq: (default: YX'Z'')
+	%
+	% :return: out new grBody in world frame
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if nargin <= 11
         seq = 'YXZ';
     end

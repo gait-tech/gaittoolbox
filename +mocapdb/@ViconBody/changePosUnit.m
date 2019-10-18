@@ -1,18 +1,17 @@
-% ======================================================================
-%> @brief change position unit of vicon body
-%> @author Luke Sy (UNSW GSBME)
-%> @date 22 Sept 2018
-%>
-%> Example:
-%>      out = obj.getSubset(5:100, segAlias);
-%>
-%> @param obj class ViconBody (self)
-%> @param newUnit new unit
-%> @param update If true, update this vicon body, else crease new ViconBody
-%>
-%> @retval out ViconBody class whose data only includes the rows in idx
-% ======================================================================
 function out = changePosUnit(obj, newUnit, update)
+	% Change position unit of vicon body
+	%
+	% Example:
+	%      out = obj.getSubset(5:100, segAlias);
+	%
+	% :param obj: class ViconBody (self)
+	% :param newUnit: new unit
+	% :param update: If true, update this vicon body, else crease new ViconBody
+	%
+	% :return: out - ViconBody class whose data only includes the rows in idx
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
+	
     validateattributes(newUnit, {'string', 'char'}, {});
     if nargin <=2, update=false; end
     

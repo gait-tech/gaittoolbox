@@ -1,10 +1,11 @@
-% ======================================================================
-%> @brief Save calibration as CSV file
-%>
-%> @param obj this XsensBody
-%> @param fname filename of file to be saved
-% ======================================================================
 function obj = loadCalibCSV(fname)
+	% Save calibration as CSV file
+	%
+	% :param obj: this XsensBody
+	% :param fname: filename of file to be saved
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     T = readtable(fname);
     
     obj = mocapdb.XsensBody();

@@ -1,21 +1,20 @@
-% ======================================================================
-%> @brief Load .sensors file from Total Capture dataset
-%>
-%> Load .sensors file and returns struct with fields:
-%> Head, Sternum, Pelvis, L_UpArm, R_UpArm, L_LowArm, R_LowArm, L_UpLeg, 
-%> R_UpLeg, L_LowLeg, R_LowLeg, L_Foot, R_Foot
-%> 
-%> Each field has a table with dimensions N x 13. The column of each row 
-%> are quaternions[4], accelerometer [3], gyroscope [3], magnetometer [3]
-%> 
-%> Accelerometer, gyroscope, magnetometer are in the sensor frame. 
-%> Quaternions tell the orientation relationship between sensor and world frame.
-%>
-%> @param fname .sensors filename
-%>
-%> @retval obj XsensBody
-% ======================================================================
 function obj = loadSensorFile(fname)
+	% Load .sensors file and returns struct with fields:
+	% Head, Sternum, Pelvis, L_UpArm, R_UpArm, L_LowArm, R_LowArm, L_UpLeg, 
+	% R_UpLeg, L_LowLeg, R_LowLeg, L_Foot, R_Foot
+	% 
+	% Each field has a table with dimensions N x 13. The column of each row 
+	% are quaternions[4], accelerometer [3], gyroscope [3], magnetometer [3]
+	% 
+	% Accelerometer, gyroscope, magnetometer are in the sensor frame. 
+	% Quaternions tell the orientation relationship between sensor and world frame.
+	%
+	% :param fname: .sensors filename
+	%
+	% :return: obj - XsensBody
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     fileID = fopen(fname, 'r');
     buf = fscanf(fileID, "%d %d", 2);
     nSensors = buf(1);

@@ -1,16 +1,15 @@
-% ======================================================================
-%> @brief Get subset of bvh body
-%> @author Luke Sy (UNSW GSBME)
-%> @date 14 Nov 2018
-%>
-%> Example:
-%>      out = obj.getSubset(5:100);
-%>
-%> @param obj class BVHBody (self)
-%> @param idx indices of data to be included in out
-%> @retval out BVHBody class whose data only includes the rows in idx
-% ======================================================================
 function out = getSubset(obj, idx)
+	% Get subset of bvh body
+	% 
+	% Example:
+	%      out = obj.getSubset(5:100);
+	%
+	% :param obj: class BVHBody (self)
+	% :param idx: indices of data to be included in out
+	% :return: out - BVHBody class whose data only includes the rows in idx
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 11/14/18
+
     validateattributes(idx, {'numeric'}, {});
     
     out = obj.copy();

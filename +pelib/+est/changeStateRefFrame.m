@@ -1,13 +1,13 @@
-% ======================================================================
-%> @brief change reference frame of state
-%> Supported changes are vicon -> MIDPEL
-%>
-%> @param state input kf_3_kmus_v3 state
-%> @param ref reference frame
-%> @param format state format (kf_3_kmus_v3)
-%>
-%> @retval out state at new frame
-% ======================================================================
+% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
+% @brief change reference frame of state
+% Supported changes are vicon -> MIDPEL
+%
+% :param state input kf_3_kmus_v3 state
+% :param ref reference frame
+% :param format state format (kf_3_kmus_v3)
+%
+% :return: out state at new frame
+% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
 function out = changeStateRefFrame(state, ref, format)
     if nargin <= 1
         ref = 'MIDPEL';

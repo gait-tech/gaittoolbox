@@ -1,14 +1,14 @@
-% ======================================================================
-%> @brief change reference frame of grBody from MIDPEL frame to world frame
-%> Supported changes are vicon -> MIDPEL
-%>
-%> @param obj grBody (self)
-%> @param pos pelvis (root) position
-%> @param ori pelvis (root) orientation
-%>
-%> @retval out new grBody in world frame
-% ======================================================================
-function out = changeRefFrame(obj, pos, ori)
+function out = toWorldFrame(obj, pos, ori)
+	% Change reference frame of grBody from MIDPEL frame to world frame
+	% Supported changes are vicon -> MIDPEL
+	%
+	% :param obj: grBody (self)
+	% :param pos: pelvis (root) position
+	% :param ori: pelvis (root) orientation
+	%
+	% :return: out - new grBody in world frame
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
     
     refMap = containers.Map({'MIDPEL'}, ...
         {'qRPV'});

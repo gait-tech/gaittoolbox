@@ -1,12 +1,11 @@
-% ======================================================================
-%> @brief Plot x y z of inputs
-%> @author Luke Sy
-%>
-%> @param fs sampling frequency
-%> @param inputs array of n x 3's to be plotted
-% ======================================================================
-
 function plotXYZ(fs, varargin)   
+	% Plot x y z of inputs
+	% 
+	% :param fs: sampling frequency
+	% :param inputs: array of n x 3's to be plotted
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     sp = [];
     lnames = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
     

@@ -1,12 +1,13 @@
-% ======================================================================
-%> @brief Returns the RMSE and Mean difference between grBody1 and grBody2
-%>
-%> @param obj1 grBody 1 (self)
-%> @param obj1 grBody 2 (other)
-%>
-%> @retval out struct with the difference of pos and ori parameters
-% ======================================================================
 function out = diffRMSEandMean(obj1, obj2)
+	% Returns the RMSE and Mean difference between grBody1 and grBody2
+	%
+	% :param obj1: grBody 1 (self)
+	% :param obj1: grBody 2 (other)
+	%
+	% :return: out - struct with the difference of pos and ori parameters
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     seq = 'YXZ';
     
     out = struct;

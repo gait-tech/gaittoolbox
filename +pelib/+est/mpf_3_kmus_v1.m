@@ -1,46 +1,46 @@
-%> PF_3_KMUS Particle Filter for performing sensor fusion on the trajectory of
-%> three KMUs presumably worn on the body in the following configuration: mid
-%> pelvis, left ankle, right ankle
-%> In this state space model, the position and velocity of each kinematic
-%> measurement unit (KMU) is estimated in 3D space by combining the
-%> information from each KMU in a kalman filter. NOTE: pay special attention 
-%> to units:
-%> position (meters)
-%> velocity (m/s)
-%> acceleration (m/2^2)
-%> uwb_mea (meters)
-%>
-%> Author: Luke Wicent Sy
-%>
-%> Inputs::
-%>   fs - sampling frequency of the magnetic and inertial measurement units
-%>   sigma_acc - user specified process noise, i.e., the standard deviation
-%>               in the accelerometer measurements when subjected to a known
-%>               acceleration
-%>   x0        - the initial state in the GFR
-%>   gfrAccMP - the acceleration of the mid-pelvis in the GFR
-%>   gfrAccLA - the acceleration of the left ankle in the GFR
-%>   gfrAccRA - the acceleration of the right ankle in the GFR
-%>   bIsStatMP  - a boolean vector, for whichever timepoints, n(i) are true,
-%>                i.e., bMoving_MP(i) == 1, a zero velocity update will be 
-%>                performed by using psuedo-zero velocity measurements 
-%>   bIsStatLA  - a boolean vector, for whichever timepoints, n(i) are true,
-%>                i.e., bMoving_LA(i) == 1, a zero velocity update will be 
-%>                performed by using psuedo-zero velocity measurements 
-%>   bIsStatRA  - a boolean vector, for whichever timepoints, n(i) are true,
-%>                i.e., bMoving_RA(i) == 1, a zero velocity update will be 
-%>                performed by using psuedo-zero velocity measurements 
-%>   qMP       - mid  pelvis orientation in the GFR (quaternion)
-%>   qLA       - left  ankle orientation in the GFR (quaternion)
-%>   qRA       - right ankle orientation in the GFR (quaternion)
-%>   dPelvis   - pelvis width
-%>   dRFemur   - right femur length
-%>   dLFemur   - left femur length
-%>   dRTibia   - right tibia length
-%>   dLTibia   - left tibia length
-%>   uwb_mea   - a structure containing the range measurements (m) between
-%>   vel0      - struct of MP, LA, RA containing initial velocity of joints
-%>   options   - struct containing the ff. settings:
+% PF_3_KMUS Particle Filter for performing sensor fusion on the trajectory of
+% three KMUs presumably worn on the body in the following configuration: mid
+% pelvis, left ankle, right ankle
+% In this state space model, the position and velocity of each kinematic
+% measurement unit (KMU) is estimated in 3D space by combining the
+% information from each KMU in a kalman filter. NOTE: pay special attention 
+% to units:
+% position (meters)
+% velocity (m/s)
+% acceleration (m/2^2)
+% uwb_mea (meters)
+%
+% Author: Luke Wicent Sy
+%
+% Inputs::
+%   fs - sampling frequency of the magnetic and inertial measurement units
+%   sigma_acc - user specified process noise, i.e., the standard deviation
+%               in the accelerometer measurements when subjected to a known
+%               acceleration
+%   x0        - the initial state in the GFR
+%   gfrAccMP - the acceleration of the mid-pelvis in the GFR
+%   gfrAccLA - the acceleration of the left ankle in the GFR
+%   gfrAccRA - the acceleration of the right ankle in the GFR
+%   bIsStatMP  - a boolean vector, for whichever timepoints, n(i) are true,
+%                i.e., bMoving_MP(i) == 1, a zero velocity update will be 
+%                performed by using psuedo-zero velocity measurements 
+%   bIsStatLA  - a boolean vector, for whichever timepoints, n(i) are true,
+%                i.e., bMoving_LA(i) == 1, a zero velocity update will be 
+%                performed by using psuedo-zero velocity measurements 
+%   bIsStatRA  - a boolean vector, for whichever timepoints, n(i) are true,
+%                i.e., bMoving_RA(i) == 1, a zero velocity update will be 
+%                performed by using psuedo-zero velocity measurements 
+%   qMP       - mid  pelvis orientation in the GFR (quaternion)
+%   qLA       - left  ankle orientation in the GFR (quaternion)
+%   qRA       - right ankle orientation in the GFR (quaternion)
+%   dPelvis   - pelvis width
+%   dRFemur   - right femur length
+%   dLFemur   - left femur length
+%   dRTibia   - right tibia length
+%   dLTibia   - left tibia length
+%   uwb_mea   - a structure containing the range measurements (m) between
+%   vel0      - struct of MP, LA, RA containing initial velocity of joints
+%   options   - struct containing the ff. settings:
 function [ xhat_pri, xhat_pos, debug_dat ] = mpf_3_kmus_v1(x0, P0, ...
     gfrAccMP, bIsStatMP, qMP, ...
     gfrAccLA, bIsStatLA, qLA, ...

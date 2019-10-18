@@ -1,18 +1,17 @@
-% ======================================================================
-%> @brief change position unit of grBody
-%> @author Luke Sy (UNSW GSBME)
-%> @date 22 Sept 2018
-%>
-%> Example:
-%>      out = obj.getSubset(5:100, segAlias);
-%>
-%> @param obj class grBody (self)
-%> @param newUnit new unit
-%> @param update If true, update this body, else crease new grBody
-%>
-%> @retval out grBody class whose data only includes the rows in idx
-% ======================================================================
 function out = changePosUnit(obj, newUnit, update)
+	% Change position unit of grBody
+	%
+	% Example:
+	%      out = obj.getSubset(5:100, segAlias);
+	%
+	% :param obj: class grBody (self)
+	% :param newUnit: new unit
+	% :param update: If true, update this body, else crease new grBody
+	%
+	% :return: out - grBody class whose data only includes the rows in idx
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
+
     validateattributes(newUnit, {'string', 'char'}, {});
     if nargin <=2, update=false; end
     

@@ -1,15 +1,13 @@
-% ======================================================================
-%> @brief Plot the lower body using the orientations (checking purposing)
-%> @author Luke Sy
-%>
-%> Plot the lower body
-%> 
-%> @param body Body instance to be plotted
-%> @param t time point to be plotted
-%> @param showGround show ground
-%> @retval p plot object
-% ======================================================================
 function p = plotLowerBody(body, t)    
+	% Plot the lower body using the orientations (checking purposing)
+	% 
+	% :param body: Body instance to be plotted
+	% :param t: time point to be plotted
+	% :param showGround: show ground
+	% :return: p - plot object
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if nargin <= 2
         showGround = false;
     end

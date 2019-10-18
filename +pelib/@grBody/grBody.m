@@ -1,17 +1,16 @@
-% ======================================================================
-%> @file Body.m
-%> @brief Body class used to animate body and obtain gait parameters
-% ======================================================================
-
 classdef grBody < matlab.mixin.Copyable
+	% Body class used to animate body and obtain gait parameters
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     properties
-        %> name of body
+        % name of body
         name
-        %> number of samples
+        % number of samples
         nSamples
-        %> sampling frequency
+        % sampling frequency
         fs = 60
-        %> frame: vicon / world / MIDPEL
+        % frame: vicon / world / MIDPEL
         frame
         
         % Plot specifications
@@ -23,7 +22,7 @@ classdef grBody < matlab.mixin.Copyable
         lnSymbol = '-';
         ptSymbol = '.';
         
-        %> SACR position (n x 3)
+        % SACR position (n x 3)
         MIDPEL
         LFEP
         LFEO
@@ -34,25 +33,27 @@ classdef grBody < matlab.mixin.Copyable
         RTIO
         RTOE
         
-        %> pelvis orientation (n x 4)
+        % pelvis orientation (n x 4)
         qRPV
-        %> right femur orientation (n x 4)
+        % right femur orientation (n x 4)
         qRTH
-        %> left femur orientation (n x 4)
+        % left femur orientation (n x 4)
         qLTH
-        %> right tibia orientation (n x 4)
+        % right tibia orientation (n x 4)
         qRSK
-        %> left tibia orientation (n x 4)
+        % left tibia orientation (n x 4)
         qLSK
-        %> right foot orientation (n x 4)
+        % right foot orientation (n x 4)
         qRFT
-        %> left foot orientation (n x 4)
+        % left foot orientation (n x 4)
         qLFT
     end
     
     properties (Constant)
+		% position property list
         posList = {'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'RFEP', 'RFEO', ...
                    'RTIO'};
+	    % orientation property list
         oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'};
     end
     
@@ -69,15 +70,15 @@ classdef grBody < matlab.mixin.Copyable
                         dMPLADist, dMPRADist);
     end
     
-    methods (Hidden)
-        % ======================================================================
-        %> @brief Return the minimum and maximum value of the corresponding coordinate
-        %>
-        %> @param idx 1 = x, 2 = y, 3 = z
-        %>
-        %> @return [low high]
-        % ======================================================================
+    methods (Hidden)	
         function out = lim(obj, idx)
+			% Return the minimum and maximum value of the corresponding coordinate
+			%
+			% :param idx: 1 = x, 2 = y, 3 = z
+			%
+			% :return: [low high]
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
             low = inf; high = -inf;
             
             for i=1:length(obj.posList)
@@ -91,14 +92,15 @@ classdef grBody < matlab.mixin.Copyable
     end
     
     methods
-        % ======================================================================
-        %> @brief Class constructor
-        %>
-        %> @param varargin param1 (string), val1, param2 (string), val2, ...
-        %>
-        %> @return instance of Body class.
-        % ======================================================================
         function obj = grBody(varargin)
+			% Class constructor
+			%
+			% :param varargin: param1 (string), val1, param2 (string), val2, ...
+			%
+			% :return: instance of Body class.
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+		
             for i = 1:2:nargin
                obj.(varargin{i}) = varargin{i+1};
             end
@@ -137,49 +139,130 @@ classdef grBody < matlab.mixin.Copyable
         end
 
         function theta = calcJointAnglesLHip(obj, idx)
+			% Calculate left hip joint angles (seq: YXZ)
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: all)
+			%
+			% :return: theta - joint angles (n x 3)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			
             if nargin <= 1, idx = 1:size(obj.qRPV, 1); end
             theta = pelib.grBody.calcJointAngles(obj.qRPV(idx, :), obj.qLTH(idx, :));
             theta = theta(:, [2 1 3]) .* [-1 -1 -1];
         end
         
         function theta = calcJointAnglesRHip(obj, idx)
+			% Calculate right hip joint angles (seq: YXZ)
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: all)
+			%
+			% :return: theta - joint angles (n x 3)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			
             if nargin <= 1, idx = 1:size(obj.qRPV, 1); end
             theta = pelib.grBody.calcJointAngles(obj.qRPV(idx, :), obj.qRTH(idx, :));
             theta = theta(:, [2 1 3]) .* [1 -1 1];
         end
 
         function theta = calcJointAnglesLKnee(obj, idx)
+			% Calculate left knee joint angles (seq: YXZ)
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: all)
+			%
+			% :return: theta - joint angles (n x 3)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			
             if nargin <= 1, idx = 1:size(obj.qLTH, 1); end
             theta = pelib.grBody.calcJointAngles(obj.qLTH(idx, :), obj.qLSK(idx, :));
             theta = theta(:, [2 1 3]) .* [-1 1 -1];
         end
         
         function theta = calcJointAnglesRKnee(obj, idx)
+			% Calculate right knee joint angles (seq: YXZ)
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: all)
+			%
+			% :return: theta - joint angles (n x 3)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			
             if nargin <= 1, idx = 1:size(obj.qRTH, 1); end
             theta = pelib.grBody.calcJointAngles(obj.qRTH(idx, :), obj.qRSK(idx, :));
             theta = theta(:, [2 1 3]);
         end
         
         function d = getPelvisLength(obj, idx)
+			% Calculate pelvis length
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: 1)
+			%
+			% :return: d - body segment length (n x 1)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			
             if nargin <= 1, idx = 1; end
             d = norm(obj.LFEP(idx, :) - obj.RFEP(idx, :));
         end
         
         function d = getLShankLength(obj, idx)
+			% Calculate left shank length
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: 1)
+			%
+			% :return: d - body segment length (n x 1)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			
             if nargin <= 1, idx = 1; end
             d = norm(obj.LFEO(idx, :) - obj.LTIO(idx, :));
         end
         
         function d = getRShankLength(obj, idx)
+			% Calculate right shank length
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: 1)
+			%
+			% :return: d - body segment length (n x 1)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			
             if nargin <= 1, idx = 1; end
             d = norm(obj.RFEO(idx, :) - obj.RTIO(idx, :));
         end
         
         function d = calcLFemurLength(obj)
+			% Calculate left femur length
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: 1)
+			%
+			% :return: d - body segment length (n x 1)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			
             d = vecnorm(obj.LFEP - obj.LFEO, 2, 2);
         end
         
         function d = calcRFemurLength(obj)
+			% Calculate right femur length
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: 1)
+			%
+			% :return: d - body segment length (n x 1)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			
             d = vecnorm(obj.RFEP - obj.RFEO, 2, 2);
         end
         
@@ -196,6 +279,7 @@ classdef grBody < matlab.mixin.Copyable
         out = diffRMSEandMean(obj1, obj2);
         out = toWorldFrame(obj, pos, ori);
         out = changePosUnit(obj, newUnit, update);
+		out = changeRefFrame(obj, ref)
         out = getSubset(obj, idx);
         out = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
                         extraMarkers, oriMode, spevents);

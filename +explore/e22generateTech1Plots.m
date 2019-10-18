@@ -5,8 +5,8 @@ if ~make_it_tight,  clear subplot;  end
 
 addpath('etclib');
 
-% setup = struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355");
-setup = struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P101+M135+C007");
+setup = struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+Aw__sOw__sIw__v+Sav03+M76+C355");
+% setup = struct('file', 'S01-Trial-Walk-1', 'algo', "NS2+lieekfv1+Aw__sOw__sIw__v+Sav03+P101+M135+C007");
 ns = extractBetween(setup.algo, 1, 3);
 
 load(sprintf('neura-sparse01/explore-v2/%s-%s-debug.mat', ns, setup.file));
@@ -39,8 +39,10 @@ estHA = rad2deg(estBody2.calcJointAnglesLHip());
 actHA = rad2deg(csActBody2.calcJointAnglesLHip());
 xsnHA = rad2deg(xsensBodyRel2.calcJointAnglesLHip());
 
-writetable(array2table([estKA(:,2) estHA(:,[2 1 3]) actKA(:,2) actHA(:,[2 1 3])]), ...
-           'lgcekf-samplequalitative.csv')
+writetable(array2table([estKA(:,2) estHA(:,[2 1 3]) ...
+                        xsnKA(:,2) xsnHA(:,[2 1 3]) ...
+                        actKA(:,2) actHA(:,[2 1 3]) ]), ...
+           'ckf-samplequalitative.csv')
 
 t = (1:size(estKA,1))/estBody.fs;
 

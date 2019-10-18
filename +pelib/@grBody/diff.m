@@ -1,13 +1,14 @@
-% ======================================================================
-%> @brief Returns the difference between grBody1 and grBody2
-%>
-%> @param obj1 grBody 1 (self)
-%> @param obj1 grBody 2 (other)
-%> @param seq orientation sequence
-%>
-%> @retval out struct with the difference of pos and ori parameters
-% ======================================================================
 function out = diff(obj1, obj2, seq)
+	% Returns the difference between grBody1 and grBody2
+	%
+	% :param obj1: grBody 1 (self)
+	% :param obj2: grBody 2 (other)
+	% :param seq: orientation sequence
+	%
+	% :return: out - struct with the difference of pos and ori parameters
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if nargin <= 2
         seq = 'YXZ';
     end

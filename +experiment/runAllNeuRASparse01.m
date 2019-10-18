@@ -66,7 +66,8 @@ for nsI = 1:length(nsList)
 
     dataN = size(dataList, 1);
 
-    for i = 1:dataN
+%     for i = 1:dataN
+    for i = 15
         n = table2struct(dataList(i, :));
         
 %         uwbDistSigma = 0.0;
@@ -87,9 +88,9 @@ for nsI = 1:length(nsList)
 
         name = sprintf("%s-%s-%s", ns, n.subj, n.act);
         dataPath = sprintf('%s/mat/%s-%s-%s.mat', dir, ns(1:3), n.subj, n.act);
-%         if exist(dataPath, 'file')
-%             load(dataPath, 'data');
-%         else
+        if exist(dataPath, 'file')
+            load(dataPath, 'data');
+        else
             data = struct('name', name, ...
                 'fnameV', sprintf('%s/vicon/%s-%s.mat', dir, n.subj, n.act), ...
                 'fnameX', sprintf('%s/xsens/%s-%s.bvh', dir, n.subj, n.act), ...
@@ -223,7 +224,7 @@ for nsI = 1:length(nsList)
             data.revStepDetect = readtable(data.fnameRevStepDetect);
             
             save(dataPath, 'data');
-%         end
+        end
 
         uwbDistSigma = 0.0;
         if strcmp(ns(1:3), 'NS2') && (size(ns, 2) > 3)

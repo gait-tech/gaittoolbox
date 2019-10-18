@@ -1,11 +1,11 @@
-% ======================================================================
-%> @brief Plot body orientation
-%>
-%> @param bodys Body instance(s) to be plotted
-%> @param parts String(s) of body point(s) to be plotted.
-%>
-% ======================================================================
 function plotOrientation(bodys, parts)
+	% Plot body orientation
+	%
+	% :param bodys: Body instance(s) to be plotted
+	% :param parts: String(s) of body point(s) to be plotted.
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if ~iscell(bodys)
         bodys = {bodys};
     end

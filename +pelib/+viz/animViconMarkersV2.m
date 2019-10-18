@@ -1,26 +1,29 @@
-% ======================================================================
-%> @brief quickly visualise the vicon markers
-%> @author Michael Del Rosario (UNSW GSBME)
-%>
-%> Source: https://github.com/mikedelr/Vicon-2-MATLAB-tools/blob/master/animViconMarkersV2.m
-%>
-%> Example usage:
-%>      animViconMarkers('markerData',markerData,'markerSet',markerSet)
-%>
-%> @param bodys Body instance(s) to be plotted
-%> @param parts String(s) of body point(s) to be plotted.
-%>
-%> @param markerData struct with fields:
-%>           .Names - a 'containers.Map' java object whose keys are the
-%>                    marker names, and whose values denote the columns
-%>                    in the (.Pos) matrix denote the co-ordinates in R3
-%>                    of the markers (units in mm)
-%>           .Pos   - a matrix containing the 3D co-ordinates of each
-%>                    marker
-%> @param markerSet cell array of size [n_rows, 2 columns]
-%> @param markerSetColour cell array of colour markers, e.g., {'b';'r';'g'}
-% ======================================================================
 function [hFig ] = animViconMarkersV2( varargin )
+	% Quickly visualise the vicon markers
+	% @author 
+	%
+	% Source: https://github.com/mikedelr/Vicon-2-MATLAB-tools/blob/master/animViconMarkersV2.m
+	%
+	% Example usage:
+	%      animViconMarkers('markerData',markerData,'markerSet',markerSet)
+	%
+	% :param bodys: Body instance(s) to be plotted
+	% :param parts: String(s) of body point(s) to be plotted.
+	%
+	% :param markerData: struct with fields
+
+	%           .Names - a 'containers.Map' java object whose keys are the
+	%                    marker names, and whose values denote the columns
+	%                    in the (.Pos) matrix denote the co-ordinates in R3
+	%                    of the markers (units in mm)
+
+	%           .Pos   - a matrix containing the 3D co-ordinates of each
+	%                    marker
+	% :param markerSet: cell array of size [n_rows, 2 columns]
+	% :param markerSetColour: cell array of colour markers, e.g., {'b';'r';'g'}
+	%
+	% .. Author: - Michael Del Rosario (UNSW GSBME)
+
 bMarkerSet = false;
 bMarkerColours = false;
 markerSet  = [];

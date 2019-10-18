@@ -1,13 +1,14 @@
-% ======================================================================
-%> @brief change reference frame of grBody
-%> Supported changes are vicon -> MIDPEL
-%>
-%> @param obj grBody (self)
-%> @param ref reference frame
-%>
-%> @retval out struct with the difference of pos and ori parameters
-% ======================================================================
 function out = changeRefFrame(obj, ref)
+	% Change reference frame of grBody
+	% Supported changes are vicon -> MIDPEL
+	%
+	% :param obj: grBody (self)
+	% :param ref: reference frame
+	%
+	% :return: out - struct with the difference of pos and ori parameters
+	%
+	% .. Author: - Luke Sy (UNSW GSBME)
+
     if nargin <= 1
         ref = 'MIDPEL';
     end

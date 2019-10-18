@@ -1,14 +1,12 @@
-% ======================================================================
-%> @brief Calculate yaw offset from vicon data
-%> @author Luke Sy (UNSW GSBME)
-%> @date 06 Feb 2019
-%>
-%>
-%> @param obj this XsensBody
-%>
-%> @return out XsensBody class with adjustment sensor data
-% ======================================================================
 function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
+	% Calculate yaw offset from vicon data
+	% 
+	% :param obj: this XsensBody
+	%
+	% :return: out XsensBody class with adjustment sensor data
+	% 
+	% .. Author: - Luke Sy (UNSW GSBME) - 02/06/19
+
     DEGRANGE = (0:0.1:359) - 180;
     out = mocapdb.XsensBody();
     

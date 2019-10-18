@@ -1,18 +1,17 @@
-% ======================================================================
-%> @brief Calculate knee angle from 3P dist
-%> @author Luke Sy (UNSW GSBME)
-%> @date 22 Mar 2019
-%>
-%> @param prox quaternion orientation (n x 4) of the proximal segment
-%> @param angles joint angles in seq order
-%> @param seq (default: YX'Z'')
-%>
-%> @retval dist quaternion orientation (n x 4) of the distal segment
-% ======================================================================
 function [alphaLK, alphaRK, d] = calcKneeAnglesFromMPLARADist(...
                             PELV_CS, LTIB_CS, RTIB_CS, ...
                             dPelvis, dLFemur, dRFemur, dLTibia, dRTibia, ...
                             dMPLADist, dMPRADist)
+	% Calculate knee angle from 3P dist
+	% 
+	% :param prox: quaternion orientation (n x 4) of the proximal segment
+	% :param angles: joint angles in seq order
+	% :param seq: (default: YX'Z'')
+	%
+	% :return: dist quaternion orientation (n x 4) of the distal segment
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 3/22/19
+
     dMPLADist = min(max(dMPLADist, 0), ...
         norm(dPelvis/2*PELV_CS(:,2)+(dLFemur+dLTibia)*LTIB_CS(:,3)));
     dMPRADist = min(max(dMPRADist, 0), ...
