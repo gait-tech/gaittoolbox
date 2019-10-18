@@ -1,20 +1,18 @@
-% ======================================================================
-%> @brief Calculate d_ori of lower body grBody as defined in the Marcard
-%> paper
-%> @author Luke Sy (UNSW GSBME)
-%> @date 7 Dec 2018
-%>
-%> T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
-%> Sparse Inertial Poser: Automatic 3D Human Pose Estimation from Sparse IMUs. 
-%> Eurographics, 36(2)
-%>
-%> @param obj this grBody
-%> @param ref reference grBody to be compared with
-%>
-%> @retval out1 array of d_ori no bias with respect to time
-%> @retval out2 array of bias
-% ======================================================================
 function [out1, out2] = calcDOrinobias(obj, ref)
+	% Calculate d_ori of lower body grBody as defined in the Marcard paper
+	% 
+	% T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
+	% Sparse Inertial Poser: Automatic 3D Human Pose Estimation from Sparse IMUs. 
+	% Eurographics, 36(2)
+	%
+	% :param obj: this grBody
+	% :param ref: reference grBody to be compared with
+	%
+	% :return: out1 - array of d_ori no bias with respect to time
+	% :return: out2 - array of bias
+	%
+	% .. Author: - Luke Sy (UNSW GSBME) - 12/07/18
+
     nameList = {'qLTH', 'qRTH'};
     doriList = {};
     rN = size(obj.qLTH, 1); cN = length(nameList);
@@ -23,8 +21,7 @@ function [out1, out2] = calcDOrinobias(obj, ref)
     for i=1:cN
         n = nameList{i};
         buf = calcEul(quat2rotm(quatmultiply(obj.(n), quatconj(ref.(n)))));
-        bmean = mean(buf, 1);
-        bias(i, :) = mean(buf, 1);
+        bias(i, :) = nanmean(buf, 1);
         dori(:, i) = vecnorm(rad2deg(buf-bias(i, :)), 2, 2);
     end
     out1 = mean(dori, 2);
