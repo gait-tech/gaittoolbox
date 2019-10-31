@@ -155,9 +155,7 @@ function [ xtilde, debug_dat ] = lieekf_3_kmus_v1(x0, P0, ...
 %     knob.cstr.velcstrZStep = 0;
 %     knob.cstr.velcstrY = bitand(knob.acHunDig, 1);
 %     knob.cstr.velcstrZ = bitand(knob.acHunDig, 1);
-    
-    addpath('liese3lib');
-    
+        
     % wOri = struct('RPV', wMP, 'LSK', wLA, 'RSK', wRA);
     g = [0 0 9.81]';        % gravity
     dt = 1/(fOpt.fs);       % assume constant sampling interval

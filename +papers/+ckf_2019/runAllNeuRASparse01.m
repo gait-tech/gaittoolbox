@@ -7,13 +7,15 @@
 
 dir = 'data/neura-sparse01';
 expDir = sprintf('%s/output', dir);
-
-DATARANGE = 1:dataN
+mkdir(expDir);
+mkdir(sprintf('%s/mat', dir));
+addpath('mod-lib');
 
 DEGRANGE = (0:0.1:359) - 180;
 dataList = readtable('+papers/+ckf_2019/data-list.csv');
 dataN = size(dataList, 1);
-    
+DATARANGE = 1:dataN;
+
 options = struct('Pelvis', '00B40B91', ...
     'L_UpLeg', '00B40C45', 'R_UpLeg', '00B40C3C', ...
     'L_LowLeg', '00B40C44', 'R_LowLeg', '00B40C47', ...
