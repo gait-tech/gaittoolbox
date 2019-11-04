@@ -188,7 +188,7 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
                 gfrAcc.(vLabel).(j.kp) = gfrAcc.(vLabel).(j.kp)(sIdx:eIdx,:);
             end
         end
-            
+        %
         for i = bodyKeyList.all
             % gfrAcc from sparse
             gfrAcc.w__sv.(i.kp) = quatrotate(quatconj(W__dataS.(i.x).ori), ...
