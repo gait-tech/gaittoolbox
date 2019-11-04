@@ -1,62 +1,63 @@
-% ======================================================================
-%> @brief Run experiment on an instance of Vicon and Xsens dataset taken at
-%> NeuRA institute
-%> @author Luke Sy
-%> 
-%> Setup parameters:
-%> - label: data instance name (e.g. s1-acting1 or s2-walking1)
-%> - est: filter type to be used.
-%>      - ekfv3: pelib.est.kf_3_kmus_v3
-%>      - pfv1: pelib.est.pf_3_kmus_v1
-%>      - mpfv1: pelib.est.mpf_3_kmus_v1
-%>      - lieekfv1: pelib.est.lieekf_3_kmus_v1
-%>      - lieekfv2: pelib.est.lieekf_3_kmus_v2
-%> - accData: acceleration data to be used
-%>      - w__v: vicon (world frame)
-%>      - w__s: sparse (world frame)
-%>      - v__v: vicon (vicon frame)
-%>      - v__s: sparse (vicon frame)
-%>      - w__x: xsens
-%> - oriData: orientation data to be used
-%>      - w__v: vicon (world frame)
-%>      - w__s: sparse (world frame)
-%>      - v__v: vicon (vicon frame)
-%>      - v__s: sparse (vicon frame)
-%>      - w__x: xsens
-%> - stepDetection: step detection algorithm to be used
-%>      - false: turn off
-%>      - av01: fixed acceleration variance on tibia accData (var = 1)
-%>      - av02: fixed acceleration variance on vicon tibia accData (var = 1)
-%>      - av03: use reviewed step detect file. Dimension similar to dataS
-%> - initSrc: source of sensor to body orientation and position init
-%>      - w__v: vicon (world frame) (default)
-%>      - v__v: vicon (vicon frame)
-%>      - w__x: xsens
-%> - applyMeas: measurement configuration number
-%> - applyCstr: constraint configuration number
-%> - sigmaQAcc: Q acceleration sigma (variance)
-%> - P: initial P matrix
-%>
-%> @param dataS loaded mocapdb.XsensBody
-%> @param dataV loaded mocapdb.ViconBody
-%> @param calibV2W quaternion (1 x 4) transforming vicon frame to world frame
-%> @param calibYawFix mocapdb.XsensBody fix ankle sensor yaw orientation offset
-%> @param calibW2V mocapdb.XsensBody transforming each sensor's world frame
-%>                 to vicon frame. Includes yaw realignment calibration.
-%> @param dataX loaded mocapdb.BVHBody 
-%> @param revStepDetect manually reviewed table if stepL and stepR was detected
-%> @param uwbMeasSigma standard dev of uwb gaussian noise in m
-%> @param name name of the experiment
-%> @param setups list of experiment parameters (struct) to be run. see details above
-%> @param savedir filepath to save .mat output/debug files (optional)
-%> @param startFrame frame number at which the algorithm will start
-%> @param endFrame frame number at which the algorithm will end
-%> @param bias pelvis accelerometer bias in sensor frame
-% ======================================================================
 function results = runNeuRASparse01Experiment(dataS, dataV, ...
                         calibV2W, calibYawFix, calibW2V, ...
                         dataX, revStepDetect, uwbMeasSigma, ...
                         name, setups, savedir, startFrame, endFrame, bias)
+    % Run experiment on an instance of Vicon and Xsens dataset taken at NeuRA institute
+    % 
+    % Setup parameters:
+    % - label: data instance name (e.g. s1-acting1 or s2-walking1)
+    % - est: filter type to be used.
+    %      - ekfv3: pelib.est.kf_3_kmus_v3
+    %      - pfv1: pelib.est.pf_3_kmus_v1
+    %      - mpfv1: pelib.est.mpf_3_kmus_v1
+    %      - lieekfv1: pelib.est.lieekf_3_kmus_v1
+    %      - lieekfv2: pelib.est.lieekf_3_kmus_v2
+    %      - lgckf7sv1: pelib.est.lgcekf7seg_3imus_v1
+    % - accData: acceleration data to be used
+    %      - w__v: vicon (world frame)
+    %      - w__s: sparse (world frame)
+    %      - v__v: vicon (vicon frame)
+    %      - v__s: sparse (vicon frame)
+    %      - w__x: xsens
+    % - oriData: orientation data to be used
+    %      - w__v: vicon (world frame)
+    %      - w__s: sparse (world frame)
+    %      - v__v: vicon (vicon frame)
+    %      - v__s: sparse (vicon frame)
+    %      - w__x: xsens
+    % - stepDetection: step detection algorithm to be used
+    %      - false: turn off
+    %      - av01: fixed acceleration variance on tibia accData (var = 1)
+    %      - av02: fixed acceleration variance on vicon tibia accData (var = 1)
+    %      - av03: use reviewed step detect file. Dimension similar to dataS
+    % - initSrc: source of sensor to body orientation and position init
+    %      - w__v: vicon (world frame) (default)
+    %      - v__v: vicon (vicon frame)
+    %      - w__x: xsens
+    % - applyMeas: measurement configuration number
+    % - applyCstr: constraint configuration number
+    % - sigmaQAcc: Q acceleration sigma (variance)
+    % - P: initial P matrix
+    %
+    %
+    % :param dataS: loaded mocapdb.XsensBody
+    % :param dataV: loaded mocapdb.ViconBody
+    % :param calibV2W: quaternion (1 x 4) transforming vicon frame to world frame
+    % :param calibYawFix: mocapdb.XsensBody fix ankle sensor yaw orientation offset
+    % :param calibW2V: mocapdb.XsensBody transforming each sensor's world frame 
+    %                  to vicon frame. Includes yaw realignment calibration.
+    % :param dataX: loaded mocapdb.BVHBody 
+    % :param revStepDetect: manually reviewed table if stepL and stepR was detected
+    % :param uwbMeasSigma: standard dev of uwb gaussian noise in m
+    % :param name: name of the experiment
+    % :param setups: list of experiment parameters (struct) to be run. see details above
+    % :param savedir: filepath to save .mat output/debug files (optional)
+    % :param startFrame: frame number at which the algorithm will start
+    % :param endFrame: frame number at which the algorithm will end
+    % :param bias: pelvis accelerometer bias in sensor frame
+    % 
+    % .. Author: - Luke Wicent Sy (GSBME, Modified 2019 Oct 31)
+    
     %% Inputs and Input Check
     validateattributes(dataS, {'mocapdb.XsensBody'}, {});
     validateattributes(dataV, {'mocapdb.ViconBody', 'numeric'}, {});
@@ -106,6 +107,20 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
     x0 = {};
     uwbMeas = {};
         
+    %% Helper variables
+    calibYawFixList = ["L_LowLeg", "R_LowLeg", "L_Foot", "R_Foot"];
+    bodyKeyList = struct();
+    bodyKeyList.all = [ ...
+       struct('ks', 'PELV', 'kp', 'MP', 'x', 'Pelvis', 'xs', 'qHips', 'vs', 'qRPV', 'vp', 'MIDPEL'), ...
+       struct('ks', 'LTIB', 'kp', 'LA', 'x', 'L_LowLeg', 'xs', 'qLeftLeg', 'vs', 'qLSK', 'vp', 'LTIO'), ...
+       struct('ks', 'RTIB', 'kp', 'RA', 'x', 'R_LowLeg', 'xs', 'qRightLeg', 'vs', 'qRSK', 'vp', 'RTIO'), ...
+       struct('ks', 'LFT', 'kp', 'LF', 'x', 'L_Foot', 'xs', 'qLeftFoot', 'vs', 'qLFT', 'vp', 'LTIO'), ...
+       struct('ks', 'RFT', 'kp', 'RF', 'x', 'R_Foot', 'xs', 'qRightFoot', 'vs', 'qRFT', 'vp', 'RTIO'), ...
+    ];
+    for i = ["ks", "kp", "x", "vs", "vp"]
+        bodyKeyList.(i) = arrayfun(@(x) x.(i), bodyKeyList.all, 'UniformOutput', false);
+    end
+    
     %% Preprocessing in world frame
     if ~isempty(dataV) && ~isempty(calibV2W)
         nSamples = min(dataV.nSamples, dataS.nSamples);
@@ -114,8 +129,11 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         W__dataS = dataS.getSubset(1:nSamples);
         W__dataS.Pelvis.acc = W__dataS.Pelvis.acc - bias.w__v;
         % apply yaw offset to orientation
-        W__dataS.L_LowLeg.ori = quatmultiply(calibYawFix.L_LowLeg.ori, W__dataS.L_LowLeg.ori);
-        W__dataS.R_LowLeg.ori = quatmultiply(calibYawFix.R_LowLeg.ori, W__dataS.R_LowLeg.ori);
+        for i=calibYawFixList
+            if ~isempty(calibYawFix.(i))
+                W__dataS.(i).ori = quatmultiply(calibYawFix.(i).ori, W__dataS.(i).ori);
+            end
+        end
         
         sIdx = max(W__dataV.getStartIndex()+1, startFrame);
         eIdx = min(length(W__dataV.PELV(:,1)) - 1, endFrame);
@@ -124,90 +142,69 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         
         viconCalibSB = W__dataS.calcCalibSB(W__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));       
         %% orientation and angular velocity
-        % Orientation of body in world frame as obtained from sparse sensor
-        qPelvisEst0 = quatmultiply(W__dataS.Pelvis.ori, quatconj(viconCalibSB.Pelvis.ori));
-        qLankleEst0 = quatmultiply(W__dataS.L_LowLeg.ori, quatconj(viconCalibSB.L_LowLeg.ori));
-        qRankleEst0 = quatmultiply(W__dataS.R_LowLeg.ori, quatconj(viconCalibSB.R_LowLeg.ori));
-        qOri.w__sv.PELV = qPelvisEst0(sIdx:eIdx, :);
-        qOri.w__sv.LTIB = qLankleEst0(sIdx:eIdx, :);
-        qOri.w__sv.RTIB = qRankleEst0(sIdx:eIdx, :);
-        
-        % https://math.stackexchange.com/questions/2282938/converting-from-quaternion-to-angular-velocity-then-back-to-quaternion
-        % Angular velocity of body in body frame as obtained from sparse sensor
-        wbodyOri.w__sv.PELV = quatrotate(quatconj(viconCalibSB.Pelvis.ori), W__dataS.Pelvis.gyr);
-        wbodyOri.w__sv.PELV = wbodyOri.w__sv.PELV(sIdx:eIdx, :);
-        wbodyOri.w__sv.LTIB = quatrotate(quatconj(viconCalibSB.L_LowLeg.ori), W__dataS.L_LowLeg.gyr);
-        wbodyOri.w__sv.LTIB = wbodyOri.w__sv.LTIB(sIdx:eIdx, :);
-        wbodyOri.w__sv.RTIB = quatrotate(quatconj(viconCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.gyr);
-        wbodyOri.w__sv.RTIB = wbodyOri.w__sv.RTIB(sIdx:eIdx, :);
-        
-        % Orientation of body in world frame as obtained from vicon input
-        qOri.w__v.PELV = W__dataV.qRPV(sIdx+1:eIdx+1, :);
-        qOri.w__v.LTIB = W__dataV.qLSK(sIdx+1:eIdx+1, :);
-        qOri.w__v.RTIB = W__dataV.qRSK(sIdx+1:eIdx+1, :);
-        
         % Angular velocity of body in body frame as obtained from vicon input
         W__viconBody = W__dataV.togrBody(1:nSamples, {'name', 'act', 'oriUnit', 'deg', ...
                          'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
                          'xyzColor', {'m', 'y', 'c'}});
-        angvel = W__viconBody.calcSegAngVel({'qRPV', 'qLSK', 'qRSK'}, 'B');
-        wbodyOri.w__v.PELV = angvel.qRPV(sIdx+1:eIdx+1,:);
-        wbodyOri.w__v.LTIB = angvel.qLSK(sIdx+1:eIdx+1,:);
-        wbodyOri.w__v.RTIB = angvel.qRSK(sIdx+1:eIdx+1,:);
-                
+        % angvel = W__viconBody.calcSegAngVel({'qRPV', 'qLSK', 'qRSK'}, 'B');
+        angvel = W__viconBody.calcSegAngVel(bodyKeyList.vs, 'B');
+        for i=bodyKeyList.all
+            % Orientation of body in world frame as obtained from sparse sensor
+            qBufferEst0 = quatmultiply(W__dataS.(i.x).ori, quatconj(viconCalibSB.(i.x).ori));
+            qOri.w__sv.(i.ks) = qBufferEst0(sIdx:eIdx, :);
+            
+            % https://math.stackexchange.com/questions/2282938/converting-from-quaternion-to-angular-velocity-then-back-to-quaternion
+            % Angular velocity of body in body frame as obtained from sparse sensor
+            wbodyOri.w__sv.(i.ks) = quatrotate(quatconj(viconCalibSB.(i.x).ori), W__dataS.(i.x).gyr);
+            wbodyOri.w__sv.(i.ks) = wbodyOri.w__sv.(i.ks)(sIdx:eIdx, :);
+            
+            % Orientation of body in world frame as obtained from vicon input
+            qOri.w__v.(i.ks) = W__dataV.(i.vs)(sIdx+1:eIdx+1, :);
+            
+            % Angular velocity of body in body frame as obtained from vicon input
+            wbodyOri.w__v.(i.ks) = angvel.(i.vs)(sIdx+1:eIdx+1,:);
+        end
+                                      
         %% position, velocity, acceleration
-        vel = W__viconBody.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
-        acc = W__viconBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
+        vel = W__viconBody.calcJointVel(bodyKeyList.vp); % {'MIDPEL', 'LTIO', 'RTIO'}
+        acc = W__viconBody.calcJointAcc(bodyKeyList.vp); % {'MIDPEL', 'LTIO', 'RTIO'}
 
         x0.w__v = [W__viconBody.MIDPEL(sIdx,:) vel.MIDPEL(sIdx,:) zeros(1,4) ...
                    W__viconBody.LTIO(sIdx,:) vel.LTIO(sIdx,:) zeros(1,4) ...
                    W__viconBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]';     
         
+        gfrAcc.w__sv = {};
+        % gfrAcc from filtered sparse
+        fc = 10;
+        [lpf_b, lpf_a] = butter(6, fc/(fs/2));
+
         vsigma = unique([cellfun(@(x) x.accDataNoise, setups), 0]);
         randnN = size(acc.MIDPEL, 1);
         for i = 1:length(vsigma)
             vLabel = getVLabel('w__v', vsigma(i));
             gfrAcc.(vLabel) = {};
-            gfrAcc.(vLabel).MP = acc.MIDPEL + randn(randnN,3).*vsigma(i);
-            gfrAcc.(vLabel).MP = gfrAcc.(vLabel).MP(sIdx:eIdx,:);
-            gfrAcc.(vLabel).LA = acc.LTIO + randn(randnN,3).*vsigma(i);
-            gfrAcc.(vLabel).LA = gfrAcc.(vLabel).LA(sIdx:eIdx,:);
-            gfrAcc.(vLabel).RA = acc.RTIO + randn(randnN,3).*vsigma(i);
-            gfrAcc.(vLabel).RA = gfrAcc.(vLabel).RA(sIdx:eIdx,:);
+            for j = bodyKeyList.all
+                gfrAcc.(vLabel).(j.kp) = acc.(j.vp) + randn(randnN,3).*vsigma(i);
+                gfrAcc.(vLabel).(j.kp) = gfrAcc.(vLabel).(j.kp)(sIdx:eIdx,:);
+            end
         end
+            
+        for i = bodyKeyList.all
+            % gfrAcc from sparse
+            gfrAcc.w__sv.(i.kp) = quatrotate(quatconj(W__dataS.(i.x).ori), ...
+                                    W__dataS.(i.x).acc) - [0 0 9.81];
+            gfrAcc.w__sv.(i.kp) = gfrAcc.w__sv.(i.kp)(sIdx:eIdx,:);
 
-        % gfrAcc from sparse
-        gfrAcc.w__sv = {};
-        gfrAcc.w__sv.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
-                                W__dataS.Pelvis.acc) - [0 0 9.81];
-        gfrAcc.w__sv.MP = gfrAcc.w__sv.MP(sIdx:eIdx,:);
-        gfrAcc.w__sv.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
-                                W__dataS.L_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.w__sv.LA = gfrAcc.w__sv.LA(sIdx:eIdx,:);
-        gfrAcc.w__sv.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
-                                W__dataS.R_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.w__sv.RA = gfrAcc.w__sv.RA(sIdx:eIdx,:);
-        
-        % gfrAcc from filtered sparse
-        fc = 10;
-        [lpf_b, lpf_a] = butter(6, fc/(fs/2));
-        gfrAcc.w__sfv.MP = filter(lpf_b, lpf_a, gfrAcc.w__sv.MP);
-        gfrAcc.w__sfv.LA = filter(lpf_b, lpf_a, gfrAcc.w__sv.LA);
-        gfrAcc.w__sfv.RA = filter(lpf_b, lpf_a, gfrAcc.w__sv.RA);
-    
-        %% body acceleration
-        bodyAcc.w__v.MP = quatrotate(qOri.w__v.PELV, gfrAcc.w__v.MP + [0 0 9.81]);
-        bodyAcc.w__v.LA = quatrotate(qOri.w__v.LTIB, gfrAcc.w__v.LA + [0 0 9.81]);
-        bodyAcc.w__v.RA = quatrotate(qOri.w__v.RTIB, gfrAcc.w__v.RA + [0 0 9.81]);
+            % gfrAcc from filtered sparse
+            gfrAcc.w__sfv.(i.kp) = filter(lpf_b, lpf_a, gfrAcc.w__sv.(i.kp));
 
-        bodyAcc.w__sv.MP = quatrotate(quatconj(viconCalibSB.Pelvis.ori), W__dataS.Pelvis.acc);
-        bodyAcc.w__sv.MP = bodyAcc.w__sv.MP(sIdx:eIdx, :);
-        bodyAcc.w__sv.LA = quatrotate(quatconj(viconCalibSB.L_LowLeg.ori), W__dataS.L_LowLeg.acc);
-        bodyAcc.w__sv.LA = bodyAcc.w__sv.LA(sIdx:eIdx, :);
-        bodyAcc.w__sv.RA = quatrotate(quatconj(viconCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.acc);
-        bodyAcc.w__sv.RA = bodyAcc.w__sv.RA(sIdx:eIdx, :);
-        
-        
+            %% body acceleration
+            bodyAcc.w__sv.(i.kp) = quatrotate(quatconj(viconCalibSB.(i.x).ori), W__dataS.(i.x).acc);
+            bodyAcc.w__sv.(i.kp) = bodyAcc.w__sv.(i.kp)(sIdx:eIdx, :);
+            
+            bodyAcc.w__v.(i.kp) = quatrotate(qOri.w__v.(i.ks), gfrAcc.w__v.(i.kp) + [0 0 9.81]);
+        end
+            
         % UWB measurements
         %  Simulate uwb measurement by generating pairwise combinations, using the
         %  origin of each bone segment as the root point
@@ -251,67 +248,69 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         allIdx.v__v = idx;
         
         viconCalibSB = V__dataS.calcCalibSB(V__dataV.togrBody(sIdx+1:sIdx+1, {}), sIdx(1));       
-        %% orientation
-        % orientation of body from sparse sensor
-        qPelvisEst0 = quatmultiply(V__dataS.Pelvis.ori, quatconj(viconCalibSB.Pelvis.ori));
-        qLankleEst0 = quatmultiply(V__dataS.L_LowLeg.ori, quatconj(viconCalibSB.L_LowLeg.ori));
-        qRankleEst0 = quatmultiply(V__dataS.R_LowLeg.ori, quatconj(viconCalibSB.R_LowLeg.ori));
-        qOri.v__sv.PELV = qPelvisEst0(sIdx:eIdx, :);
-        qOri.v__sv.LTIB = qLankleEst0(sIdx:eIdx, :);
-        qOri.v__sv.RTIB = qRankleEst0(sIdx:eIdx, :);
-        
-        % orientation of body from vicon
-        qOri.v__v.PELV = V__dataV.qRPV(sIdx+1:eIdx+1, :);
-        qOri.v__v.LTIB = V__dataV.qLSK(sIdx+1:eIdx+1, :);
-        qOri.v__v.RTIB = V__dataV.qRSK(sIdx+1:eIdx+1, :);
-        
-        %% position, velocity, acceleration
+        %% orientation and angular velocity
+        % Angular velocity of body in body frame as obtained from vicon input
         V__viconBody = V__dataV.togrBody(1:nSamples, {'name', 'act', 'oriUnit', 'deg', ...
                          'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
-                         'xyzColor', {'m', 'y', 'c'}});  
-        vel = V__viconBody.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
-        acc = V__viconBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
+                         'xyzColor', {'m', 'y', 'c'}});
+        angvel = V__viconBody.calcSegAngVel(bodyKeyList.vs, 'B');
+        
+        for i=bodyKeyList.all
+            % Orientation of body in world frame as obtained from sparse sensor
+            qBufferEst0 = quatmultiply(V__dataS.(i.x).ori, quatconj(viconCalibSB.(i.x).ori));
+            qOri.v__sv.(i.ks) = qBufferEst0(sIdx:eIdx, :);
 
+            % https://math.stackexchange.com/questions/2282938/converting-from-quaternion-to-angular-velocity-then-back-to-quaternion
+            % Angular velocity of body in body frame as obtained from sparse sensor
+            wbodyOri.v__sv.(i.ks) = quatrotate(quatconj(viconCalibSB.(i.x).ori), V__dataS.(i.x).gyr);
+            wbodyOri.v__sv.(i.ks) = wbodyOri.v__sv.(i.ks)(sIdx:eIdx, :);
+
+            % Orientation of body in world frame as obtained from vicon input
+            qOri.v__v.(i.ks) = V__dataV.(i.vs)(sIdx+1:eIdx+1, :);
+
+            % Angular velocity of body in body frame as obtained from vicon input
+            wbodyOri.v__v.(i.ks) = angvel.(i.vs)(sIdx+1:eIdx+1,:);
+        end
+        
+        %% position, velocity, acceleration
+        vel = V__viconBody.calcJointVel(bodyKeyList.vp); % {'MIDPEL', 'LTIO', 'RTIO'}
+        acc = V__viconBody.calcJointAcc(bodyKeyList.vp); % {'MIDPEL', 'LTIO', 'RTIO'}
         x0.v__v = [V__viconBody.MIDPEL(sIdx,:) vel.MIDPEL(sIdx,:) zeros(1,4) ...
                    V__viconBody.LTIO(sIdx,:) vel.LTIO(sIdx,:) zeros(1,4) ...
-                   V__viconBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]';     
-
+                   V__viconBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]';        
+               
         vsigma = unique([cellfun(@(x) x.accDataNoise, setups), 0]);
         randnN = size(acc.MIDPEL, 1);
         for i = 1:length(vsigma)
             vLabel = getVLabel('v__v', vsigma(i));
             gfrAcc.(vLabel) = {};
-            gfrAcc.(vLabel).MP = acc.MIDPEL + randn(randnN,3).*vsigma(i);
-            gfrAcc.(vLabel).MP = gfrAcc.(vLabel).MP(sIdx:eIdx,:);
-            gfrAcc.(vLabel).LA = acc.LTIO + randn(randnN,3).*vsigma(i);
-            gfrAcc.(vLabel).LA = gfrAcc.(vLabel).LA(sIdx:eIdx,:);
-            gfrAcc.(vLabel).RA = acc.RTIO + randn(randnN,3).*vsigma(i);
-            gfrAcc.(vLabel).RA = gfrAcc.(vLabel).RA(sIdx:eIdx,:);
-        end
-
-        % gfrAcc from sparse
-        gfrAcc.v__sv = {};
-        gfrAcc.v__sv.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
-                                W__dataS.Pelvis.acc) - [0 0 9.81];
-        gfrAcc.v__sv.MP = gfrAcc.v__sv.MP(sIdx:eIdx,:);
-        gfrAcc.v__sv.MP = quatrotate(quatconj(calibW2V.Pelvis.ori), gfrAcc.v__sv.MP);
+            for j = bodyKeyList.all
+                gfrAcc.(vLabel).(j.kp) = acc.(j.vp) + randn(randnN,3).*vsigma(i);
+                gfrAcc.(vLabel).(j.kp) = gfrAcc.(vLabel).(j.kp)(sIdx:eIdx,:);
+            end
+        end        
         
-        gfrAcc.v__sv.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
-                                W__dataS.L_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.v__sv.LA = gfrAcc.v__sv.LA(sIdx:eIdx,:);
-        gfrAcc.v__sv.LA = quatrotate(quatconj(calibW2V.L_LowLeg.ori), gfrAcc.v__sv.LA);
-        gfrAcc.v__sv.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
-                                W__dataS.R_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.v__sv.RA = gfrAcc.v__sv.RA(sIdx:eIdx,:);
-        gfrAcc.v__sv.RA = quatrotate(quatconj(calibW2V.R_LowLeg.ori), gfrAcc.v__sv.RA);
-               
+        gfrAcc.v__sv = {};
         % gfrAcc from filtered sparse
         fc = 10;
         [lpf_b, lpf_a] = butter(6, fc/(fs/2));
-        gfrAcc.v__sfv.MP = filter(lpf_b, lpf_a, gfrAcc.v__sv.MP);
-        gfrAcc.v__sfv.LA = filter(lpf_b, lpf_a, gfrAcc.v__sv.LA);
-        gfrAcc.v__sfv.RA = filter(lpf_b, lpf_a, gfrAcc.v__sv.RA);
-        
+        for i = bodyKeyList.all
+            % gfrAcc from sparse
+            gfrAcc.v__sv.(i.kp) = quatrotate(quatconj(W__dataS.(i.x).ori), ...
+                                    W__dataS.(i.x).acc) - [0 0 9.81];
+            gfrAcc.v__sv.(i.kp) = gfrAcc.v__sv.(i.kp)(sIdx:eIdx,:);
+            gfrAcc.v__sv.(i.kp) = quatrotate(quatconj(calibW2V.(i.x).ori), gfrAcc.v__sv.(i.kp));
+                    
+            % gfrAcc from filtered sparse
+            gfrAcc.v__sfv.(i.kp) = filter(lpf_b, lpf_a, gfrAcc.v__sv.(i.kp));
+
+            %% body acceleration
+            bodyAcc.v__sv.(i.kp) = quatrotate(quatconj(viconCalibSB.(i.x).ori), V__dataS.(i.x).acc);
+            bodyAcc.v__sv.(i.kp) = bodyAcc.v__sv.(i.kp)(sIdx:eIdx, :);
+            
+            bodyAcc.v__v.(i.kp) = quatrotate(qOri.v__v.(i.ks), gfrAcc.v__v.(i.kp) + [0 0 9.81]);
+        end
+               
         % UWB measurements
         %  Simulate uwb measurement by generating pairwise combinations, using the
         %  origin of each bone segment as the root point
@@ -350,86 +349,72 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
         % order is not important as calibW2V fixes only the ankle yaw offset
         W__dataS.Pelvis.acc = W__dataS.Pelvis.acc - bias.w__x; 
         % apply yaw offset to orientation
-        W__dataS.L_LowLeg.ori = quatmultiply(calibYawFix.L_LowLeg.ori, W__dataS.L_LowLeg.ori);
-        W__dataS.R_LowLeg.ori = quatmultiply(calibYawFix.R_LowLeg.ori, W__dataS.R_LowLeg.ori);
-        
+        for i=calibYawFixList
+            if ~isempty(calibYawFix.(i))
+                W__dataS.(i).ori = quatmultiply(calibYawFix.(i).ori, W__dataS.(i).ori);
+            end
+        end
+       
         sIdx = startFrame;
         eIdx = min(length(W__dataX.Hips(:,1)) - 1, endFrame);
         idx = sIdx:eIdx; idx0 = 1:(eIdx-sIdx+1);
         allIdx.w__x = idx;
         xsensCalibSB = W__dataS.calcCalibSB(W__dataX.togrBody(sIdx+1:sIdx+1, {}), sIdx(1)); 
-                
-        % orientation of body from sparse sensor
-        qPelvisEst0 = quatmultiply(W__dataS.Pelvis.ori, quatconj(xsensCalibSB.Pelvis.ori));
-        qLankleEst0 = quatmultiply(W__dataS.L_LowLeg.ori, quatconj(xsensCalibSB.L_LowLeg.ori));
-        qRankleEst0 = quatmultiply(W__dataS.R_LowLeg.ori, quatconj(xsensCalibSB.R_LowLeg.ori));
-        qOri.w__sx.PELV = qPelvisEst0(sIdx:eIdx, :);
-        qOri.w__sx.LTIB = qLankleEst0(sIdx:eIdx, :);
-        qOri.w__sx.RTIB = qRankleEst0(sIdx:eIdx, :);
-                
-        % https://math.stackexchange.com/questions/2282938/converting-from-quaternion-to-angular-velocity-then-back-to-quaternion
-        % Angular velocity of body in body frame as obtained from sparse sensor
-        wbodyOri.w__sx.PELV = quatrotate(quatconj(xsensCalibSB.Pelvis.ori), W__dataS.Pelvis.gyr);
-        wbodyOri.w__sx.PELV = wbodyOri.w__sx.PELV(sIdx:eIdx, :);
-        wbodyOri.w__sx.LTIB = quatrotate(quatconj(xsensCalibSB.L_LowLeg.ori), W__dataS.L_LowLeg.gyr);
-        wbodyOri.w__sx.LTIB = wbodyOri.w__sx.LTIB(sIdx:eIdx, :);
-        wbodyOri.w__sx.RTIB = quatrotate(quatconj(xsensCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.gyr);
-        wbodyOri.w__sx.RTIB = wbodyOri.w__sx.RTIB(sIdx:eIdx, :);
         
-        % orientation of body from xsens
-        qOri.w__x.PELV = W__dataX.qHips(sIdx:eIdx, :);
-        qOri.w__x.LTIB = W__dataX.qLeftLeg(sIdx:eIdx, :);
-        qOri.w__x.RTIB = W__dataX.qRightLeg(sIdx:eIdx, :);
-               
+        %% orientation and angular velocity
         % Angular velocity of body in body frame as obtained from vicon input
         W__xsensBody = W__dataX.togrBody(1:nSamples, {'name', 'xsens', 'oriUnit', 'deg', ...
                              'lnSymbol', '-', 'ptSymbol', '*', 'fs', fs, ...
                              'xyzColor', {'m', 'y', 'c'}}); 
-        angvel = W__xsensBody.calcSegAngVel({'qRPV', 'qLSK', 'qRSK'}, 'B');
-        wbodyOri.w__x.PELV = angvel.qRPV(sIdx:eIdx,:);
-        wbodyOri.w__x.LTIB = angvel.qLSK(sIdx:eIdx,:);
-        wbodyOri.w__x.RTIB = angvel.qRSK(sIdx:eIdx,:);
+        angvel = W__xsensBody.calcSegAngVel(bodyKeyList.vs, 'B');
         
-        % Position, Velocity, Acceleration
-        % gfrAcc from xsens
-        vel = W__xsensBody.calcJointVel({'MIDPEL', 'LTIO', 'RTIO'});
-        acc = W__xsensBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
+        for i=bodyKeyList.all
+            % Orientation of body in world frame as obtained from sparse sensor
+            qBufferEst0 = quatmultiply(W__dataS.(i.x).ori, quatconj(xsensCalibSB.(i.x).ori));
+            qOri.w__sx.(i.ks) = qBufferEst0(sIdx:eIdx, :);
 
+            % https://math.stackexchange.com/questions/2282938/converting-from-quaternion-to-angular-velocity-then-back-to-quaternion
+            % Angular velocity of body in body frame as obtained from sparse sensor
+            wbodyOri.w__sx.(i.ks) = quatrotate(quatconj(xsensCalibSB.(i.x).ori), W__dataS.(i.x).gyr);
+            wbodyOri.w__sx.(i.ks) = wbodyOri.w__sx.(i.ks)(sIdx:eIdx, :);
+
+            % Orientation of body in world frame as obtained from vicon input
+            qOri.w__x.(i.ks) = W__dataX.(i.xs)(sIdx:eIdx, :);
+
+            % Angular velocity of body in body frame as obtained from vicon input
+            wbodyOri.w__x.(i.ks) = angvel.(i.vs)(sIdx:eIdx,:);
+        end               
+       
+        %% position, velocity, acceleration
+        vel = W__xsensBody.calcJointVel(bodyKeyList.vp); % {'MIDPEL', 'LTIO', 'RTIO'}
+        acc = W__xsensBody.calcJointAcc(bodyKeyList.vp); % {'MIDPEL', 'LTIO', 'RTIO'}
+        
         x0.w__x = [W__xsensBody.MIDPEL(sIdx,:) vel.MIDPEL(sIdx,:) zeros(1,4) ...
                    W__xsensBody.LTIO(sIdx,:) vel.LTIO(sIdx,:) zeros(1,4) ...
-                   W__xsensBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]';  
-        
-        gfrAcc.w__x = {};
-        gfrAcc.w__x.MP = acc.MIDPEL;
-        gfrAcc.w__x.MP = gfrAcc.w__x.MP(sIdx:eIdx,:);
-        gfrAcc.w__x.LA = acc.LTIO;
-        gfrAcc.w__x.LA = gfrAcc.w__x.LA(sIdx:eIdx,:);
-        gfrAcc.w__x.RA = acc.RTIO;
-        gfrAcc.w__x.RA = gfrAcc.w__x.RA(sIdx:eIdx,:);
-        
-        % gfrAcc from sparse
-        gfrAcc.w__sx = {};
-        gfrAcc.w__sx.MP = quatrotate(quatconj(W__dataS.Pelvis.ori), ...
-                                W__dataS.Pelvis.acc) - [0 0 9.81];
-        gfrAcc.w__sx.MP = gfrAcc.w__sx.MP(sIdx:eIdx,:);
-        gfrAcc.w__sx.LA = quatrotate(quatconj(W__dataS.L_LowLeg.ori), ...
-                                W__dataS.L_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.w__sx.LA = gfrAcc.w__sx.LA(sIdx:eIdx,:);
-        gfrAcc.w__sx.RA = quatrotate(quatconj(W__dataS.R_LowLeg.ori), ...
-                                W__dataS.R_LowLeg.acc) - [0 0 9.81];
-        gfrAcc.w__sx.RA = gfrAcc.w__sx.RA(sIdx:eIdx,:);
-        
-        %% body acceleration
-        bodyAcc.w__x.MP = quatrotate(qOri.w__x.PELV, gfrAcc.w__x.MP + [0 0 9.81]);
-        bodyAcc.w__x.LA = quatrotate(qOri.w__x.LTIB, gfrAcc.w__x.LA + [0 0 9.81]);
-        bodyAcc.w__x.RA = quatrotate(qOri.w__x.RTIB, gfrAcc.w__x.RA + [0 0 9.81]);
+                   W__xsensBody.RTIO(sIdx,:) vel.RTIO(sIdx,:) zeros(1,4)]'; 
 
-        bodyAcc.w__sx.MP = quatrotate(quatconj(xsensCalibSB.Pelvis.ori), W__dataS.Pelvis.acc);
-        bodyAcc.w__sx.MP = bodyAcc.w__sx.MP(sIdx:eIdx, :);
-        bodyAcc.w__sx.LA = quatrotate(quatconj(xsensCalibSB.L_LowLeg.ori), W__dataS.L_LowLeg.acc);
-        bodyAcc.w__sx.LA = bodyAcc.w__sx.LA(sIdx:eIdx, :);
-        bodyAcc.w__sx.RA = quatrotate(quatconj(xsensCalibSB.R_LowLeg.ori), W__dataS.R_LowLeg.acc);
-        bodyAcc.w__sx.RA = bodyAcc.w__sx.RA(sIdx:eIdx, :);
+        gfrAcc.w__x = {}; gfrAcc.w__sx = {};
+        % gfrAcc from filtered sparse
+        fc = 10;
+        [lpf_b, lpf_a] = butter(6, fc/(fs/2));
+        for i = bodyKeyList.all
+            gfrAcc.w__x.(i.kp) = acc.(i.vp);
+            gfrAcc.w__x.(i.kp) = gfrAcc.w__x.(i.kp)(sIdx:eIdx,:);
+        
+            % gfrAcc from sparse
+            gfrAcc.w__sx.(i.kp) = quatrotate(quatconj(W__dataS.(i.x).ori), ...
+                                    W__dataS.(i.x).acc) - [0 0 9.81];
+            gfrAcc.w__sx.(i.kp) = gfrAcc.w__sx.(i.kp)(sIdx:eIdx,:);
+
+            % gfrAcc from filtered sparse
+            gfrAcc.w__sfx.(i.kp) = filter(lpf_b, lpf_a, gfrAcc.w__sx.(i.kp));
+
+            %% body acceleration
+            bodyAcc.w__sx.(i.kp) = quatrotate(quatconj(xsensCalibSB.(i.x).ori), W__dataS.(i.x).acc);
+            bodyAcc.w__sx.(i.kp) = bodyAcc.w__sx.(i.kp)(sIdx:eIdx, :);
+
+            bodyAcc.w__x.(i.kp) = quatrotate(qOri.w__x.(i.ks), gfrAcc.w__x.(i.kp) + [0 0 9.81]);
+        end
         
         % UWB measurements
         %  Simulate uwb measurement by generating pairwise combinations, using the
@@ -862,6 +847,77 @@ function results = runNeuRASparse01Experiment(dataS, dataV, ...
                        'qLSK', rotm2quat(x_pos_v2.W_R_LS(:,:,idx1)), ...
                        'qRSK', rotm2quat(x_pos_v2.W_R_RS(:,:,idx1)));
                 end
+                estState = x_pos_v2;
+                estState2 = t_dat_v2;
+            elseif strcmp(cs.est, 'lgckf7sv1')
+                v3Options = struct('fs', fs, 'applyPred', cs.applyPred, ...
+                  'applyMeas', cs.applyMeas, 'applyCstr', cs.applyCstr);
+                csx0(07:10) = csQOri.PELV(1,:)';
+                csx0(17:20) = csQOri.LTIB(1,:)';
+                csx0(27:30) = csQOri.RTIB(1,:)';
+                
+                idx1EndIdx = idx0(end)+1;
+                if ~(strcmp(cs.oriData, 'w__s') || strcmp(cs.oriData, 'v__s'))
+                    idx1EndIdx = min(find(isnan(csQOri.PELV(:)), 1), idx1EndIdx);
+                    idx1EndIdx = min(find(isnan(csQOri.LTIB(:)), 1), idx1EndIdx);
+                    idx1EndIdx = min(find(isnan(csQOri.RTIB(:)), 1), idx1EndIdx);
+                end                             
+                if ~( strcmp(cs.accData, 'w__s') || strcmp(cs.accData, 'v__s') || ...
+                   strcmp(cs.accData, 'w__sf') || strcmp(cs.accData, 'v__sf') )
+                    idx1EndIdx = min(find(isnan(csBodyAcc.MP(:)), 1), idx1EndIdx);
+                    idx1EndIdx = min(find(isnan(csBodyAcc.LA(:)), 1), idx1EndIdx);
+                    idx1EndIdx = min(find(isnan(csBodyAcc.RA(:)), 1), idx1EndIdx);
+                end
+                if isempty(idx1EndIdx)
+                    idx1 = idx0;
+                else 
+                    idx1 = idx0(1):idx0(idx1EndIdx-1);
+                end
+                
+                body = struct('PV_d', d_pelvis, ...
+                              'LT_d', d_lfemur, 'RT_d', d_rfemur, ...
+                              'LS_d', d_ltibia, 'RS_d', d_rtibia);
+                tmpBodyAcc = struct('PV', csBodyAcc.MP(idx1,:), ...
+                                 'LS', csBodyAcc.LA(idx1,:), ...
+                                 'RS', csBodyAcc.RA(idx1,:));
+                tmpStep = struct('PV', bIsStatMP(idx1,:), ...
+                                 'LS', bIsStatLA(idx1,:), 'RS', bIsStatRA(idx1,:));
+                tmpQOri = struct('PV', quat2rotm(csQOri.PELV(idx1,:)), ...
+                                 'LS', quat2rotm(csQOri.LTIB(idx1,:)), ...
+                                 'RS', quat2rotm(csQOri.RTIB(idx1,:)) );
+            	tmpWbody = struct('PV', csBodyWOri.PELV(idx1,:), ...
+                                  'LS', csBodyWOri.LTIB(idx1,:), ...
+                                  'RS', csBodyWOri.RTIB(idx1,:));
+
+                [ x_pos_v2, t_dat_v2 ] = pelib.est.lgcekf7seg_3imus_v1( ...
+                    csx0, cs.P, tmpBodyAcc, tmpStep, tmpQOri, tmpWbody, ...
+                    body, uwbMeas.(cs.initSrc), v3Options);
+
+%                 idx1EndIdx = find(any(isnan(x_pos_v2.vec), 1));
+%                 if isempty(idx1EndIdx)
+%                     idx1 = idx0;
+%                 else 
+%                     idx1 = idx0(1):idx0(idx1EndIdx-1); 
+%                     csActBody = csActBody.getSubset(idx1);
+%                     csActBodyRel = csActBodyRel.getSubset(idx1);
+%                     disp('NaN found in estimator result. Only evaluating until the last non NaN value');
+%                 end
+                
+%                 estBody = pelib.grBody('name', 'est', 'posUnit', 'm', 'oriUnit', 'deg', ...
+%                    'lnSymbol', '--', 'ptSymbol', 'o', 'frame', 'world', ...
+%                    'xyzColor', {'r', 'g', 'b'}, 'fs', fs, ...
+%                    'MIDPEL', squeeze(x_pos_v2.W_T_PV(1:3,4,idx1))', ...
+%                    'LFEP', t_dat_v2.LFEP(idx1, :), ...
+%                    'LFEO', t_dat_v2.LFEO(idx1, :), ...
+%                    'LTIO', squeeze(x_pos_v2.W_T_LS(1:3,4,idx1))', ...
+%                    'RFEP', t_dat_v2.RFEP(idx1, :), ...
+%                    'RFEO', t_dat_v2.RFEO(idx1, :), ...
+%                    'RTIO', squeeze(x_pos_v2.W_T_RS(1:3,4,idx1))', ...
+%                    'qRPV', rotm2quat(x_pos_v2.W_T_PV(1:3,1:3,idx1)), ...
+%                    'qLTH', t_dat_v2.qLTH(idx1, :), ...
+%                    'qRTH', t_dat_v2.qRTH(idx1, :), ...
+%                    'qLSK', rotm2quat(x_pos_v2.W_T_LS(1:3,1:3,idx1)), ...
+%                    'qRSK', rotm2quat(x_pos_v2.W_T_RS(1:3,1:3,idx1)));
                 estState = x_pos_v2;
                 estState2 = t_dat_v2;
             end
