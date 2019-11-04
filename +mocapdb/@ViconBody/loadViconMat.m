@@ -79,6 +79,7 @@ function obj = loadViconMat(fname)
     RSHK_CS(:, 3, :) = reshape(RSHK_z', 3, 1, n);
     obj.qRSK = rotm2quat(RSHK_CS);
     
+    % https://docs.vicon.com/display/Nexus25/Plug-in+Gait+output+specification#Plug-inGaitoutputspecification-Foot
     LAB_z = zeros(n, 3);
     LAB_z(:, 3) = 1;
     LFT_c = LHEE(:, 1:3) - LTOE(:, 1:3);
@@ -92,6 +93,7 @@ function obj = loadViconMat(fname)
     LFT_CS(:, 3, :) = reshape(LFT_z', 3, 1, n);
     obj.qLFT = rotm2quat(LFT_CS);
     
+    % https://docs.vicon.com/display/Nexus25/Plug-in+Gait+output+specification#Plug-inGaitoutputspecification-Foot
     RFT_c = RHEE(:, 1:3) - RTOE(:, 1:3);
     RFT_c = RFT_c ./ vecnorm(RFT_c, 2, 2);
     RFT_z = cross(cross(LAB_z, RFT_c, 2), LAB_z, 2);
