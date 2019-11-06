@@ -22,13 +22,17 @@ function out = toWorldFrame(obj, pos, ori)
     
     posList = obj.posList;
     for i=1:length(posList)
-        out.(posList{i}) = quatrotate(quatconj(ori), ...
-            obj.(posList{i})) + pos;
+        if(~isempty(obj.(posList{i})))
+            out.(posList{i}) = quatrotate(quatconj(ori), ...
+                obj.(posList{i})) + pos;
+        end
     end
     
     oriList = obj.oriList;
     for i=1:length(oriList)
-        out.(oriList{i}) = quatmultiply(ori, ...
-            obj.(oriList{i}));
+        if(~isempty(obj.(oriList{i})))
+            out.(oriList{i}) = quatmultiply(ori, ...
+                obj.(oriList{i}));
+        end
     end
 end

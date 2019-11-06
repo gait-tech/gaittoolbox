@@ -65,18 +65,18 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     %% add markers
     for i = 1:length(obj.posList)
         ptName = obj.posList{i};
-        btkAppendPoint(acq, 'marker', ptName, obj.(ptName), zeroRes, ...
-                       desc.(ptName));
-    end
-    if ~islogical(refBody)
-        for i = 1:length(refBody.posList)
-            ptName = refBody.posList{i};
-            if size(ptName, 1) > 0
-                btkAppendPoint(acq, 'marker', sprintf('%sRef', refBody.posList{i}), ...
-                            refBody.(ptName), zeroRes, desc.(ptName));
-            end
+        if(~isempty(obj.(ptName)))
+            btkAppendPoint(acq, 'marker', ptName, obj.(ptName), zeroRes, ...
+                           desc.(ptName));
+        end
+        % only put in reference point if the main point exists
+        if(~isempty(obj.(ptName)) && ~islogical(refBody) && ...
+           ~isempty(refBody.(ptName)))
+            btkAppendPoint(acq, 'marker', sprintf('%sRef', ptName), ...
+                           refBody.(ptName), zeroRes, desc.(ptName));
         end
     end
+
     eMarkerLabels = fieldnames(extraMarkers);
     for i = 1:length(eMarkerLabels)
         ptName = eMarkerLabels{i};
@@ -212,12 +212,14 @@ function addAxis(body1, body2, acq, suffix)
     labels = fieldnames(pair);
     for i=1:length(labels)
         v = labels{i}; k = pair.(v);
-        R = quat2rotm(body1.(v));
-        btkAppendPoint(acq, 'marker', sprintf('%sX%s', v, suffix), ...
-                       body2.(k)+d*squeeze(R(:,1,:))' );
-        btkAppendPoint(acq, 'marker', sprintf('%sY%s', v, suffix), ...
-                       body2.(k)+d*squeeze(R(:,2,:))' );
-        btkAppendPoint(acq, 'marker', sprintf('%sZ%s', v, suffix), ...
-                       body2.(k)+d*squeeze(R(:,3,:))' );
+        if(~isempty(body1.(v)) && ~isempty(body2.(k)))
+            R = quat2rotm(body1.(v));
+            btkAppendPoint(acq, 'marker', sprintf('%sX%s', v, suffix), ...
+                           body2.(k)+d*squeeze(R(:,1,:))' );
+            btkAppendPoint(acq, 'marker', sprintf('%sY%s', v, suffix), ...
+                           body2.(k)+d*squeeze(R(:,2,:))' );
+            btkAppendPoint(acq, 'marker', sprintf('%sZ%s', v, suffix), ...
+                           body2.(k)+d*squeeze(R(:,3,:))' );
+        end
     end
 end

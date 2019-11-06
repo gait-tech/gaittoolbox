@@ -24,7 +24,9 @@ function out = calcCalibSB(obj, refBody, sIdx)
     
     for i=1:n
         w_q_b = refBody.(val{i});
-        w_q_s = obj.(key{i}).ori;
-        out.(key{i}).ori = quatmultiply(quatconj(w_q_b(1,:)), w_q_s(sIdx,:));
+        if (~isempty(w_q_b) && ~isempty(obj.(key{i})))            
+            w_q_s = obj.(key{i}).ori;
+            out.(key{i}).ori = quatmultiply(quatconj(w_q_b(1,:)), w_q_s(sIdx,:));
+        end
     end
 end

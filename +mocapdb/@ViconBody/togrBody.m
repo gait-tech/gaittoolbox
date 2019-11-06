@@ -18,12 +18,16 @@ function out = togrBody(obj, idx, args)
            
     for i=1:length(key1)
         data = (obj.(key1{i}));
-        out.(val1{i}) = data(idx,:);
+        if(~isempty(data))
+            out.(val1{i}) = data(idx,:);
+        end
     end
     
     for i=1:length(key2)
         data = (obj.(key2{i}));
-        out.(val2{i}) = data(idx,:);
+        if(~isempty(data))
+            out.(val2{i}) = data(idx,:);
+        end
     end
     
     out.MIDPEL = [mean([obj.LFEP(idx,1) obj.RFEP(idx,1)], 2),...

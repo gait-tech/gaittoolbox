@@ -50,9 +50,15 @@ function out = diffRMSEandMean(obj1, obj2)
         valStd =  zeros(nPosFields, 3);
         for i=1:nPosFields
             d = rawDiff.(posFields{i});
-            valMean(i,:) = nanmean(d, 1);
-            valRMSE(i,:) = sqrt(nanmean(d.^2, 1));
-            valStd(i,:) = nanstd(d, 1);
+            if(~isempty(d))
+                valMean(i,:) = nanmean(d, 1);
+                valRMSE(i,:) = sqrt(nanmean(d.^2, 1));
+                valStd(i,:) = nanstd(d, 1);
+            else
+                valMean(i,:) = [nan nan nan];
+                valRMSE(i,:) = [nan nan nan];
+                valStd(i,:) = [nan nan nan];
+            end
             out.(sprintf('%sRMSE', posFields{i})) = valRMSE(i, :);
             out.(sprintf('%sStd',  posFields{i})) = valStd(i, :);
             out.(sprintf('%sMean', posFields{i})) = valMean(i,:);
