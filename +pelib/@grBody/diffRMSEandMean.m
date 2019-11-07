@@ -63,8 +63,8 @@ function out = diffRMSEandMean(obj1, obj2)
             out.(sprintf('%sStd',  posFields{i})) = valStd(i, :);
             out.(sprintf('%sMean', posFields{i})) = valMean(i,:);
         end
-        out.posMeanRMSE = mean(valRMSE(:));
-        out.posMeanMean = mean(valMean(:));
+        out.posMeanRMSE = nanmean(valRMSE(:));
+        out.posMeanMean = nanmean(valMean(:));
 
         buf = {}; objList = {obj1, obj2};
         for i=1:2
@@ -103,8 +103,8 @@ function out = diffRMSEandMean(obj1, obj2)
             out.(sprintf('%sMean', oriFields{i})) = valMean(i,:);
             out.(sprintf('%sCorrCoef', oriFields{i})) = valCorrCoef(i,:);
         end
-        out.oriMeanRMSE = mean(valRMSE(:));
-        out.oriMeanMean = mean(valMean(:));
+        out.oriMeanRMSE = nanmean(valRMSE(:));
+        out.oriMeanMean = nanmean(valMean(:));
         
         out.dOri = nanmean(obj1.calcDOri(obj2));
         [out.dOrinobias, out.dOribias] = obj1.calcDOrinobias(obj2);

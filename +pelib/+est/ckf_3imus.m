@@ -232,6 +232,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
     % matrices beginnning with 'H_' are the 'observation matrices' that map
     % the variables in the state estimate vector, xhat, to the measurement
     % domain. In this case we are using
+    if fOpt.applyMeas
         idx = [];
             
         if bIsStatMP(n) idx(end+1:end+3) = idxMVelMP; end
@@ -255,13 +256,15 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
         K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
         P_plus = (I_N - K * H(idx2, :)) * P_min;
         
-        if fOpt.applyMeas
-            debug_dat.zuptState(n,:) = x_plus;
-            debug_dat.zuptP(:,:,n) = P_plus;
-        end      
-        xhat_pos(n, :) = x_plus;
-        P_pos(:, :, n)  = P_plus;
-        
+        debug_dat.zuptState(n,:) = x_plus;
+        debug_dat.zuptP(:,:,n) = P_plus;
+    else
+        x_plus = x_min;
+        P_plus = P_min;
+    end
+    xhat_pos(n, :) = x_plus;
+    P_pos(:, :, n)  = P_plus;
+    
     %% -----------------------------------------------------------------------
     % Constraint update step ---- 
         PELV_CS = quat2rotm(qMP(n,:));
