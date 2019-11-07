@@ -1,3 +1,3 @@
 [submodule "+papers"]
 	path = +papers
-	url = https://github.com/gait-tech/gt.papers.git
+	url = https://github.com/gait-tech/gt.papers

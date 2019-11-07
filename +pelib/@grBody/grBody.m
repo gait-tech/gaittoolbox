@@ -24,37 +24,47 @@ classdef grBody < matlab.mixin.Copyable
         
         % SACR position (n x 3)
         MIDPEL
+        % Left hip joint center
         LFEP
+        % Left knee joint center
         LFEO
+        % Left ankle joint center
         LTIO
+        % Left toe
         LTOE
+        % Right hip joint center
         RFEP
+        % Right knee joint center
         RFEO
+        % Right ankle joint center
         RTIO
+        % Right toe
         RTOE
         
-        % pelvis orientation (n x 4)
+        % pelvis orientation (n x 4), z = upward, x = forward, y = towards left hip joint center
         qRPV
-        % right femur orientation (n x 4)
+        % right femur orientation (n x 4), z = along thigh, x = forward, y towards left
         qRTH
-        % left femur orientation (n x 4)
+        % left femur orientation (n x 4), z = along thigh, x = forward, y towards left
         qLTH
-        % right tibia orientation (n x 4)
+        % right tibia orientation (n x 4), z = along tibia, x = forward, y towards left
         qRSK
-        % left tibia orientation (n x 4)
+        % left tibia orientation (n x 4), z = along tibia, x = forward, y towards left
         qLSK
-        % right foot orientation (n x 4)
+        % right foot orientation (n x 4) following Vicon convention, 
+        % z = toe to heel vector projected to the floor, x = upward, y = towards left
         qRFT
-        % left foot orientation (n x 4)
+        % left foot orientation (n x 4) following Vicon convention
+        % z = toe to heel vector projected to the floor, x = upward, y = towards left
         qLFT
     end
     
     properties (Constant)
 		% position property list
-        posList = {'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'RFEP', 'RFEO', ...
-                   'RTIO'};
+        posList = {'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'LTOE', ...
+                   'RFEP', 'RFEO', 'RTIO', 'RTOE'};
 	    % orientation property list
-        oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'};
+        oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK', 'qRFT', 'qLFT'};
     end
     
     methods (Static)

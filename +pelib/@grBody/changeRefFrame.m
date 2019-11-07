@@ -31,13 +31,17 @@ function out = changeRefFrame(obj, ref)
     
     posList = obj.posList;
     for i=1:length(posList)
+        if (~isempty(obj.(posList{i})))
         out.(posList{i}) = quatrotate(obj.(refOri), ...
             obj.(posList{i})-obj.(refPos));
+        end
     end
     
     oriList = obj.oriList;
     for i=1:length(oriList)
-        out.(oriList{i}) = quatmultiply(quatconj(obj.(refOri)), ...
-            obj.(oriList{i}));
+        if (~isempty(obj.(oriList{i})))
+            out.(oriList{i}) = quatmultiply(quatconj(obj.(refOri)), ...
+                obj.(oriList{i}));
+        end
     end
 end

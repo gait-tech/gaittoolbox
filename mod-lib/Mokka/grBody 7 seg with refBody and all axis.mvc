@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MokkaModelVisualConfiguration name="grBody 7 seg with refBody and axis" version="1.0">
+    <MarkersList>
+        <Marker label="MIDPEL" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="MIDPELRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LFEP" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LFEPRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LFEO" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LFEORef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LTIO" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LTIORef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LTOE" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="LTOERef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RFEP" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RFEPRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RFEO" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RFEORef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RTIO" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RTIORef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RTOE" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="RTOERef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRPVX" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRPVY" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRPVZ" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLTHX" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLTHY" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLTHZ" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRTHX" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRTHY" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRTHZ" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLSKX" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLSKY" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLSKZ" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRSKX" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRSKY" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRSKZ" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLFTX" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLFTY" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLFTZ" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRFTX" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRFTY" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRFTZ" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRPVXRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRPVYRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRPVZRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLTHXRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLTHYRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLTHZRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRTHXRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRTHYRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRTHZRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLSKXRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLSKYRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLSKZRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRSKXRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRSKYRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRSKZRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLFTXRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLFTYRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qLFTZRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRFTXRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRFTYRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+        <Marker label="qRFTZRef" radius="8" colorR="1" colorG="1" colorB="1" visible="1" trajectory="0"/>
+    </MarkersList>
+    <SegmentsList>
+        <Segment label="Pelvis" colorR="0" colorG="1" colorB="0" visible="1" surface="0" description="">
+            <Point label="MIDPEL"/>
+            <Point label="LFEP"/>
+            <Point label="RFEP"/>
+            <Link pt1="LFEP" pt2="MIDPEL"/>
+            <Link pt1="LFEP" pt2="RFEP"/>
+            <Link pt1="MIDPEL" pt2="RFEP"/>
+        </Segment>
+        <Segment label="LTH" colorR="0" colorG="0" colorB="1" visible="1" surface="0" description="">
+            <Point label="LFEP"/>
+            <Point label="LFEO"/>
+            <Link pt1="LFEO" pt2="LFEP"/>
+        </Segment>
+        <Segment label="LSK" colorR="0" colorG="0" colorB="1" visible="1" surface="0" description="">
+            <Point label="LFEO"/>
+            <Point label="LTIO"/>
+            <Link pt1="LFEO" pt2="LTIO"/>
+        </Segment>
+        <Segment label="RTH" colorR="1" colorG="0" colorB="0" visible="1" surface="0" description="">
+            <Point label="RFEP"/>
+            <Point label="RFEO"/>
+            <Link pt1="RFEO" pt2="RFEP"/>
+        </Segment>
+        <Segment label="RSK" colorR="1" colorG="0" colorB="0" visible="1" surface="0" description="">
+            <Point label="RFEO"/>
+            <Point label="RTIO"/>
+            <Link pt1="RFEO" pt2="RTIO"/>
+        </Segment>
+        <Segment label="LFT" colorR="0" colorG="0" colorB="1" visible="1" surface="0" description="">
+            <Point label="LTIO"/>
+            <Point label="LTOE"/>
+            <Link pt1="LTIO" pt2="LTOE"/>
+        </Segment>
+        <Segment label="RFT" colorR="1" colorG="0" colorB="0" visible="1" surface="0" description="">
+            <Point label="RTIO"/>
+            <Point label="RTOE"/>
+            <Link pt1="RTIO" pt2="RTOE"/>
+        </Segment>
+        <Segment label="PelvisRef" colorR="1" colorG="1" colorB="0" visible="1" surface="0" description="">
+            <Point label="MIDPELRef"/>
+            <Point label="LFEPRef"/>
+            <Point label="RFEPRef"/>
+            <Link pt1="LFEPRef" pt2="MIDPELRef"/>
+            <Link pt1="LFEPRef" pt2="RFEPRef"/>
+            <Link pt1="MIDPELRef" pt2="RFEPRef"/>
+        </Segment>
+        <Segment label="LTHRef" colorR="0.666667" colorG="1" colorB="1" visible="1" surface="0" description="">
+            <Point label="LFEPRef"/>
+            <Point label="LFEORef"/>
+            <Link pt1="LFEORef" pt2="LFEPRef"/>
+        </Segment>
+        <Segment label="LSKRef" colorR="0.666667" colorG="1" colorB="1" visible="1" surface="0" description="">
+            <Point label="LFEORef"/>
+            <Point label="LTIORef"/>
+            <Link pt1="LFEORef" pt2="LTIORef"/>
+        </Segment>
+        <Segment label="RTHRef" colorR="1" colorG="0.666667" colorB="1" visible="1" surface="0" description="">
+            <Point label="RFEPRef"/>
+            <Point label="RFEORef"/>
+            <Link pt1="RFEORef" pt2="RFEPRef"/>
+        </Segment>
+        <Segment label="RSKRef" colorR="1" colorG="0.666667" colorB="1" visible="1" surface="0" description="">
+            <Point label="RFEORef"/>
+            <Point label="RTIORef"/>
+            <Link pt1="RFEORef" pt2="RTIORef"/>
+        </Segment>
+        <Segment label="LFTRef" colorR="0.666667" colorG="1" colorB="1" visible="1" surface="0" description="">
+            <Point label="LTIORef"/>
+            <Point label="LTOERef"/>
+            <Link pt1="LTIORef" pt2="LTOERef"/>
+        </Segment>
+        <Segment label="RFTRef" colorR="1" colorG="0.666667" colorB="1" visible="1" surface="0" description="">
+            <Point label="RTIORef"/>
+            <Point label="RTOERef"/>
+            <Link pt1="RTIORef" pt2="RTOERef"/>
+        </Segment>
+        <Segment label="qRPVX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="MIDPEL"/>
+            <Point label="qRPVX"/>
+            <Link pt1="MIDPEL" pt2="qRPVX"/>
+        </Segment>
+        <Segment label="qRPVY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="MIDPEL"/>
+            <Point label="qRPVY"/>
+            <Link pt1="MIDPEL" pt2="qRPVY"/>
+        </Segment>
+        <Segment label="qRPVZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="MIDPEL"/>
+            <Point label="qRPVZ"/>
+            <Link pt1="MIDPEL" pt2="qRPVZ"/>
+        </Segment>
+        <Segment label="qLTHX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="LFEO"/>
+            <Point label="qLTHX"/>
+            <Link pt1="LFEO" pt2="qLTHX"/>
+        </Segment>
+        <Segment label="qLTHY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="LFEO"/>
+            <Point label="qLTHY"/>
+            <Link pt1="LFEO" pt2="qLTHY"/>
+        </Segment>
+        <Segment label="qLTHZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="LFEO"/>
+            <Point label="qLTHZ"/>
+            <Link pt1="LFEO" pt2="qLTHZ"/>
+        </Segment>
+        <Segment label="qLSKX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="LTIO"/>
+            <Point label="qLSKX"/>
+            <Link pt1="LTIO" pt2="qLSKX"/>
+        </Segment>
+        <Segment label="qLSKY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="LTIO"/>
+            <Point label="qLSKY"/>
+            <Link pt1="LTIO" pt2="qLSKY"/>
+        </Segment>
+        <Segment label="qLSKZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="LTIO"/>
+            <Point label="qLSKZ"/>
+            <Link pt1="LTIO" pt2="qLSKZ"/>
+        </Segment>
+        <Segment label="qLFTX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="LTOE"/>
+            <Point label="qLFTX"/>
+            <Link pt1="LTOE" pt2="qLFTX"/>
+        </Segment>
+        <Segment label="qLFTY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="LTOE"/>
+            <Point label="qLFTY"/>
+            <Link pt1="LTOE" pt2="qLFTY"/>
+        </Segment>
+        <Segment label="qLFTZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="LTOE"/>
+            <Point label="qLFTZ"/>
+            <Link pt1="LTOE" pt2="qLFTZ"/>
+        </Segment>
+        <Segment label="qRTHX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="RFEO"/>
+            <Point label="qRTHX"/>
+            <Link pt1="RFEO" pt2="qRTHX"/>
+        </Segment>
+        <Segment label="qRTHY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="RFEO"/>
+            <Point label="qRTHY"/>
+            <Link pt1="RFEO" pt2="qRTHY"/>
+        </Segment>
+        <Segment label="qRTHZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="RFEO"/>
+            <Point label="qRTHZ"/>
+            <Link pt1="RFEO" pt2="qRTHZ"/>
+        </Segment>
+        <Segment label="qRSKX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="RTIO"/>
+            <Point label="qRSKX"/>
+            <Link pt1="RTIO" pt2="qRSKX"/>
+        </Segment>
+        <Segment label="qRSKY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="RTIO"/>
+            <Point label="qRSKY"/>
+            <Link pt1="RTIO" pt2="qRSKY"/>
+        </Segment>
+        <Segment label="qRSKZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="RTIO"/>
+            <Point label="qRSKZ"/>
+            <Link pt1="RTIO" pt2="qRSKZ"/>
+        </Segment>
+        <Segment label="qRFTX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="RTOE"/>
+            <Point label="qRFTX"/>
+            <Link pt1="RTOE" pt2="qRFTX"/>
+        </Segment>
+        <Segment label="qRFTY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="RTOE"/>
+            <Point label="qRFTY"/>
+            <Link pt1="RTOE" pt2="qRFTY"/>
+        </Segment>
+        <Segment label="qRFTZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="RTOE"/>
+            <Point label="qRFTZ"/>
+            <Link pt1="RTOE" pt2="qRFTZ"/>
+        </Segment>
+        <Segment label="qRPVXRef" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="MIDPELRef"/>
+            <Point label="qRPVXRef"/>
+            <Link pt1="MIDPELRef" pt2="qRPVXRef"/>
+        </Segment>
+        <Segment label="qRPVYRef" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="MIDPELRef"/>
+            <Point label="qRPVYRef"/>
+            <Link pt1="MIDPELRef" pt2="qRPVYRef"/>
+        </Segment>
+        <Segment label="qRPVZRef" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="MIDPELRef"/>
+            <Point label="qRPVZRef"/>
+            <Link pt1="MIDPELRef" pt2="qRPVZRef"/>
+        </Segment>
+        <Segment label="qLTHXRef" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="LFEORef"/>
+            <Point label="qLTHXRef"/>
+            <Link pt1="LFEORef" pt2="qLTHXRef"/>
+        </Segment>
+        <Segment label="qLTHYRef" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="LFEORef"/>
+            <Point label="qLTHYRef"/>
+            <Link pt1="LFEORef" pt2="qLTHYRef"/>
+        </Segment>
+        <Segment label="qLTHZRef" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="LFEORef"/>
+            <Point label="qLTHZRef"/>
+            <Link pt1="LFEORef" pt2="qLTHZRef"/>
+        </Segment>
+        <Segment label="qLSKXRef" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="LTIORef"/>
+            <Point label="qLSKXRef"/>
+            <Link pt1="LTIORef" pt2="qLSKXRef"/>
+        </Segment>
+        <Segment label="qLSKYRef" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="LTIORef"/>
+            <Point label="qLSKYRef"/>
+            <Link pt1="LTIORef" pt2="qLSKYRef"/>
+        </Segment>
+        <Segment label="qLSKZRef" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="LTIORef"/>
+            <Point label="qLSKZRef"/>
+            <Link pt1="LTIORef" pt2="qLSKZRef"/>
+        </Segment>
+        <Segment label="qLFTXRef" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="LTOERef"/>
+            <Point label="qLFTXRef"/>
+            <Link pt1="LTOERef" pt2="qLFTXRef"/>
+        </Segment>
+        <Segment label="qLFTYRef" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="LTOERef"/>
+            <Point label="qLFTYRef"/>
+            <Link pt1="LTOERef" pt2="qLFTYRef"/>
+        </Segment>
+        <Segment label="qLFTZRef" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="LTOERef"/>
+            <Point label="qLFTZRef"/>
+            <Link pt1="LTOERef" pt2="qLFTZRef"/>
+        </Segment>
+        <Segment label="qRTHXRef" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="RFEORef"/>
+            <Point label="qRTHXRef"/>
+            <Link pt1="RFEORef" pt2="qRTHXRef"/>
+        </Segment>
+        <Segment label="qRTHYRef" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="RFEORef"/>
+            <Point label="qRTHYRef"/>
+            <Link pt1="RFEORef" pt2="qRTHYRef"/>
+        </Segment>
+        <Segment label="qRTHZRef" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="RFEORef"/>
+            <Point label="qRTHZRef"/>
+            <Link pt1="RFEORef" pt2="qRTHZRef"/>
+        </Segment>
+        <Segment label="qRSKXRef" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="RTIORef"/>
+            <Point label="qRSKXRef"/>
+            <Link pt1="RTIORef" pt2="qRSKXRef"/>
+        </Segment>
+        <Segment label="qRSKYRef" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="RTIORef"/>
+            <Point label="qRSKYRef"/>
+            <Link pt1="RTIORef" pt2="qRSKYRef"/>
+        </Segment>
+        <Segment label="qRSKZRef" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="RTIORef"/>
+            <Point label="qRSKZRef"/>
+            <Link pt1="RTIORef" pt2="qRSKZRef"/>
+        </Segment>
+        <Segment label="qRFTXRef" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="RTOERef"/>
+            <Point label="qRFTXRef"/>
+            <Link pt1="RTOERef" pt2="qRFTXRef"/>
+        </Segment>
+        <Segment label="qRFTYRef" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="RTOERef"/>
+            <Point label="qRFTYRef"/>
+            <Link pt1="RTOERef" pt2="qRFTYRef"/>
+        </Segment>
+        <Segment label="qRFTZRef" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="RTOERef"/>
+            <Point label="qRFTZRef"/>
+            <Link pt1="RTOERef" pt2="qRFTZRef"/>
+        </Segment>
+        <Segment label="qRPVSensX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="MIDPEL"/>
+        </Segment>
+        <Segment label="qRPVSensY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="MIDPEL"/>
+        </Segment>
+        <Segment label="qRPVSensZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="MIDPEL"/>
+        </Segment>
+        <Segment label="qLSKSensX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="LTIO"/>
+        </Segment>
+        <Segment label="qLSKSensY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="LTIO"/>
+        </Segment>
+        <Segment label="qLSKSensZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="LTIO"/>
+        </Segment>
+        <Segment label="qRSKSensX" colorR="0.666667" colorG="0.329412" colorB="0" visible="1" surface="0" description="">
+            <Point label="RTIO"/>
+        </Segment>
+        <Segment label="qRSKSensY" colorR="0.882353" colorG="1" colorB="0.556863" visible="1" surface="0" description="">
+            <Point label="RTIO"/>
+        </Segment>
+        <Segment label="qRSKSensZ" colorR="0.411765" colorG="0.0156863" colorB="1" visible="1" surface="0" description="">
+            <Point label="RTIO"/>
+        </Segment>
+    </SegmentsList>
+</MokkaModelVisualConfiguration>
