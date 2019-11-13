@@ -32,8 +32,8 @@ function out = changeRefFrame(obj, ref)
     posList = obj.posList;
     for i=1:length(posList)
         if (~isempty(obj.(posList{i})))
-        out.(posList{i}) = quatrotate(obj.(refOri), ...
-            obj.(posList{i})-obj.(refPos));
+            out.(posList{i}) = quatrotate(obj.(refOri), ...
+                obj.(posList{i})-obj.(refPos));
         end
     end
     

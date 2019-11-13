@@ -52,10 +52,10 @@ classdef grBody < matlab.mixin.Copyable
         % left tibia orientation (n x 4), z = along tibia, x = forward, y towards left
         qLSK
         % right foot orientation (n x 4) following Vicon convention, 
-        % z = toe to heel vector projected to the floor, x = upward, y = towards left
+        % z = toe to ankle joint center, x = downward, y = towards left, tibia y axis
         qRFT
         % left foot orientation (n x 4) following Vicon convention
-        % z = toe to heel vector projected to the floor, x = upward, y = towards left
+        % z = toe to ankle joint center, x = downward, y = towards left, tibia y axis
         qLFT
     end
     
@@ -208,7 +208,7 @@ classdef grBody < matlab.mixin.Copyable
             theta = theta(:, [2 1 3]);
         end
         
-        function d = getPelvisLength(obj, idx)
+        function d = calcPelvisLength(obj, idx)
 			% Calculate pelvis length
 			%
 			% :param obj: this object class
@@ -219,10 +219,14 @@ classdef grBody < matlab.mixin.Copyable
 			% .. Author: - Luke Sy (UNSW GSBME)
 			
             if nargin <= 1, idx = 1; end
-            d = norm(obj.LFEP(idx, :) - obj.RFEP(idx, :));
+            if isempty(obj.LFEP) || isempty(obj.RFEP)
+                d = nan;
+            else
+                d = vecnorm(obj.LFEP(idx, :) - obj.RFEP(idx, :), 2, 2);
+            end
         end
         
-        function d = getLShankLength(obj, idx)
+        function d = calcLShankLength(obj, idx)
 			% Calculate left shank length
 			%
 			% :param obj: this object class
@@ -233,10 +237,14 @@ classdef grBody < matlab.mixin.Copyable
 			% .. Author: - Luke Sy (UNSW GSBME)
 			
             if nargin <= 1, idx = 1; end
-            d = norm(obj.LFEO(idx, :) - obj.LTIO(idx, :));
+            if isempty(obj.LFEO) || isempty(obj.LTIO)
+                d = nan;
+            else
+                d = vecnorm(obj.LFEO(idx, :) - obj.LTIO(idx, :), 2, 2);
+            end
         end
         
-        function d = getRShankLength(obj, idx)
+        function d = calcRShankLength(obj, idx)
 			% Calculate right shank length
 			%
 			% :param obj: this object class
@@ -247,10 +255,14 @@ classdef grBody < matlab.mixin.Copyable
 			% .. Author: - Luke Sy (UNSW GSBME)
 			
             if nargin <= 1, idx = 1; end
-            d = norm(obj.RFEO(idx, :) - obj.RTIO(idx, :));
+            if isempty(obj.RFEO) || isempty(obj.RTIO)
+                d = nan;
+            else
+                d = vecnorm(obj.RFEO(idx, :) - obj.RTIO(idx, :), 2, 2);
+            end
         end
         
-        function d = calcLFemurLength(obj)
+        function d = calcLFemurLength(obj, idx)
 			% Calculate left femur length
 			%
 			% :param obj: this object class
@@ -259,11 +271,15 @@ classdef grBody < matlab.mixin.Copyable
 			% :return: d - body segment length (n x 1)
 			%
 			% .. Author: - Luke Sy (UNSW GSBME)
-			
-            d = vecnorm(obj.LFEP - obj.LFEO, 2, 2);
+			if nargin <= 1, idx = 1; end
+            if isempty(obj.LFEP) || isempty(obj.LFEO)
+                d = nan;
+            else
+                d = vecnorm(obj.LFEP(idx, :) - obj.LFEO(idx, :), 2, 2);
+            end
         end
         
-        function d = calcRFemurLength(obj)
+        function d = calcRFemurLength(obj, idx)
 			% Calculate right femur length
 			%
 			% :param obj: this object class
@@ -272,8 +288,46 @@ classdef grBody < matlab.mixin.Copyable
 			% :return: d - body segment length (n x 1)
 			%
 			% .. Author: - Luke Sy (UNSW GSBME)
-			
-            d = vecnorm(obj.RFEP - obj.RFEO, 2, 2);
+			if nargin <= 1, idx = 1; end
+            if isempty(obj.RFEP) || isempty(obj.RFEO)
+                d = nan;
+            else
+                d = vecnorm(obj.RFEP(idx, :) - obj.RFEO(idx, :), 2, 2);
+            end
+        end
+        
+        function d = calcLFootLength(obj, idx)
+			% Calculate left foot length
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: 1)
+			%
+			% :return: d - body segment length (n x 1)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			if nargin <= 1, idx = 1; end
+            if isempty(obj.LTIO) || isempty(obj.LTOE)
+                d = nan;
+            else
+                d = vecnorm(obj.LTIO(idx, :) - obj.LTOE(idx, :), 2, 2);
+            end
+        end
+        
+        function d = calcRFootLength(obj, idx)
+			% Calculate right foot length
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: 1)
+			%
+			% :return: d - body segment length (n x 1)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME)
+			if nargin <= 1, idx = 1; end
+            if isempty(obj.RTIO) || isempty(obj.RTOE)
+                d = nan; 
+            else
+                d = vecnorm(obj.RTIO(idx, :) - obj.RTOE(idx, :), 2, 2);
+            end
         end
         
         out = calcJointVel(obj, pts);
