@@ -89,7 +89,17 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Data Set</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#neura-sparse-dataset">Neura Sparse Dataset</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#movements">Movements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#description">Description</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#imu">imu</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vicon">vicon</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#xsens">xsens</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-detect">step-detect</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#calib">calib</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -166,15 +176,211 @@
 <h1>Data Set<a class="headerlink" href="#data-set" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="neura-sparse-dataset">
 <h2>Neura Sparse Dataset<a class="headerlink" href="#neura-sparse-dataset" title="Permalink to this headline">¶</a></h2>
-<p>Refer to the following papers for description:
+<div class="section" id="setup">
+<h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
+<p>The experiment had nine healthy subjects (7 men and 2 women, weight <span class="math notranslate nohighlight">\(63.0 \pm 6.8\)</span> kg, height <span class="math notranslate nohighlight">\(1.70 \pm 0.06\)</span> m, age <span class="math notranslate nohighlight">\(24.6 \pm 3.9\)</span> years old), with no known gait or lower body biomechanical abnormalities.
+Each subject was compared to two benchmark systems, namely the Vicon and Xsens systems.</p>
+<ul class="simple">
+<li><p>The Vicon Vantage system consisted of eight cameras covering approximately <span class="math notranslate nohighlight">\(4 \times 4 m^2\)</span> capture area with millimetre accuracy. Vicon data were captured at 100 Hz and processed using Nexus 2.7 software.</p></li>
+<li><p>The Xsens Awinda system consisted of seven MTx units (IMUs). Xsens data were captured at 100 Hz using MT Manager 4.8 and processed using MVN Studio 4.4 software.</p></li>
+</ul>
+<p>The Vicon and Xsens recordings were synchronized by having the Xsens Awinda station send a trigger pulse to the Vicon system at the start and stop event of each recording.
+Each subject had reflective Vicon markers placed according to the Helen-Hayes 16 marker set,
+seven MTx units attached to the pelvis, thighs, shanks, and feet according to standard Xsens sensor placement, and two MTx units attached near the ankles.
+The MTx units were all factory calibrated.</p>
+<p>Refer to the following papers for examples on how the dataset can be used:
 <a class="bibtex reference internal" href="references.html#sy2019ckf" id="id1">[1]</a>
 <a class="bibtex reference internal" href="references.html#sy2019lgcekf" id="id2">[2]</a>.</p>
+</div>
+<div class="section" id="movements">
+<h3>Movements<a class="headerlink" href="#movements" title="Permalink to this headline">¶</a></h3>
+<p>Each subject performed the movements listed in the table below twice (i.e., two trials).
+The subjects stood still before and after each trial for ten seconds.
+The experiment was approved by the Human Research Ethics Board of the University of New South Wales (UNSW) with approval number HC180413.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 56%" />
+<col style="width: 20%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Movement</p></td>
+<td><p>Description</p></td>
+<td><p>Duration (s)</p></td>
+</tr>
+<tr class="row-even"><td><p>Static</p></td>
+<td><p>Stand still</p></td>
+<td><p>~10</p></td>
+</tr>
+<tr class="row-odd"><td><p>Walk</p></td>
+<td><p>Walk straight and back</p></td>
+<td><p>~30</p></td>
+</tr>
+<tr class="row-even"><td><p>Figure of eight</p></td>
+<td><p>Walk in figures of eight</p></td>
+<td><p>~60</p></td>
+</tr>
+<tr class="row-odd"><td><p>Zig-zag</p></td>
+<td><p>Walk zigzag</p></td>
+<td><p>~60</p></td>
+</tr>
+<tr class="row-even"><td><p>5-minute walk</p></td>
+<td><p>Undirected walk, side step, and stand</p></td>
+<td><p>~300</p></td>
+</tr>
+<tr class="row-odd"><td><p>Speedskater</p></td>
+<td><p>Speedskater on the spot</p></td>
+<td><p>~30</p></td>
+</tr>
+<tr class="row-even"><td><p>Jog</p></td>
+<td><p>Jog straight and return</p></td>
+<td><p>~30</p></td>
+</tr>
+<tr class="row-odd"><td><p>Jumping jacks</p></td>
+<td><p>Jumping jacks on the spot</p></td>
+<td><p>~30</p></td>
+</tr>
+<tr class="row-even"><td><p>High knee</p></td>
+<td><p>High knee jog straight and return</p></td>
+<td><p>~30</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="installation">
 <h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
-<li><p>Download <cite>neura-sparse01.zip</cite> from <a class="reference external" href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/9QDD5J">Harvard Dataverse</a>.</p></li>
+<li><p>Download <cite>neura-sparse01.7z</cite> from <a class="reference external" href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/9QDD5J">Harvard Dataverse</a>.</p></li>
 <li><p>Extract to <cite>data/neura-sparse01</cite></p></li>
 </ol>
+</div>
+<div class="section" id="description">
+<h3>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h3>
+<p>&lt;Subject ID&gt;-Trial-&lt;Movement Type&gt;.&lt;Extension&gt;</p>
+<div class="section" id="imu">
+<h4>imu<a class="headerlink" href="#imu" title="Permalink to this headline">¶</a></h4>
+<p>File name is &lt;Subject ID&gt;-Trial-&lt;Movement Type&gt;-&lt;Sensor ID&gt;.txt.</p>
+<p>Sensor ID to body segment table:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 56%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Body Segment</p></td>
+<td><p>Sensor ID</p></td>
+</tr>
+<tr class="row-even"><td><p>Pelvis</p></td>
+<td><p>00B40B91</p></td>
+</tr>
+<tr class="row-odd"><td><p>L_UpLeg</p></td>
+<td><p>00B40C45</p></td>
+</tr>
+<tr class="row-even"><td><p>R_UpLeg</p></td>
+<td><p>00B40C3C</p></td>
+</tr>
+<tr class="row-odd"><td><p>L_LowLeg</p></td>
+<td><p>00B40C44</p></td>
+</tr>
+<tr class="row-even"><td><p>R_LowLeg</p></td>
+<td><p>00B40C47</p></td>
+</tr>
+<tr class="row-odd"><td><p>L_Foot</p></td>
+<td><p>00B40C55</p></td>
+</tr>
+<tr class="row-even"><td><p>R_Foot</p></td>
+<td><p>00B40C48</p></td>
+</tr>
+</tbody>
+</table>
+<p>Column Description:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 11%" />
+<col style="width: 65%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Column</p></td>
+<td><p>Type</p></td>
+<td><p>Description</p></td>
+</tr>
+<tr class="row-even"><td><p>PacketCounter</p></td>
+<td><p>Int</p></td>
+<td><p>Packet number</p></td>
+</tr>
+<tr class="row-odd"><td><p>SampleTimeFine</p></td>
+<td><p>Float</p></td>
+<td><p>Time of recording</p></td>
+</tr>
+<tr class="row-even"><td><p>Acc_X/Y/Z</p></td>
+<td><p>Float</p></td>
+<td><p>Measured acceleration in sensor frame</p></td>
+</tr>
+<tr class="row-odd"><td><p>Gyr_X/Y/Z</p></td>
+<td><p>Float</p></td>
+<td><p>Measured angular velocity in sensor frame</p></td>
+</tr>
+<tr class="row-even"><td><p>Mag_X/Y/Z</p></td>
+<td><p>Float</p></td>
+<td><p>Measured magnetic field in sensor frame</p></td>
+</tr>
+<tr class="row-odd"><td><p>Quat_q0-4</p></td>
+<td><p>Float</p></td>
+<td><p>Orientation of sensor in world frame</p></td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PacketCounter</span><span class="p">,</span><span class="n">SampleTimeFine</span><span class="p">,</span><span class="n">Acc_X</span><span class="p">,</span><span class="n">Acc_Y</span><span class="p">,</span><span class="n">Acc_Z</span><span class="p">,</span><span class="n">Gyr_X</span><span class="p">,</span><span class="n">Gyr_Y</span><span class="p">,</span><span class="n">Gyr_Z</span><span class="p">,</span><span class="n">Mag_X</span><span class="p">,</span><span class="n">Mag_Y</span><span class="p">,</span><span class="n">Mag_Z</span><span class="p">,</span><span class="n">Quat_q0</span><span class="p">,</span><span class="n">Quat_q1</span><span class="p">,</span><span class="n">Quat_q2</span><span class="p">,</span><span class="n">Quat_q3</span>
+<span class="mi">27626</span><span class="p">,,</span><span class="mf">8.696773</span><span class="p">,</span><span class="mf">0.341363</span><span class="p">,</span><span class="mf">4.715198</span><span class="p">,</span><span class="mf">0.015417</span><span class="p">,</span><span class="mf">0.009366</span><span class="p">,</span><span class="o">-</span><span class="mf">0.011596</span><span class="p">,</span><span class="mf">0.886719</span><span class="p">,</span><span class="mf">0.420898</span><span class="p">,</span><span class="mf">0.468506</span><span class="p">,</span><span class="mf">0.651925</span><span class="p">,</span><span class="o">-</span><span class="mf">0.318177</span><span class="p">,</span><span class="o">-</span><span class="mf">0.399341</span><span class="p">,</span><span class="o">-</span><span class="mf">0.560611</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="vicon">
+<h4>vicon<a class="headerlink" href="#vicon" title="Permalink to this headline">¶</a></h4>
+<p>CSV export from vicon but converted to .mat file. Contains marker and joint centre positions of the movement trial.</p>
+</div>
+<div class="section" id="xsens">
+<h4>xsens<a class="headerlink" href="#xsens" title="Permalink to this headline">¶</a></h4>
+<p>Pose reconstruction by the Xsens system. Specifically, bvh files of the movement trial generated by the MVN Studio 4.4 software.</p>
+</div>
+<div class="section" id="step-detect">
+<h4>step-detect<a class="headerlink" href="#step-detect" title="Permalink to this headline">¶</a></h4>
+<p>Indicate if step is detected. Reviewed manually.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 15%" />
+<col style="width: 72%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Column</p></td>
+<td><p>Type</p></td>
+<td><p>Description</p></td>
+</tr>
+<tr class="row-even"><td><p>stepL</p></td>
+<td><p>Boolean</p></td>
+<td><p>1 if left foot step is detected, 0 if not</p></td>
+</tr>
+<tr class="row-odd"><td><p>stepR</p></td>
+<td><p>Boolean</p></td>
+<td><p>1 if left foot step is detected, 0 if not</p></td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stepL</span><span class="p">,</span><span class="n">stepR</span>
+<span class="mi">1</span><span class="p">,</span><span class="mi">1</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="calib">
+<h4>calib<a class="headerlink" href="#calib" title="Permalink to this headline">¶</a></h4>
+<p>TODO: to be added. For now, see the calibration loader code from github.</p>
+</div>
 </div>
 </div>
 </div>

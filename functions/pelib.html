@@ -575,9 +575,57 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 <dd><p>Bases: <code class="xref mat mat-class docutils literal notranslate"><span class="pre">matlab.mixin.Copyable</span></code></p>
 <p>Body class used to animate body and obtain gait parameters</p>
 <dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.LFEO">
+<code class="sig-name descname">LFEO</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.LFEO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Left ankle joint center</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.LFEP">
+<code class="sig-name descname">LFEP</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.LFEP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Left knee joint center</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.LTIO">
+<code class="sig-name descname">LTIO</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.LTIO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Left toe</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.LTOE">
+<code class="sig-name descname">LTOE</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.LTOE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Right hip joint center</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="+pelib.&#64;grBody.grBody.MIDPEL">
 <code class="sig-name descname">MIDPEL</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.MIDPEL" title="Permalink to this definition">¶</a></dt>
-<dd><p>pelvis orientation (n x 4)</p>
+<dd><p>Left hip joint center</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.RFEO">
+<code class="sig-name descname">RFEO</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.RFEO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Right ankle joint center</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.RFEP">
+<code class="sig-name descname">RFEP</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.RFEP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Right knee joint center</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.RTIO">
+<code class="sig-name descname">RTIO</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.RTIO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Right toe</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="+pelib.&#64;grBody.grBody.RTOE">
+<code class="sig-name descname">RTOE</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.RTOE" title="Permalink to this definition">¶</a></dt>
+<dd><p>pelvis orientation (n x 4), z = upward, x = forward, y = towards left hip joint center</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -655,7 +703,7 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 
 <dl class="method">
 <dt id="+pelib.&#64;grBody.grBody.calcLFemurLength">
-<code class="sig-name descname">calcLFemurLength</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcLFemurLength" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calcLFemurLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcLFemurLength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate left femur length</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -671,9 +719,94 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcLFootLength">
+<code class="sig-name descname">calcLFootLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcLFootLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate left foot length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this object class</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>d - body segment length (n x 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcLShankLength">
+<code class="sig-name descname">calcLShankLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcLShankLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate left shank length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this object class</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>d - body segment length (n x 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcPelvisLength">
+<code class="sig-name descname">calcPelvisLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcPelvisLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate pelvis length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this object class</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>d - body segment length (n x 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="+pelib.&#64;grBody.grBody.calcRFemurLength">
-<code class="sig-name descname">calcRFemurLength</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcRFemurLength" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calcRFemurLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcRFemurLength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate right femur length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this object class</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>d - body segment length (n x 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcRFootLength">
+<code class="sig-name descname">calcRFootLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcRFootLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate right foot length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this object class</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>d - body segment length (n x 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="+pelib.&#64;grBody.grBody.calcRShankLength">
+<code class="sig-name descname">calcRShankLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcRShankLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate right shank length</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -697,57 +830,6 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 <dt id="+pelib.&#64;grBody.grBody.fs">
 <code class="sig-name descname">fs</code><em class="property"> = '60'</em><a class="headerlink" href="#+pelib.@grBody.grBody.fs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="method">
-<dt id="+pelib.&#64;grBody.grBody.getLShankLength">
-<code class="sig-name descname">getLShankLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.getLShankLength" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate left shank length</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> – this object class</p></li>
-<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>d - body segment length (n x 1)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="+pelib.&#64;grBody.grBody.getPelvisLength">
-<code class="sig-name descname">getPelvisLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.getPelvisLength" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate pelvis length</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> – this object class</p></li>
-<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>d - body segment length (n x 1)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="+pelib.&#64;grBody.grBody.getRShankLength">
-<code class="sig-name descname">getRShankLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.getRShankLength" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate right shank length</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> – this object class</p></li>
-<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>d - body segment length (n x 1)</p>
-</dd>
-</dl>
-</dd></dl>
 
 <dl class="method">
 <dt id="+pelib.&#64;grBody.grBody.grBody">
@@ -789,7 +871,7 @@ xVector = xVector / norm(xVector);</p>
 
 <dl class="attribute">
 <dt id="+pelib.&#64;grBody.grBody.oriList">
-<code class="sig-name descname">oriList</code><em class="property"> = &quot;{'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.oriList" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">oriList</code><em class="property"> = &quot;{'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK', 'qRFT', 'qLFT'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.oriList" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -799,7 +881,7 @@ xVector = xVector / norm(xVector);</p>
 
 <dl class="attribute">
 <dt id="+pelib.&#64;grBody.grBody.posList">
-<code class="sig-name descname">posList</code><em class="property"> = &quot;{'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'RFEP', 'RFEO',                    'RTIO'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.posList" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">posList</code><em class="property"> = &quot;{'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'LTOE',                    'RFEP', 'RFEO', 'RTIO', 'RTOE'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.posList" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -820,37 +902,37 @@ xVector = xVector / norm(xVector);</p>
 <dl class="attribute">
 <dt id="+pelib.&#64;grBody.grBody.qLSK">
 <code class="sig-name descname">qLSK</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qLSK" title="Permalink to this definition">¶</a></dt>
-<dd><p>right foot orientation (n x 4)</p>
+<dd><p>right foot orientation (n x 4) following Vicon convention,</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="+pelib.&#64;grBody.grBody.qLTH">
 <code class="sig-name descname">qLTH</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qLTH" title="Permalink to this definition">¶</a></dt>
-<dd><p>right tibia orientation (n x 4)</p>
+<dd><p>right tibia orientation (n x 4), z = along tibia, x = forward, y towards left</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="+pelib.&#64;grBody.grBody.qRFT">
 <code class="sig-name descname">qRFT</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRFT" title="Permalink to this definition">¶</a></dt>
-<dd><p>left foot orientation (n x 4)</p>
+<dd><p>left foot orientation (n x 4) following Vicon convention</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="+pelib.&#64;grBody.grBody.qRPV">
 <code class="sig-name descname">qRPV</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRPV" title="Permalink to this definition">¶</a></dt>
-<dd><p>right femur orientation (n x 4)</p>
+<dd><p>right femur orientation (n x 4), z = along thigh, x = forward, y towards left</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="+pelib.&#64;grBody.grBody.qRSK">
 <code class="sig-name descname">qRSK</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRSK" title="Permalink to this definition">¶</a></dt>
-<dd><p>left tibia orientation (n x 4)</p>
+<dd><p>left tibia orientation (n x 4), z = along tibia, x = forward, y towards left</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="+pelib.&#64;grBody.grBody.qRTH">
 <code class="sig-name descname">qRTH</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRTH" title="Permalink to this definition">¶</a></dt>
-<dd><p>left femur orientation (n x 4)</p>
+<dd><p>left femur orientation (n x 4), z = along thigh, x = forward, y towards left</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -910,50 +992,66 @@ three KMUs presumably worn on the body in the following configuration: mid
 pelvis, left ankle, right ankle
 In this state space model, the position and velocity of each kinematic
 measurement unit (KMU) is estimated in 3D space by combining the
-information from each KMU in a kalman filter.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x0</strong> – the initial state in the GFR</p></li>
-<li><p><strong>gfrAccMP</strong> – the acceleration of the mid-pelvis in the GFR</p></li>
-<li><p><strong>gfrAccLA</strong> – the acceleration of the left ankle in the GFR</p></li>
-<li><p><strong>gfrAccRA</strong> – the acceleration of the right ankle in the GFR</p></li>
-<li><p><strong>bIsStatMP</strong> – a boolean vector, for whichever timepoints, n(i) are true,
+information from each KMU in a kalman filter. NOTE: pay special attention 
+to units:;
+position (meters)
+velocity (m/s)
+acceleration (m/2^2)</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param x0</dt>
+<dd class="field-odd"><p>the initial state in the GFR</p>
+</dd>
+<dt class="field-even">param gfrAccMP</dt>
+<dd class="field-even"><p>the acceleration of the mid-pelvis in the GFR</p>
+</dd>
+<dt class="field-odd">param gfrAccLA</dt>
+<dd class="field-odd"><p>the acceleration of the left ankle in the GFR</p>
+</dd>
+<dt class="field-even">param gfrAccRA</dt>
+<dd class="field-even"><p>the acceleration of the right ankle in the GFR</p>
+</dd>
+<dt class="field-odd">param bIsStatMP</dt>
+<dd class="field-odd"><p>a boolean vector, for whichever timepoints, n(i) are true,
 i.e., bMoving_MP(i) == 1, a zero velocity update will be 
-performed by using psuedo-zero velocity measurements</p></li>
-<li><p><strong>bIsStatLA</strong> – a boolean vector, for whichever timepoints, n(i) are true,
+performed by using psuedo-zero velocity measurements</p>
+</dd>
+<dt class="field-even">param bIsStatLA</dt>
+<dd class="field-even"><p>a boolean vector, for whichever timepoints, n(i) are true,
 i.e., bMoving_LA(i) == 1, a zero velocity update will be 
-performed by using psuedo-zero velocity measurements</p></li>
-<li><p><strong>bIsStatRA</strong> – a boolean vector, for whichever timepoints, n(i) are true,
+performed by using psuedo-zero velocity measurements</p>
+</dd>
+<dt class="field-odd">param bIsStatRA</dt>
+<dd class="field-odd"><p>a boolean vector, for whichever timepoints, n(i) are true,
 i.e., bMoving_RA(i) == 1, a zero velocity update will be 
-performed by using psuedo-zero velocity measurements</p></li>
-<li><p><strong>qMP</strong> – mid  pelvis orientation in the GFR (quaternion)</p></li>
-<li><p><strong>qLA</strong> – left  ankle orientation in the GFR (quaternion)</p></li>
-<li><p><strong>qRA</strong> – right ankle orientation in the GFR (quaternion)</p></li>
-<li><p><strong>dPelvis</strong> – pelvis width</p></li>
-<li><p><strong>dRFemur</strong> – right femur length</p></li>
-<li><p><strong>dLFemur</strong> – left femur length</p></li>
-<li><p><strong>dRTibia</strong> – right tibia length</p></li>
-<li><p><strong>dLTibia</strong> – left tibia length</p></li>
-</ul>
+performed by using psuedo-zero velocity measurements</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>xhat_pri - Prior state estimate</p></li>
-<li><p>xhat_con - Constrained state estimate</p></li>
-<li><p>debug_dat -   Additional debug data</p></li>
-</ul>
-</p>
+<dt class="field-even">param qMP</dt>
+<dd class="field-even"><p>mid  pelvis orientation in the GFR (quaternion)</p>
+</dd>
+<dt class="field-odd">param qLA</dt>
+<dd class="field-odd"><p>left  ankle orientation in the GFR (quaternion)</p>
+</dd>
+<dt class="field-even">param qRA</dt>
+<dd class="field-even"><p>right ankle orientation in the GFR (quaternion)</p>
+</dd>
+<dt class="field-odd">param dPelvis</dt>
+<dd class="field-odd"><p>pelvis width</p>
+</dd>
+<dt class="field-even">param dRFemur</dt>
+<dd class="field-even"><p>right femur length</p>
+</dd>
+<dt class="field-odd">param dLFemur</dt>
+<dd class="field-odd"><p>left femur length</p>
+</dd>
+<dt class="field-even">param dRTibia</dt>
+<dd class="field-even"><p>right tibia length</p>
+</dd>
+<dt class="field-odd">param dLTibia</dt>
+<dd class="field-odd"><p>left tibia length</p>
 </dd>
 </dl>
-<dl class="simple">
-<dt>NOTE:</dt><dd><ul class="simple">
-<li><p>Pay special attention to units: position (<span class="math notranslate nohighlight">\(m\)</span>), 
-velocity (<span class="math notranslate nohighlight">\(m/s\)</span>), acceleration (<span class="math notranslate nohighlight">\(m/s^2\)</span>)</p></li>
-<li><p>Refer to <a class="bibtex reference internal" href="../references.html#sy2019ckf" id="id1">[1]</a> for details.</p></li>
-</ul>
-</dd>
-</dl>
+</div></blockquote>
 </dd></dl>
 
 </div>
