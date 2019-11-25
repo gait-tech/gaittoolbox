@@ -24,3 +24,11 @@ est
    :members:
    :undoc-members:
    
+viz
+---------
+
+.. automodule:: +pelib.+viz
+   :show-inheritance:
+   :members:
+   :undoc-members:
+   
