@@ -95,6 +95,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Pose Estimator Library</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-+pelib.&#64;grBody">grBody</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-+pelib.+est">est</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-+pelib.+viz">viz</a></li>
 </ul>
 </li>
 </ul>
@@ -1052,6 +1053,270 @@ performed by using psuedo-zero velocity measurements</p>
 </dd>
 </dl>
 </div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-+pelib.+viz">
+<span id="viz"></span><h2>viz<a class="headerlink" href="#module-+pelib.+viz" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="+pelib.+viz.UKF_Rel_LPVA_plot">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">UKF_Rel_LPVA_plot</code><span class="sig-paren">(</span><em class="sig-param">N_MP</em>, <em class="sig-param">fs</em>, <em class="sig-param">actBody</em>, <em class="sig-param">estBody</em>, <em class="sig-param">pIntS</em>, <em class="sig-param">plotRes</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.UKF_Rel_LPVA_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>close all</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.UKF_plotAccel">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">UKF_plotAccel</code><span class="sig-paren">(</span><em class="sig-param">pIntS</em>, <em class="sig-param">tru_Acc_GFR</em>, <em class="sig-param">est_Acc_GFR</em>, <em class="sig-param">N_MP</em>, <em class="sig-param">fs</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.UKF_plotAccel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.animViconMarkersV2">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">animViconMarkersV2</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.animViconMarkersV2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quickly visualise the vicon markers
+&#64;author</p>
+<p>Source: <a class="reference external" href="https://github.com/mikedelr/Vicon-2-MATLAB-tools/blob/master/animViconMarkersV2.m">https://github.com/mikedelr/Vicon-2-MATLAB-tools/blob/master/animViconMarkersV2.m</a></p>
+<dl class="simple">
+<dt>Example usage:</dt><dd><p>animViconMarkers(‘markerData’,markerData,’markerSet’,markerSet)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bodys</strong> – Body instance(s) to be plotted</p></li>
+<li><p><strong>parts</strong> – String(s) of body point(s) to be plotted.</p></li>
+<li><p><strong>markerData</strong> – struct with fields</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotComparison">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotComparison</code><span class="sig-paren">(</span><em class="sig-param">data1</em>, <em class="sig-param">data2</em>, <em class="sig-param">fs</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotComparison" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot comparison between data1 and data2</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data1</strong> – array of n x m to be plotted</p></li>
+<li><p><strong>data2</strong> – array of n x m to be plotted</p></li>
+<li><p><strong>fs</strong> – [Optional] sampling frequency. default=1</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotJointAngles">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotJointAngles</code><span class="sig-paren">(</span><em class="sig-param">bodys</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotJointAngles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot joint angles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bodys</strong> – Body instance(s) to be plotted</p></li>
+<li><p><strong>parts</strong> – String(s) of body point(s) to be plotted (LHip, RHip, LKnee, RKnee).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotLowerBody">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotLowerBody</code><span class="sig-paren">(</span><em class="sig-param">body</em>, <em class="sig-param">t</em>, <em class="sig-param">showOrientation</em>, <em class="sig-param">showGround</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotLowerBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the lower body using the joint positions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> – Body instance to be plotted</p></li>
+<li><p><strong>t</strong> – time point to be plotted</p></li>
+<li><p><strong>showOrientation</strong> – [Optional] show coordinate system of each body segment</p></li>
+<li><p><strong>showGround</strong> – [Optional] show ground</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>p - plot object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotLowerBody2">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotLowerBody2</code><span class="sig-paren">(</span><em class="sig-param">body</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotLowerBody2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the lower body using the orientations (checking purposing)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> – Body instance to be plotted</p></li>
+<li><p><strong>t</strong> – time point to be plotted</p></li>
+<li><p><strong>showGround</strong> – show ground</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>p - plot object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotLowerBodySegmentLengthError">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotLowerBodySegmentLengthError</code><span class="sig-paren">(</span><em class="sig-param">body</em>, <em class="sig-param">hips</em>, <em class="sig-param">lfemur</em>, <em class="sig-param">rfemur</em>, <em class="sig-param">ltibia</em>, <em class="sig-param">rtibia</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotLowerBodySegmentLengthError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot lower body segment length error</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> – Body instance to be plotted</p></li>
+<li><p><strong>hips</strong> – left and right hip distance</p></li>
+<li><p><strong>lfemur</strong> – left femur length</p></li>
+<li><p><strong>rfemer</strong> – right femur length</p></li>
+<li><p><strong>ltibia</strong> – left tibia length</p></li>
+<li><p><strong>rtibia</strong> – right tibia length</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>p - plot object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotMeanCovSamples">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotMeanCovSamples</code><span class="sig-paren">(</span><em class="sig-param">MU</em>, <em class="sig-param">SIGMA</em>, <em class="sig-param">N</em>, <em class="sig-param">setup</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotMeanCovSamples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot dots based on mean MU and covariance SIGMA</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>MU</strong> – mean</p></li>
+<li><p><strong>SIGMA</strong> – convariance matrix</p></li>
+<li><p><strong>N</strong> – number of dots to represent the covariance cloud</p></li>
+<li><p><strong>setup</strong> – plot setup</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>p plot object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotOrientation">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotOrientation</code><span class="sig-paren">(</span><em class="sig-param">bodys</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotOrientation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot body orientation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bodys</strong> – Body instance(s) to be plotted</p></li>
+<li><p><strong>parts</strong> – String(s) of body point(s) to be plotted.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotOrientationDiff">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotOrientationDiff</code><span class="sig-paren">(</span><em class="sig-param">body1</em>, <em class="sig-param">body2</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotOrientationDiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot body orientation (body2 - body1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body1</strong> – Base Body instance</p></li>
+<li><p><strong>body2</strong> – Body instance(s) to be compared to</p></li>
+<li><p><strong>parts</strong> – String(s) of body point(s) to be plotted.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotPosOri">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotPosOri</code><span class="sig-paren">(</span><em class="sig-param">pos</em>, <em class="sig-param">ori</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotPosOri" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot point with axis</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> – position of point</p></li>
+<li><p><strong>ori</strong> – orientation of segment</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotPosition">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotPosition</code><span class="sig-paren">(</span><em class="sig-param">bodys</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotPosition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot body position</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bodys</strong> – Body instance(s) to be plotted</p></li>
+<li><p><strong>parts</strong> – String(s) of body point(s) to be plotted.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotPositionDiff">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotPositionDiff</code><span class="sig-paren">(</span><em class="sig-param">body1</em>, <em class="sig-param">body2</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotPositionDiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot body position difference (body2 - body1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body1</strong> – Base Body instance</p></li>
+<li><p><strong>body2</strong> – Body instance(s) to be compared to</p></li>
+<li><p><strong>parts</strong> – String(s) of body point(s) to be plotted.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotQuaternion">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotQuaternion</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotQuaternion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot s0 s1 s2 s3 of quaternion</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> – array of n x 4’s to be plotted</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotR">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotR</code><span class="sig-paren">(</span><em class="sig-param">R</em>, <em class="sig-param">origin</em>, <em class="sig-param">color</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot rotation matrix column basis</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>R</strong> – rotation matrix</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotStateComparison">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotStateComparison</code><span class="sig-paren">(</span><em class="sig-param">estStateData</em>, <em class="sig-param">actStateData</em>, <em class="sig-param">stateIdx</em>, <em class="sig-param">fs</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotStateComparison" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the state across time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estStateData</strong> – estimated state data (n_samples x n_state)</p></li>
+<li><p><strong>actStateData</strong> – actual (basis) state data (n_samples x n_state)</p></li>
+<li><p><strong>stateIdx</strong> – compare state number stateIdx: stateIdx+2</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="+pelib.+viz.plotXYZ">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotXYZ</code><span class="sig-paren">(</span><em class="sig-param">fs</em>, <em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotXYZ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot x y z of inputs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fs</strong> – sampling frequency</p></li>
+<li><p><strong>inputs</strong> – array of n x 3’s to be plotted</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
