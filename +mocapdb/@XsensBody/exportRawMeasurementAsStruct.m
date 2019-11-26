@@ -32,7 +32,7 @@ function out = exportRawMeasurementAsStruct(obj, seg, segAlias)
         out.(sprintf('B_%sAcc', segAlias{i})) = t.acc;
         out.(sprintf('B_%sGyr', segAlias{i})) = t.gyr;
         out.(sprintf('B_%sMag', segAlias{i})) = t.mag;
-        out.(sprintf('W_%sAcc', segAlias{i})) = quatrotate(quatconj(t.ori), t.acc);
+        out.(sprintf('W_%sAcc', segAlias{i})) = quatrotate(quatconj(t.ori), t.acc) - [0 0 9.81];
         out.(sprintf('W_%sGyr', segAlias{i})) = quatrotate(quatconj(t.ori), t.gyr);
         out.(sprintf('W_%sMag', segAlias{i})) = quatrotate(quatconj(t.ori), t.mag);
         

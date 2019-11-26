@@ -12,6 +12,10 @@ classdef grBody < matlab.mixin.Copyable
         fs = 60
         % frame: vicon / world / MIDPEL
         frame
+        % full trial start index
+        ftStartIndex
+        % full trial end index
+        ftEndIndex
         
         % Plot specifications
         posUnit = 'mm';
@@ -208,6 +212,36 @@ classdef grBody < matlab.mixin.Copyable
             theta = theta(:, [2 1 3]);
         end
         
+        function theta = calcJointAnglesLAnkle(obj, idx)
+			% Calculate left ankle joint angles (seq: YXZ)
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: all)
+			%
+			% :return: theta - joint angles (n x 3)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME) 2019/11/27
+			
+            if nargin <= 1, idx = 1:size(obj.qLSK, 1); end
+            theta = pelib.grBody.calcJointAngles(obj.qLSK(idx, :), obj.qLFT(idx, :));
+            theta = theta(:, [2 1 3]) .* [-1 1 -1];
+        end
+        
+        function theta = calcJointAnglesRAnkle(obj, idx)
+			% Calculate right ankle joint angles (seq: YXZ)
+			%
+			% :param obj: this object class
+			% :param idx: [OPTIONAL] index to be calculated (default: all)
+			%
+			% :return: theta - joint angles (n x 3)
+			%
+			% .. Author: - Luke Sy (UNSW GSBME) 2019/11/27
+			
+            if nargin <= 1, idx = 1:size(obj.qRSK, 1); end
+            theta = pelib.grBody.calcJointAngles(obj.qRSK(idx, :), obj.qRFT(idx, :));
+            theta = theta(:, [2 1 3]);
+        end
+        
         function d = calcPelvisLength(obj, idx)
 			% Calculate pelvis length
 			%
@@ -345,6 +379,7 @@ classdef grBody < matlab.mixin.Copyable
         out = changePosUnit(obj, newUnit, update);
 		out = changeRefFrame(obj, ref)
         out = getSubset(obj, idx);
+        out = repelem(obj, n);
         out = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
                         extraMarkers, oriMode, spevents);
     end

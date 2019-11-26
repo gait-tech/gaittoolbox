@@ -19,6 +19,6 @@ function out = calcJointAcc(obj, pts)
     out = {}; fs = obj.fs;
     for i=1:length(pts)
         n = pts{i};
-        out.(n) = [0 0 0; diff(obj.(n), 2, 1)*fs*fs];
+        out.(n) = [0 0 0; diff(obj.(n), 2, 1)*fs*fs; 0 0 0];
     end
 end

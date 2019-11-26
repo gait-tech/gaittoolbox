@@ -10,7 +10,7 @@ function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
     DEGRANGE = (0:0.1:359) - 180;
     out = mocapdb.XsensBody();
     
-    segList = {'Pelvis', 'L_LowLeg', 'R_LowLeg'};
+    segList = ["Pelvis", "L_LowLeg", "R_LowLeg", "L_Foot", "R_Foot"];
     
     nSamples = min(dataV.nSamples, obj.nSamples);
     sIdx = max(dataV.getStartIndex()+1, 100);
@@ -21,32 +21,22 @@ function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
                              'lnSymbol', '-', 'ptSymbol', '*', 'fs', dataV.fs, ...
                              'xyzColor', {'m', 'y', 'c'}});  
     refAcc = viconBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
-    refAcc.MIDPEL = refAcc.MIDPEL(sIdx:eIdx,:);
-    refAcc.LTIO = refAcc.LTIO(sIdx:eIdx,:);
-    refAcc.RTIO = refAcc.RTIO(sIdx:eIdx,:);
+    refAcc.Pelvis = refAcc.MIDPEL(sIdx:eIdx,:);
+    refAcc.L_LowLeg = refAcc.LTIO(sIdx:eIdx,:);
+    refAcc.R_LowLeg = refAcc.RTIO(sIdx:eIdx,:);
+    refAcc.L_Foot = refAcc.LTIO(sIdx:eIdx,:);
+    refAcc.R_Foot = refAcc.RTIO(sIdx:eIdx,:);
 
     estAcc = {};
-    estAcc.MIDPEL = quatrotate(quatconj(obj.Pelvis.ori), ...
-                            obj.Pelvis.acc) - [0 0 9.81];
-    estAcc.MIDPEL = estAcc.MIDPEL(sIdx:eIdx,:);
-    estAcc.LTIO = quatrotate(quatconj(obj.L_LowLeg.ori), ...
-                            obj.L_LowLeg.acc) - [0 0 9.81];
-    estAcc.LTIO = estAcc.LTIO(sIdx:eIdx,:);
-    estAcc.RTIO = quatrotate(quatconj(obj.R_LowLeg.ori), ...
-                            obj.R_LowLeg.acc) - [0 0 9.81];
-    estAcc.RTIO = estAcc.RTIO(sIdx:eIdx,:);
+    for i = segList
+        estAcc.(i) = quatrotate(quatconj(obj.(i).ori), ...
+                            obj.(i).acc) - [0 0 9.81];
+        estAcc.(i) = estAcc.(i)(sIdx:eIdx,:);
 
-    [thetaP, errP] = findOptimalThetaBrute(refAcc.MIDPEL, estAcc.MIDPEL);
-    [thetaL, errL] = findOptimalThetaBrute(refAcc.LTIO, estAcc.LTIO);
-    [thetaR, errR] = findOptimalThetaBrute(refAcc.RTIO, estAcc.RTIO);
-
-    [~, peakIdxP] = min(abs(DEGRANGE-thetaP)); 
-    [~, peakIdxL] = min(abs(DEGRANGE-thetaL)); 
-    [~, peakIdxR] = min(abs(DEGRANGE-thetaR)); 
-    
-    out.Pelvis.ori = axang2quat([0 0 1 deg2rad(-DEGRANGE(peakIdxP))]);
-    out.L_LowLeg.ori = axang2quat([0 0 1 deg2rad(-DEGRANGE(peakIdxL))]);
-    out.R_LowLeg.ori = axang2quat([0 0 1 deg2rad(-DEGRANGE(peakIdxR))]);
+        [theta, err] = findOptimalThetaBrute(refAcc.(i), estAcc.(i));
+        [~, peakIdx] = min(abs(DEGRANGE-theta)); 
+        out.(i).ori = axang2quat([0 0 1 deg2rad(-DEGRANGE(peakIdx))]);
+    end
 end
 
 function [theta, err] = findOptimalThetaBrute(refAcc, estAcc)
