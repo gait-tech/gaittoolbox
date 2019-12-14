@@ -371,6 +371,7 @@ classdef grBody < matlab.mixin.Copyable
         [out1, out2] = calcDOrinobias(obj, ref);
         out = calcDPos(obj, ref);
         out = calcMPLARAdist(obj);
+        out = calcTTD(obj1, obj2, intervals, baseStruct);
         
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);
