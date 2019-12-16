@@ -15,11 +15,19 @@ function out = calcTTD(obj1, obj2, intervals, baseStruct)
     else, out = baseStruct; end
     
     posFields = ["MIDPEL", "LTIO", "RTIO"];
+    intervals2 = struct();
+    for i=posFields
+        buf = intervals.(i);
+        buf([1, end]) = true;
+        event = buf - buf([1, 1:end-1]);
+        [idx, val] = find(event == 1);
+        intervals2.(i) = idx;
+    end
     
     for i=posFields
         %% obj1 TTD
         % get position at intervals
-        pos1 = obj1.(i)(intervals.(i), 1:2);
+        pos1 = obj1.(i)(intervals2.(i), 1:2);
         % get distance between intervals
         dist1 = vecnorm(pos1(2:end,:)-pos1(1:end-1,:), 2, 2);
         % add distance
@@ -27,7 +35,7 @@ function out = calcTTD(obj1, obj2, intervals, baseStruct)
         
         %% act TTD
         % get position at intervals
-        pos2 = obj2.(i)(intervals.(i), 1:2);
+        pos2 = obj2.(i)(intervals2.(i), 1:2);
         % get distance between intervals
         dist2 = vecnorm(pos2(2:end,:)-pos2(1:end-1,:), 2, 2);
         % add distance
