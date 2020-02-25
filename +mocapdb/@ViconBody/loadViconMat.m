@@ -82,8 +82,9 @@ function obj = loadViconMat(fname)
     % https://docs.vicon.com/display/Nexus29/Lower+body+kinematics#Lowerbodykinematics-Foot
     LFT_z = LTOE(:, 1:3) - LAJC(:, 1:3);
     LFT_z = LFT_z ./ vecnorm(LFT_z, 2, 2);
-    LFT_y = LSHK_y;
-    LFT_x = cross(LFT_y, LFT_z, 2);
+    LFT_c = LSHK_y;
+    LFT_x = cross(LFT_c, LFT_z, 2);
+    LFT_y = cross(LFT_z, LFT_x, 2);
     LFT_CS = zeros(3, 3, n);
     LFT_CS(:, 1, :) = reshape(LFT_x', 3, 1, n);
     LFT_CS(:, 2, :) = reshape(LFT_y', 3, 1, n);
@@ -93,8 +94,9 @@ function obj = loadViconMat(fname)
     % https://docs.vicon.com/display/Nexus29/Lower+body+kinematics#Lowerbodykinematics-Foot
     RFT_z = RTOE(:, 1:3) - RAJC(:, 1:3);
     RFT_z = RFT_z ./ vecnorm(RFT_z, 2, 2);
-    RFT_y = RSHK_y;
-    RFT_x = cross(RFT_y, RFT_z, 2);
+    RFT_c = RSHK_y;
+    RFT_x = cross(RFT_c, RFT_z, 2);
+    RFT_y = cross(RFT_z, RFT_x, 2);
     RFT_CS = zeros(3, 3, n);
     RFT_CS(:, 1, :) = reshape(RFT_x', 3, 1, n);
     RFT_CS(:, 2, :) = reshape(RFT_y', 3, 1, n);

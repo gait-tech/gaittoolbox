@@ -367,6 +367,7 @@ classdef grBody < matlab.mixin.Copyable
         out = calcJointVel(obj, pts);
         out = calcSegAngVel(obj, pts, frame);
         out = calcJointAcc(obj, pts);
+        out = calcSegAngAcc(obj, pts, frame);
         out = calcDOri(obj, ref);
         [out1, out2] = calcDOrinobias(obj, ref);
         out = calcDPos(obj, ref);
