@@ -13,13 +13,19 @@ function out = toWorldFrame(obj, qR)
         
     posList = obj.posList;
            
-    qR2 = quatconj(qR);
+    qR2 = quatconj(qR);    
+    posList = obj.posList;
     for i=1:length(posList)
-        out.(posList{i}) = quatrotate(qR2, obj.(posList{i}));
+        if(~isempty(obj.(posList{i})))
+            out.(posList{i}) = quatrotate(qR2, obj.(posList{i}));
+        end
     end
     
     oriList = obj.oriList;
-	for i=1:length(oriList)
-        out.(oriList{i}) = quatmultiply(qR, obj.(oriList{i}));
+    for i=1:length(oriList)
+        if(~isempty(obj.(oriList{i})))
+            out.(oriList{i}) = quatmultiply(qR, ...
+                obj.(oriList{i}));
+        end
     end
 end

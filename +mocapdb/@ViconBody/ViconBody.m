@@ -57,7 +57,7 @@ classdef ViconBody < matlab.mixin.Copyable
         posList = {'PELV', 'LFEP', 'LFEO', 'LTIO', 'LTOE', ...
             'RFEP', 'RFEO', 'RTIO', 'RTOE'};
 		% orientation property list
-        oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'};
+        oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK', 'qRFT', 'qLFT'};
     end
     methods
         % Class constructor
