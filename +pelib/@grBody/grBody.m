@@ -223,8 +223,12 @@ classdef grBody < matlab.mixin.Copyable
 			% .. Author: - Luke Sy (UNSW GSBME) 2019/11/27
 			
             if nargin <= 1, idx = 1:size(obj.qLSK, 1); end
-            theta = pelib.grBody.calcJointAngles(obj.qLSK(idx, :), obj.qLFT(idx, :));
-            theta = theta(:, [2 1 3]) .* [-1 1 -1];
+            if isempty(obj.qLSK) || isempty(obj.qLFT)
+                theta = [];
+            else
+                theta = pelib.grBody.calcJointAngles(obj.qLSK(idx, :), obj.qLFT(idx, :));
+                theta = theta(:, [2 1 3]) .* [-1 1 -1];
+            end
         end
         
         function theta = calcJointAnglesRAnkle(obj, idx)
@@ -238,8 +242,12 @@ classdef grBody < matlab.mixin.Copyable
 			% .. Author: - Luke Sy (UNSW GSBME) 2019/11/27
 			
             if nargin <= 1, idx = 1:size(obj.qRSK, 1); end
-            theta = pelib.grBody.calcJointAngles(obj.qRSK(idx, :), obj.qRFT(idx, :));
-            theta = theta(:, [2 1 3]);
+            if isempty(obj.qRSK) || isempty(obj.qRFT)
+                theta = [];
+            else
+                theta = pelib.grBody.calcJointAngles(obj.qRSK(idx, :), obj.qRFT(idx, :));
+                theta = theta(:, [2 1 3]);
+            end
         end
         
         function d = calcPelvisLength(obj, idx)
@@ -368,15 +376,15 @@ classdef grBody < matlab.mixin.Copyable
         out = calcSegAngVel(obj, pts, frame);
         out = calcJointAcc(obj, pts);
         out = calcSegAngAcc(obj, pts, frame);
-        out = calcDOri(obj, ref);
-        [out1, out2] = calcDOrinobias(obj, ref);
-        out = calcDPos(obj, ref);
+        out = calcDOri(obj, ref, targetSeg);
+        [out1, out2] = calcDOrinobias(obj, ref, targetSeg);
+        out = calcDPos(obj, ref, includeRoot);
         out = calcMPLARAdist(obj);
         out = calcTTD(obj1, obj2, intervals, baseStruct);
         
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);
-        out = diffRMSEandMean(obj1, obj2);
+        out = diffRMSEandMean(obj1, obj2, includeRoot, targetSeg);
         out = toWorldFrame(obj, pos, ori);
         out = changePosUnit(obj, newUnit, update);
 		out = changeRefFrame(obj, ref)

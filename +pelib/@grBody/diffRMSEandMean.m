@@ -1,19 +1,22 @@
-function out = diffRMSEandMean(obj1, obj2)
+function out = diffRMSEandMean(obj1, obj2, includeRoot, targetSeg)
 	% Returns the RMSE and Mean difference between grBody1 and grBody2
 	%
 	% :param obj1: grBody 1 (self)
 	% :param obj1: grBody 2 (other)
+    % :param includeRoot: [boolean] if root/pelvis is included
+    % :param targetSeg: segments to be computed (usually occluded)
 	%
 	% :return: out - struct with the difference of pos and ori parameters
 	%
 	% .. Author: - Luke Sy (UNSW GSBME)
-
+    if nargin <= 2, includeRoot = true; end
+    if nargin <= 3, targetSeg = {'qLTH', 'qRTH'}; end
     seq = 'YXZ';
     
     out = struct;
     posFields = obj1.posList;
 %     oriFields = obj1.oriList;
-    oriFields = {'qRPV', 'qLHIP', 'qRHIP', 'qLKNE', 'qRKNE'};
+    oriFields = {'qRPV', 'qLHIP', 'qRHIP', 'qLKNE', 'qRKNE', 'qLANK', 'qRANK'};
     
     if ~isobject(obj2) && isnan(obj2)
         for i=1:length(posFields)
@@ -75,6 +78,8 @@ function out = diffRMSEandMean(obj1, obj2)
             buf{i}.qRHIP = objList{i}.calcJointAnglesRHip()*180/pi;
             buf{i}.qLKNE = objList{i}.calcJointAnglesLKnee()*180/pi;
             buf{i}.qRKNE = objList{i}.calcJointAnglesRKnee()*180/pi;
+            buf{i}.qLANK = objList{i}.calcJointAnglesLAnkle()*180/pi;
+            buf{i}.qRANK = objList{i}.calcJointAnglesRAnkle()*180/pi;
         end      
         nOriFields = length(oriFields);
         valRMSE = zeros(nOriFields, 3);
@@ -84,19 +89,28 @@ function out = diffRMSEandMean(obj1, obj2)
         valCorrCoef = zeros(nOriFields, 3);
         for i=1:nOriFields
             d = rawDiff.(oriFields{i});
-            valMean(i,:) = nanmean(d, 1);
-            valRMSE(i,:) = sqrt(nanmean(d.^2, 1));
-            valRMSEnobias(i,:) = sqrt(nanmean((d-valMean(i,:)).^2, 1));
-            valStd(i,:) = nanstd(d, 1);
-            theta1 = buf{1}.(oriFields{i});
-            theta2 = buf{2}.(oriFields{i});
-            thetaIdx = ~isnan(theta1) & ~isnan(theta2);
-            R = zeros(2,2,3);
-            for j=1:3
-                R(:,:,j) = corrcoef(theta1(thetaIdx(:,j),j), ...
-                                    theta2(thetaIdx(:,j),j));
+            if(~isempty(d))
+                valMean(i,:) = nanmean(d, 1);
+                valRMSE(i,:) = sqrt(nanmean(d.^2, 1));
+                valRMSEnobias(i,:) = sqrt(nanmean((d-valMean(i,:)).^2, 1));
+                valStd(i,:) = nanstd(d, 1);
+                theta1 = buf{1}.(oriFields{i});
+                theta2 = buf{2}.(oriFields{i});
+                thetaIdx = ~isnan(theta1) & ~isnan(theta2);
+                R = zeros(2,2,3);
+                for j=1:3
+                    R(:,:,j) = corrcoef(theta1(thetaIdx(:,j),j), ...
+                                        theta2(thetaIdx(:,j),j));
+                end
+                valCorrCoef(i,:) = squeeze(R(2,1,:));
+            else
+                valMean(i,:) = [nan nan nan];
+                valRMSE(i,:) = [nan nan nan];
+                valRMSEnobias(i,:) = [nan nan nan];
+                valStd(i,:) = [nan nan nan];
+                valCorrCoef(i,:) = [nan nan nan];
             end
-            valCorrCoef(i,:) = squeeze(R(2,1,:));
+
             out.(sprintf('%sRMSE', oriFields{i})) = valRMSE(i, :);
             out.(sprintf('%sRMSEnobias', oriFields{i})) = valRMSEnobias(i, :);
             out.(sprintf('%sStd',  oriFields{i})) = valStd(i, :);
@@ -106,10 +120,10 @@ function out = diffRMSEandMean(obj1, obj2)
         out.oriMeanRMSE = nanmean(valRMSE(:));
         out.oriMeanMean = nanmean(valMean(:));
         
-        out.dOri = nanmean(obj1.calcDOri(obj2));
-        [out.dOrinobias, out.dOribias] = obj1.calcDOrinobias(obj2);
+        out.dOri = nanmean(obj1.calcDOri(obj2,targetSeg));
+        [out.dOrinobias, out.dOribias] = obj1.calcDOrinobias(obj2,targetSeg);
         out.dOrinobias = nanmean(out.dOrinobias);
-        out.dPos = nanmean(obj1.calcDPos(obj2));
+        out.dPos = nanmean(obj1.calcDPos(obj2,includeRoot));
     end
     out.trialDuration = obj1.nSamples;
 end
