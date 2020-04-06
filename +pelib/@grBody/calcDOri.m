@@ -1,4 +1,4 @@
-function out = calcDOri(obj, ref)
+function out = calcDOri(obj, ref, targetSeg)
 	% Calculate d_ori of lower body grBody as defined in the Marcard paper
 	% 
 	% T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
@@ -7,22 +7,26 @@ function out = calcDOri(obj, ref)
 	%
 	% :param obj: this grBody
 	% :param ref: reference grBody to be compared with
+    % :param targetSeg: segments to be computed (usually occluded)
 	%
 	% :return: out - array of d_ori with respect to time
 	%
 	% .. Author: - Luke Sy (UNSW GSBME) - 12/07/18
 
-    nameList = {'qLTH', 'qRTH'};
-    doriList = {};
-    rN = size(obj.qLTH, 1); cN = length(nameList);
+    if nargin <= 2, targetSeg = {'qLTH', 'qRTH'}; end
+    rN = size(obj.qLTH, 1); cN = length(targetSeg);
     dori = zeros(rN, cN);
     
+    cIdx = 0;
     for i=1:cN
-        n = nameList{i};
+        n = targetSeg{i};
+        if (isempty(obj.(n)) || isempty(ref.(n))), continue; end
+            
         buf = calcEul(quat2rotm(quatmultiply(obj.(n), quatconj(ref.(n)))));
-        dori(:, i) = vecnorm(rad2deg(buf), 2, 2);
+        cIdx = cIdx + 1;
+        dori(:, cIdx) = vecnorm(rad2deg(buf), 2, 2);
     end
-    out = mean(dori, 2);
+    out = mean(dori(:,1:cIdx), 2);
 end
 
 function eul = calcEul(R)
