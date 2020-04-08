@@ -32,7 +32,7 @@ Minimal Example
 	examples.runSample01
 
 
-2. To run the experiments in `+paper`, go to the root of the gaittoolbox code and run the following command from console.
+#. To run the experiments in `+paper`, you will run the following command from console
 
 .. code-block::
 
