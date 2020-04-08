@@ -3,14 +3,19 @@ Installation
 
 Core
 ------------
-#. Clone this repository 
-	```
+
+1. Clone this repository 
+
+.. code-block::
+
 	git clone https://github.com/gait-tech/gaittoolbox.git
-	```
-#. Run the following command to initialize submodules
-	```
+
+2. Run the following command to initialize submodules
+
+.. code-block::
+
 	git submodule update --init --recursive
-	```
+
 	
 Enable C3D Export
 -----------------
@@ -19,4 +24,17 @@ Enable C3D Export
 
 Minimal Example
 ---------------
-See [sample code](https://github.com/gait-tech/gaittoolbox/tree/master/%2Bexamples).
+
+1. For a quick run, go to the root of the gaittoolbox code and run the following command from console. This command will run the `sample code <https://github.com/gait-tech/gaittoolbox/tree/master/%2Bexamples>`_.
+
+.. code-block::
+
+	examples.runSample01
+
+
+2. To run the experiments in `+paper`, go to the root of the gaittoolbox code and run the following command from console.
+
+.. code-block::
+
+	papers.<foldername>.runAllNeuRASparse01
+	papers.ckf2019.runAllNeuRASparse01
