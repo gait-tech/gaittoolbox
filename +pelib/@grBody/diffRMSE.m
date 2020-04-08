@@ -44,23 +44,33 @@ function out = diffRMSE(obj1, obj2, ref, seq)
         valStd = [];
         for i=1:length(posFields)
             d = rawDiff.(posFields{i});
-            val(end+1,:) = sqrt(nanmean(d.^2, 1));
-            valStd(end+1,:) = nanstd(d, 1);
+            if(~isempty(d))
+                val(end+1,:) = sqrt(nanmean(d.^2, 1));
+                valStd(end+1,:) = nanstd(d, 1);
+            else
+                val(end+1,:) = [nan nan nan];
+                valStd(end+1,:) = [nan nan nan];
+            end
             out.(posFields{i}) = val(end,:);
             out.(sprintf('%sStd', posFields{i})) = valStd(end,:);
         end
-        out.posMeanRMSE = mean(val(:));
+        out.posMeanRMSE = nanmean(val(:));
 
         val = [];
         valStd = [];
         for i=1:length(oriFields)
             d = rawDiff.(oriFields{i});
-            val(end+1,:) = sqrt(nanmean(d.^2, 1));
-            valStd(end+1,:) = nanstd(d, 1);
+            if(~isempty(d))
+                val(end+1,:) = sqrt(nanmean(d.^2, 1));
+                valStd(end+1,:) = nanstd(d, 1);
+            else
+                val(end+1,:) = [nan nan nan];
+                valStd(end+1,:) = [nan nan nan];
+            end
             out.(oriFields{i}) = val(end,:);
             out.(sprintf('%sStd', oriFields{i})) = valStd(end,:);
         end
-        out.oriMeanRMSE = mean(val(:));
+        out.oriMeanRMSE = nanmean(val(:));
         
         out.dOri = nanmean(obj1.calcDOri(obj2));
         out.dPos = nanmean(obj1.calcDPos(obj2));

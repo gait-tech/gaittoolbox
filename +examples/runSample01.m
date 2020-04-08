@@ -7,6 +7,9 @@
 
 dir = 'data/sample';
 expDir = sprintf('%s/output', dir);
+mkdir(expDir);
+mkdir(sprintf('%s/mat', dir));
+addpath('mod-lib');
 
 DEGRANGE = (0:0.1:359) - 180;
 options = struct('Pelvis', '00B40B91', ...
@@ -84,7 +87,7 @@ end
 data.name = name;
 
 fprintf("Data: %s\n", data.name);
-r1 = papers.ckf_2019.runNeuRASparse01Experiment(data.dataS, ...
+r1 = examples.runNeuRASparse01Experiment(data.dataS, ...
         data.dataV, data.calibV2W, data.calibYawFix, ...
         data.dataX, data.revStepDetect, ...
         data.name, setups, expDir, n.startFrame, n.endFrame, data.bias);

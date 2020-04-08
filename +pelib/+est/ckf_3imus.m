@@ -8,48 +8,40 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
 % pelvis, left ankle, right ankle
 % In this state space model, the position and velocity of each kinematic
 % measurement unit (KMU) is estimated in 3D space by combining the
-% information from each KMU in a kalman filter.
-% 
-% :param x0: the initial state in the GFR
-% :param gfrAccMP: the acceleration of the mid-pelvis in the GFR
-% :param gfrAccLA: the acceleration of the left ankle in the GFR
-% :param gfrAccRA: the acceleration of the right ankle in the GFR
-% :param bIsStatMP: a boolean vector, for whichever timepoints, n(i) are true,
+% information from each KMU in a kalman filter. NOTE: pay special attention 
+% to units:;
+% position (meters)
+% velocity (m/s)
+% acceleration (m/2^2)
+%
+%   :param x0: the initial state in the GFR
+%   :param gfrAccMP: the acceleration of the mid-pelvis in the GFR
+%   :param gfrAccLA: the acceleration of the left ankle in the GFR
+%   :param gfrAccRA: the acceleration of the right ankle in the GFR
+%   :param bIsStatMP: a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_MP(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-% :param bIsStatLA: a boolean vector, for whichever timepoints, n(i) are true,
+%   :param bIsStatLA: a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_LA(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-% :param bIsStatRA: a boolean vector, for whichever timepoints, n(i) are true,
+%   :param bIsStatRA: a boolean vector, for whichever timepoints, n(i) are true,
 %                i.e., bMoving_RA(i) == 1, a zero velocity update will be 
 %                performed by using psuedo-zero velocity measurements 
-% :param qMP:		mid  pelvis orientation in the GFR (quaternion)
-% :param qLA:		left  ankle orientation in the GFR (quaternion)
-% :param qRA:		right ankle orientation in the GFR (quaternion)
-% :param dPelvis:	pelvis width
-% :param dRFemur:	right femur length
-% :param dLFemur:	left femur length
-% :param dRTibia:	right tibia length
-% :param dLTibia:	left tibia length
+%   :param qMP:		mid  pelvis orientation in the GFR (quaternion)
+%   :param qLA:		left  ankle orientation in the GFR (quaternion)
+%   :param qRA:		right ankle orientation in the GFR (quaternion)
+%   :param dPelvis:	pelvis width
+%   :param dRFemur:	right femur length
+%   :param dLFemur:	left femur length
+%   :param dRTibia:	right tibia length
+%   :param dLTibia:	left tibia length
 % 
-% :return: 
-%	* xhat_pri - Prior state estimate
-%	* xhat_con - Constrained state estimate
-%	* debug_dat -	Additional debug data
-%
-% NOTE:
-%	* Pay special attention to units: position (:math:`m`), 
-% 	  velocity (:math:`m/s`), acceleration (:math:`m/s^2`)
-%	* Refer to :cite:`sy2019ckf` for details.
-%
 % .. Author: - Luke Wicent Sy, Michael Del Rosario
     fOpt = struct('fs', 60, 'applyMeas', 76, 'applyCstr', 355, ...
         'sigma2QAccMP', 0.5^2, 'sigma2QAccLA', 0.5^2, 'sigma2QAccRA', 0.5^2, ...
-        'sigma2QOriMP', 1e6, 'sigma2QOriLA', 1e6, 'sigma2QOriRA', 1e6, ...
-        'sigma2ROriMP', 1e-6, 'sigma2ROriLA', 1e-6, 'sigma2ROriRA', 1e-6, ...
         'sigma2RPosLA', 1e-4, 'sigma2RPosRA', 1e-4, 'sigma2RPosZMP', 1e-1, ...
-        'sigma2RPosMPLimit', 1e2, 'sigma2RPosLALimit', 1e2, ...
-        'sigma2RPosRALimit', 1e2, 'sigma2RPosMPLARA', 1e2, ...
+        'sigma2RPosMPLimit', 1e4, 'sigma2RPosLALimit', 1e4, ...
+        'sigma2RPosRALimit', 1e4, 'sigma2RPosMPLARA', 1e2, ...
         'sigma2ZuptMP', 1e-2, 'sigma2ZuptLA', 1e-2, 'sigma2ZuptRA', 1e-2, ...
         'alphaLKmin', 0, 'alphaLKmax', pi*8/9, ...
         'alphaRKmin', 0, 'alphaRKmax', pi*8/9, ...
@@ -63,21 +55,20 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
         fOpt.(optionFieldNames{i}) = options.(optionFieldNames{i});
     end
     
-    idxPosMP = 1:3; % column idx corresponding to the mid-pelvis position
-    idxVelMP = 4:6; % column idx corresponding to the mid-pelvis velocity
-	idxOriMP = 7:10; % column idx corresponding to the mid-pelvis orientation
-    idxPosLA = 11:13; % column idx corresponding to the left ankle position
-    idxVelLA = 14:16; % column idx corresponding to the left ankle velocity
-    idxOriLA = 17:20; % column idx corresponding to the left ankle orientation
-    idxPosRA = 21:23; % column idx corresponding to the right ankle position
-    idxVelRA = 24:26; % column idx corresponding to the right ankle velocity
-    idxOriRA = 27:30; % column idx corresponding to the right ankle orientation
-    idxMOriMP = 1:4;
-    idxMOriLA = 5:8;
-    idxMOriRA = 9:12;
-    
-    nStates = 30;
-    
+    nStates = 0;
+    % column idx corresponding to the mid-pelvis position
+    idxPosMP = nStates+1:nStates+3; nStates = nStates + 3;
+    % column idx corresponding to the mid-pelvis velocity
+    idxVelMP = nStates+1:nStates+3; nStates = nStates + 3;
+    % column idx corresponding to the left ankle position
+    idxPosLA = nStates+1:nStates+3; nStates = nStates + 3;
+    % column idx corresponding to the left ankle velocity
+    idxVelLA = nStates+1:nStates+3; nStates = nStates + 3;
+    % column idx corresponding to the right ankle position
+    idxPosRA = nStates+1:nStates+3; nStates = nStates + 3;
+    % column idx corresponding to the right ankle velocity
+    idxVelRA = nStates+1:nStates+3; nStates = nStates + 3;
+        
     % initialise state vector (must be column)
     validateattributes(x0, {'numeric'}, ...
                        {'2d', 'ncols', 1, 'nrows', nStates});
@@ -107,10 +98,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
 
     % Initialise process noise covariance
     Q = diag(repelem([fOpt.sigma2QAccMP fOpt.sigma2QAccLA fOpt.sigma2QAccRA], 3));
-    Qori = diag([zeros(1,6) repelem(fOpt.sigma2QOriMP, 1, 4) ...
-                 zeros(1,6) repelem(fOpt.sigma2QOriLA, 1, 4) ...
-                 zeros(1,6) repelem(fOpt.sigma2QOriRA, 1, 4)]);
-    Q = G * Q * G' + Qori;
+    Q = G * Q * G';
     % initialise covariance in the state estimate
     if islogical(P0) && ~P0
         P_tilde = Q;
@@ -119,16 +107,7 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
     else
         P_tilde = P0;
     end
-    
-    nMeasure = 12;
-    H = zeros(nMeasure, nStates);
-    H(idxMOriMP, idxOriMP) = eye(4, 4);
-    H(idxMOriLA, idxOriLA) = eye(4, 4);
-    H(idxMOriRA, idxOriRA) = eye(4, 4);
-
-    Rdiag = repelem([fOpt.sigma2ROriMP fOpt.sigma2ROriLA fOpt.sigma2ROriRA], 4);
-    R = diag(Rdiag);
-    
+       
     % check that all accelerometer measurements are equal dimensions
     [nSamples, ~] = size(gfrAccMP);
     validateattributes(gfrAccMP, {'numeric'}, {'2d', 'nrows', nSamples, 'ncols', 3});
@@ -140,7 +119,6 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
     
     % local variable assignment for readability
     u_k = [gfrAccMP, gfrAccLA, gfrAccRA]';
-    y_k = [qMP, qLA, qRA]';
                  
     % allocate memory to store apriori and aposteriori state estimates, xhat,
     % and error covariances in the state estimate, P_pri, P_pos
@@ -168,115 +146,73 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
     
     debug_dat.zuptStateL = bIsStatLA;
     debug_dat.zuptStateR = bIsStatRA;
-    
-    floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
-    
-    modHundredApplyMeas = mod(fOpt.applyMeas, 100);
-    applyCstrW = idivide(int32(fOpt.applyCstr), 100, 'floor');
-    
-    % applyMeas update orientation initialization
-    if fOpt.applyMeas
-        idxMVelMP = nMeasure+1:nMeasure+3;
-        idxMVelLA = nMeasure+4:nMeasure+6;
-        idxMVelRA = nMeasure+7:nMeasure+9;
-        nMeasure = nMeasure+9;
         
-        H(end+1:end+9, :) = zeros(9, nStates);
-        H(idxMVelMP, idxVelMP) = eye(3);
-        H(idxMVelLA, idxVelLA) = eye(3);
-        H(idxMVelRA, idxVelRA) = eye(3);
-        
-        Rdiag = diag(R);
-        Rdiag(end+1:end+9) = repelem([fOpt.sigma2ZuptMP ...
-            fOpt.sigma2ZuptLA fOpt.sigma2ZuptRA], 3);
-        R = diag(Rdiag);
-        
-        y_k(end+1:end+9, :) = zeros(9, nSamples);
-    end
+    nMeasure = 23;
+    H = zeros(nMeasure, nStates);
+    Rdiag = zeros(nMeasure, 1);
+    y_k = zeros(nMeasure, nSamples);
+    nMeasure = 0;
     
+    % ====================================
+    % applyMeas update ZUPT initialization
+    % ====================================
+    idxMVelMP = nMeasure+1:nMeasure+3;
+    idxMVelLA = nMeasure+4:nMeasure+6;
+    idxMVelRA = nMeasure+7:nMeasure+9;
+
+    H(nMeasure+1:nMeasure+9, :) = zeros(9, nStates);
+    H(idxMVelMP, idxVelMP) = eye(3);
+    H(idxMVelLA, idxVelLA) = eye(3);
+    H(idxMVelRA, idxVelRA) = eye(3);
+    Rdiag(nMeasure+1:nMeasure+9) = repelem([fOpt.sigma2ZuptMP ...
+        fOpt.sigma2ZuptLA fOpt.sigma2ZuptRA], 3);
+    y_k(nMeasure+1:nMeasure+9, :) = zeros(9, nSamples);
+    nMeasure = nMeasure+9;
+    
+    % ==============================================
     % applyMeas flat floor assumption initialization
-    if modHundredApplyMeas >= 2 % add more zupt features
-        floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
+    % ==============================================
+    floorZ = min([x0(idxPosLA(3)), x0(idxPosRA(3))]);
+
+    idxMPosLA = nMeasure+1;     idxMPosRA = nMeasure+2;
+    H(idxMPosLA, idxPosLA(3)) = eye(1);
+    H(idxMPosRA, idxPosRA(3)) = eye(1);
+    Rdiag(nMeasure+1:nMeasure+2) = [fOpt.sigma2RPosLA, fOpt.sigma2RPosRA];
+    y_k(nMeasure+1:nMeasure+2, :) = floorZ*ones(2, nSamples);  
+    nMeasure = nMeasure+2;
         
-        targetL = idxPosLA(3);
-        targetR = idxPosRA(3);
-        targetLN = length(targetL); targetRN = length(targetR);
-        targetN = targetLN + targetRN;
-        idxMPosLA = nMeasure+1:nMeasure+targetLN;
-        idxMPosRA = idxMPosLA(end)+1:idxMPosLA(end)+targetRN;
-        nMeasure = nMeasure + targetN;
-
-        H(end+1:end+targetN, :) = zeros(targetN, nStates);
-        H(idxMPosLA, targetL) = eye(targetLN);
-        H(idxMPosRA, targetR) = eye(targetRN);
-
-        Rdiag = diag(R);
-        Rdiag(end+1:end+targetLN) = repelem([fOpt.sigma2RPosLA], targetLN);
-        Rdiag(end+1:end+targetRN) = repelem([fOpt.sigma2RPosRA], targetRN);
-        R = diag(Rdiag);
-
-        y_k(end+1:end+targetN, :) = floorZ*ones(targetN, nSamples);  
-    end
+    % ===============================================
+    % applyMeas covariance limiter initialization
+    % ===============================================
+    idxMCov1 = nMeasure+1:nMeasure+9;
+    H(nMeasure+1:nMeasure+3, idxPosMP) = eye(3, 3);
+    H(nMeasure+4:nMeasure+6, idxPosLA) = eye(3, 3);
+    H(nMeasure+7:nMeasure+9, idxPosRA) = eye(3, 3);
+    Rdiag(nMeasure+1:nMeasure+9) = repelem( [fOpt.sigma2RPosMPLimit ...
+                        fOpt.sigma2RPosLALimit fOpt.sigma2RPosRALimit], 3);
+    y_k(nMeasure+1:nMeasure+9, :) = zeros(9, nSamples);
+    nMeasure = nMeasure+9;
     
-    if (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77)
-        target = [idxPosMP idxPosLA idxPosRA];
-        sigmas = [fOpt.sigma2RPosMPLimit fOpt.sigma2RPosLALimit ...
-                  fOpt.sigma2RPosRALimit];
-        idxMCov1 = nMeasure+1:nMeasure+9;
-        
-        targetN = length(target);
-        idx = nMeasure+1:nMeasure+targetN;
-        nMeasure = nMeasure+targetN;
-        
-        H(end+1:end+targetN, :) = zeros(targetN, nStates);
-        for i=1:3:targetN
-            idx2 = idx(i:i+2);
-            target2 = target(i:i+2);
-            H(idx2, target2) = eye(3, 3);
-        end
-        
-        y_k(end+1:end+targetN, :) = zeros(targetN, nSamples);
-        
-        Rdiag = diag(R);
-        Rdiag(end+1:end+targetN) = repelem(sigmas.^2, 3);
-        R = diag(Rdiag);
-    end
+    % ===============================================
+    % applyMeas soft pelvis constraint initialization
+    % ===============================================   
+    % pelvis x y pos = ankle average x y pos
+    idxMPosMPLARA = nMeasure+1:nMeasure+2;
+    H(idxMPosMPLARA, idxPosMP(1:2)) = -eye(2,2);
+    H(idxMPosMPLARA, idxPosLA(1:2)) = 0.5*eye(2,2);
+    H(idxMPosMPLARA, idxPosRA(1:2)) = 0.5*eye(2,2);
+    Rdiag(nMeasure+1:nMeasure+2) = repelem(fOpt.sigma2RPosMPLARA, 2);
+    y_k(nMeasure+1:nMeasure+2, :) = zeros(2, nSamples);
+    nMeasure = nMeasure+2;
+
+    % pelvis z pos = initial pelvis z pos
+    idxMPosZMP = nMeasure+1:nMeasure+1;
+    H(idxMPosZMP, idxPosMP(3)) = 1;
+    Rdiag(nMeasure+1) = fOpt.sigma2RPosZMP;
+    y_k(nMeasure+1, :) = x0(idxPosMP(3));
+    nMeasure = nMeasure+1;
     
-    if (modHundredApplyMeas >= 70 && modHundredApplyMeas <= 77)
-        % bit 2: pelvis x y pos = ankle average x y pos
-        % bit 3: pelvis z pos = initial pelvis z pos
-        modTenApplyMeas = mod(fOpt.applyMeas, 10);
-        if bitand(modTenApplyMeas, 2)
-            targetN = 2;
-            idxMPosMPLARA = nMeasure+1:nMeasure+targetN;
-            H(end+1:end+targetN, :) = zeros(targetN, nStates);
-            H(idxMPosMPLARA, idxPosMP(1:2)) = -eye(2,2);
-            H(idxMPosMPLARA, idxPosLA(1:2)) = 0.5*eye(2,2);
-            H(idxMPosMPLARA, idxPosRA(1:2)) = 0.5*eye(2,2);
-
-            Rdiag = diag(R);
-            Rdiag(end+1:end+targetN) = repelem(fOpt.sigma2RPosMPLARA, targetN);
-            R = diag(Rdiag);
-
-            y_k(end+1:end+targetN, :) = zeros(targetN, nSamples);
-            
-            nMeasure = nMeasure+targetN;
-        end
-        if bitand(modTenApplyMeas, 4)
-            idxMPosZMP = nMeasure+1:nMeasure+1;
-            nMeasure = nMeasure+1;
-
-            H(end+1:end+1, :) = zeros(1, nStates);
-            H(idxMPosZMP, idxPosMP(3)) = 1;
-
-            Rdiag = diag(R);
-            Rdiag(end+1:end+1) = fOpt.sigma2RPosZMP;
-            R = diag(Rdiag);
-
-            y_k(end+1:end+1, :) = x0(idxPosMP(3));
-        end
-    end
-      
+    R = diag(Rdiag);
     alphalimit = struct('lkmin', fOpt.alphaLKmin, 'lkmax', fOpt.alphaLKmax, ...
                         'rkmin', fOpt.alphaRKmin, 'rkmax', fOpt.alphaRKmax);
 
@@ -296,7 +232,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
     % matrices beginnning with 'H_' are the 'observation matrices' that map
     % the variables in the state estimate vector, xhat, to the measurement
     % domain. In this case we are using
-        idx = [idxMOriMP idxMOriLA idxMOriRA];
+    if fOpt.applyMeas
+        idx = [];
             
         if bIsStatMP(n) idx(end+1:end+3) = idxMVelMP; end
         if bIsStatLA(n) idx(end+1:end+3) = idxMVelLA; end
@@ -313,33 +250,28 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
         
         res = y_k(idx, n) - H(idx, :) * x_min;
         K = P_min * H(idx, :)' /(H(idx, :) * P_min * H(idx,:)' + R(idx, idx));
-        x_min1 = x_min + K * res;
+        x_plus = x_min + K * res;
         
         idx2 = [idx idxMCov1];
         K = P_min * H(idx2, :)' /(H(idx2, :) * P_min * H(idx2,:)' + R(idx2, idx2));
-        P_min1 = (I_N - K * H(idx2, :)) * P_min;
+        P_plus = (I_N - K * H(idx2, :)) * P_min;
         
-        if fOpt.applyMeas
-            debug_dat.zuptState(n,:) = x_min1;
-            debug_dat.zuptP(:,:,n) = P_min1;
-        end
-        
-		x_plus = x_min1;
-		P_plus = P_min1;
-        x_plus(idxOriMP,1) = quatnormalize(x_plus(idxOriMP,1)')';
-        x_plus(idxOriLA,1) = quatnormalize(x_plus(idxOriLA,1)')';
-        x_plus(idxOriRA,1) = quatnormalize(x_plus(idxOriRA,1)')';
-        
-        xhat_pos(n, :) = x_plus;
-        P_pos(:, :, n)  = P_plus;
-        
+        debug_dat.zuptState(n,:) = x_plus;
+        debug_dat.zuptP(:,:,n) = P_plus;
+    else
+        x_plus = x_min;
+        P_plus = P_min;
+    end
+    xhat_pos(n, :) = x_plus;
+    P_pos(:, :, n)  = P_plus;
+    
     %% -----------------------------------------------------------------------
     % Constraint update step ---- 
-        PELV_CS = quat2rotm(x_plus(idxOriMP,1)');
-        LTIB_CS = quat2rotm(x_plus(idxOriLA,1)');
-        RTIB_CS = quat2rotm(x_plus(idxOriRA,1)');
+        PELV_CS = quat2rotm(qMP(n,:));
+        LTIB_CS = quat2rotm(qLA(n,:));
+        RTIB_CS = quat2rotm(qRA(n,:));
         % Test frankenstein constraint
-        if (applyCstrW >= 3 && applyCstrW <= 5)           
+        if fOpt.applyCstr
             sckfAlpha = fOpt.sckfAlpha;
             sckfThreshold = fOpt.sckfThreshold;
 
@@ -456,28 +388,8 @@ function [ xhat_pri, xhat_con, debug_dat ] = ckf_3imus(x0, P0, ...
                 end
 
                 % Step 4: update x_tilde and P_tilde
-                switch mod(fOpt.applyCstr, 10)
-                    case 1
-                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
-                        P_tilde = (I_N2-Kk*D)*P_tilde*(I_N2-Kk*D)' + Kk*Ri*Kk';
-                    case 2
-                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
-                    case 3
-                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
-%                         Kk = D'*(D*D'+Ri)^(-1);
-                        P_tilde = (I_N2-Kk*D)*P_tilde*(I_N2-Kk*D)' + Kk*Ri*Kk';
-                    case 4
-                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
-%                         Kk = D'*(D*D'+Ri)^(-1);
-                    case 5
-                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
-                        P_tilde = (I_N2-Kk*D)*P_tilde*(I_N2-Kk*D)' + Kk*Ri*Kk';
-                    case 6
-                        Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
-                    otherwise
-                        Kk = 0;
-                end
-                
+                Kk = P_custom*D'*(D*P_custom*D'+Ri)^(-1);
+                P_tilde = (I_N2-Kk*D)*P_tilde*(I_N2-Kk*D)' + Kk*Ri*Kk';
                 dx = Kk*(res);
                 x_tilde = x_tilde + dx;
             end
