@@ -185,8 +185,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'GaitReconstructionToolbox', u'Gait Reconstruction Toolbox Documentation',
-     author, 'GaitReconstructionToolbox', 'One line description of project.',
+    (master_doc, 'GaitReconToolbox', u'Gait Reconstruction Toolbox Documentation',
+     author, 'Luke Sy', 'One line description of project.',
      'Miscellaneous'),
 ]
 

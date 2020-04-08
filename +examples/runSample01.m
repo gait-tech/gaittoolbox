@@ -1,4 +1,4 @@
-%% Simple example program 1
+ %% Simple example program 1
 % Run ckf algorithm using `data/sample` comparing
 %   1. ckf-3imu vs vicon system
 %   2. xsens vs vicon system
