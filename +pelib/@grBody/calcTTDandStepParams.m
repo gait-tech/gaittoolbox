@@ -1,4 +1,4 @@
-function out = calcTTDansStepParams(obj1, obj2, intervals, baseStruct)
+function out = calcTTDandStepParams(obj1, obj2, intervals, baseStruct)
 	% Returns the total travelled distance, stride length, and gait speed
 	%
 	% :param obj1: grBody 1 (self)

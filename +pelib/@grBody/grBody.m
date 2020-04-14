@@ -382,6 +382,7 @@ classdef grBody < matlab.mixin.Copyable
         out = calcMPLARAdist(obj);
         out = calcTTD(obj1, obj2, intervals, baseStruct);
         out = calcTTDandStepParams(obj1, obj2, intervals, baseStruct);
+        dumpStepParams(obj1, obj2, intervals, fname);
         
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);
