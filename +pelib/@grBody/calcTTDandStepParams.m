@@ -25,17 +25,36 @@ function out = calcTTDansStepParams(obj1, obj2, intervals, baseStruct)
     end
     
     for i=posFields
-        % time
-        time = (intervals2.(i)(2:end)-intervals2.(i)(1:end-1)+1)/obj1.fs;
-        totaltime = (intervals2.(i)(end)-intervals2.(i)(1)+1)/obj1.fs;
+        if isempty(intervals2.(i))
+            time = nan;
+            totaltime = nan;
+            dist1 = nan;
+            ttd1 = nan;
+            dist2 = nan;
+            ttd2 = nan;
+        else
+            % time
+            time = (intervals2.(i)(2:end)-intervals2.(i)(1:end-1)+1)/obj1.fs;
+            totaltime = (intervals2.(i)(end)-intervals2.(i)(1)+1)/obj1.fs;
+
         
-        %% obj1 TTD
-        % get position at intervals
-        pos1 = obj1.(i)(intervals2.(i), 1:2);
-        % get distance between intervals
-        dist1 = vecnorm(pos1(2:end,:)-pos1(1:end-1,:), 2, 2);
-        % add distance
-        ttd1 = sum(dist1);
+            %% obj1 TTD
+            % get position at intervals
+            pos1 = obj1.(i)(intervals2.(i), 1:2);
+            % get distance between intervals
+            dist1 = vecnorm(pos1(2:end,:)-pos1(1:end-1,:), 2, 2);
+            % add distance
+            ttd1 = sum(dist1);
+
+            %% act TTD
+            % get position at intervals
+            pos2 = obj2.(i)(intervals2.(i), 1:2);
+            % get distance between intervals
+            dist2 = vecnorm(pos2(2:end,:)-pos2(1:end-1,:), 2, 2);
+            % add distance
+            ttd2 = sum(dist2);
+        end
+        
         % step length
         out.(sprintf("%sStrideLengthEstMean",i)) = mean(dist1);
         out.(sprintf("%sStrideLengthEstStd",i)) = std(dist1);
@@ -43,20 +62,13 @@ function out = calcTTDansStepParams(obj1, obj2, intervals, baseStruct)
         out.(sprintf("%sGaitSpeedStrLenEstMean",i)) = mean(dist1./time);
         out.(sprintf("%sGaitSpeedStrLenEstStd",i)) = std(dist1./time);
         
-        %% act TTD
-        % get position at intervals
-        pos2 = obj2.(i)(intervals2.(i), 1:2);
-        % get distance between intervals
-        dist2 = vecnorm(pos2(2:end,:)-pos2(1:end-1,:), 2, 2);
-        % add distance
-        ttd2 = sum(dist2);
         % step length
         out.(sprintf("%sStrideLengthActMean",i)) = mean(dist2);
         out.(sprintf("%sStrideLengthActStd",i)) = std(dist2);
         % gait speed SL
         out.(sprintf("%sGaitSpeedStrLenActMean",i)) = mean(dist2./time);
         out.(sprintf("%sGaitSpeedStrLenActStd",i)) = std(dist2./time);
-        
+
         % ratio
         out.(sprintf("%sTTDEst",i)) = ttd1;
         out.(sprintf("%sTTDAct",i)) = ttd2;
