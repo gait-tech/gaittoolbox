@@ -25,29 +25,30 @@ function dumpStepParams(obj1, obj2, intervals, fname)
         T = table();
         % time
         time = (intervals2.(i)(2:end)-intervals2.(i)(1:end-1)+1)/obj1.fs;
-        % totaltime = (intervals2.(i)(end)-intervals2.(i)(1)+1)/obj1.fs;
-        T.("StartTime_s") = intervals2.(i)(1:end-1)/obj1.fs;
-        T.("EndTime_s") = intervals2.(i)(2:end)/obj1.fs;
-        T.("Duration_s") = time;
-        
-        %% obj1 TTD
-        % get position at intervals
-        pos1 = obj1.(i)(intervals2.(i), 1:2);
-        % get distance between intervals
-        dist1 = vecnorm(pos1(2:end,:)-pos1(1:end-1,:), 2, 2);
-        T.("StrideLengthEst_m") = dist1;
-        T.("GaitSpeedEst_mpersec") = dist1./time;
-        
-        %% act TTD
-        % get position at intervals
-        pos2 = obj2.(i)(intervals2.(i), 1:2);
-        % get distance between intervals
-        dist2 = vecnorm(pos2(2:end,:)-pos2(1:end-1,:), 2, 2);
-        % step length
-        T.("StrideLengthAct_m") = dist2;
-        % gait speed SL
-        T.("GaitSpeedAct_mpersec") = dist2./time;
-        
+        if ~isempty(time)
+            % totaltime = (intervals2.(i)(end)-intervals2.(i)(1)+1)/obj1.fs;
+            T.("StartTime_s") = intervals2.(i)(1:end-1)/obj1.fs;
+            T.("EndTime_s") = intervals2.(i)(2:end)/obj1.fs;
+            T.("Duration_s") = time;
+
+            %% obj1 TTD
+            % get position at intervals
+            pos1 = obj1.(i)(intervals2.(i), 1:2);
+            % get distance between intervals
+            dist1 = vecnorm(pos1(2:end,:)-pos1(1:end-1,:), 2, 2);
+            T.("StrideLengthEst_m") = dist1;
+            T.("GaitSpeedEst_mpersec") = dist1./time;
+
+            %% act TTD
+            % get position at intervals
+            pos2 = obj2.(i)(intervals2.(i), 1:2);
+            % get distance between intervals
+            dist2 = vecnorm(pos2(2:end,:)-pos2(1:end-1,:), 2, 2);
+            % step length
+            T.("StrideLengthAct_m") = dist2;
+            % gait speed SL
+            T.("GaitSpeedAct_mpersec") = dist2./time;
+        end
         writetable(T, sprintf('%s-%s.csv',fname,i));
     end
 end
