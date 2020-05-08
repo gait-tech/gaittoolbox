@@ -50,6 +50,7 @@ classdef XsensBody < matlab.mixin.Copyable
         end
         
         out = calcCalibSB(obj, refBody, sIdx);
+        out = calcCalibSBFromMean(obj, refBody);
         out = calcCalibAnkleSensorW2PelvisWFromAcc(obj, idx);
         out = calcCalibAnkleSensorW2PelvisWFromROM(obj, calibS2B, DEGRANGE);
         out = calcCalibAnkleSensorW2PelvisWFromGyroSkewness(obj, DEGRANGE);

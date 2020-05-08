@@ -1,18 +1,13 @@
-function out = calcCalibSB(obj, refBody, sIdx)
-	% Calculate the calibration between sensor frame to body frame from one
-	% frame (usually first frame).
+function out = calcCalibSBFromMean(obj, refBody)
+	% Calculate the calibration between sensor frame to body frame 
+    % by taking the mean rotation offset between obj and refBody
 	% 
-	%
-	% :param refBody: grBody class in world frame. (use data at index 1)
-	% :param sIdx: index of obj to be used
+    % Return B_q_S = argmin || ||
+	% :param refBody: grBody class in world frame.
 	%
 	% :return: out - Xsens with calibration data from sensor frame to body frame
 	%
-	% .. Author: - Luke Sy (UNSW GSBME) - 9/22/18
-
-    if nargin <= 2
-        sIdx = 1;
-    end
+	% .. Author: - Luke Sy (UNSW GSBME) - 2020 May 8
     
     %% Variable initialization
     out = mocapdb.XsensBody('srcFileName', refBody.name, ...
@@ -25,10 +20,10 @@ function out = calcCalibSB(obj, refBody, sIdx)
     n = length(key);
     
     for i=1:n
-        w_q_b = refBody.(val{i});
+        w_q_b = quaternion(refBody.(val{i}));
         if (~isempty(w_q_b) && ~isempty(obj.(key{i})))            
-            w_q_s = obj.(key{i}).ori;
-            out.(key{i}).ori = quatmultiply(quatconj(w_q_b(1,:)), w_q_s(sIdx,:));
+            w_q_s = quaternion(obj.(key{i}).ori(1:obj.nSamples,:));
+            out.(key{i}).ori = compact(meanrot(w_q_b.conj().*w_q_s));
         end
     end
 end
