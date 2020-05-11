@@ -23,7 +23,7 @@ function out = calcCalibSBFromMean(obj, refBody)
         w_q_b = quaternion(refBody.(val{i}));
         if (~isempty(w_q_b) && ~isempty(obj.(key{i})))            
             w_q_s = quaternion(obj.(key{i}).ori(1:obj.nSamples,:));
-            out.(key{i}).ori = compact(meanrot(w_q_b.conj().*w_q_s));
+            out.(key{i}).ori = compact(meanrot(w_q_b.conj().*w_q_s, 'omitnan'));
         end
     end
 end
