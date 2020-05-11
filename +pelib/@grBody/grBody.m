@@ -227,7 +227,7 @@ classdef grBody < matlab.mixin.Copyable
                 theta = [];
             else
                 theta = pelib.grBody.calcJointAngles(obj.qLSK(idx, :), obj.qLFT(idx, :));
-                theta = theta(:, [2 1 3]) .* [-1 1 -1];
+                theta = theta(:, [2 1 3]) .* [-1 -1 -1] + [0 90 0];
             end
         end
         
@@ -246,7 +246,7 @@ classdef grBody < matlab.mixin.Copyable
                 theta = [];
             else
                 theta = pelib.grBody.calcJointAngles(obj.qRSK(idx, :), obj.qRFT(idx, :));
-                theta = theta(:, [2 1 3]);
+                theta = theta(:, [2 1 3]) .* [1 -1 1] + [0 90 0];
             end
         end
         
