@@ -83,6 +83,8 @@ function out = calcRMSEvsTime(obj1, obj2, includeRoot, targetSeg)
         out.qHipRMSE = sqrt(nanmean(d.^2,3));
         d = cat(3,rawDiff.qLKNE,rawDiff.qRKNE);
         out.qKneeRMSE = sqrt(nanmean(d.^2,3));
+        d = cat(3,rawDiff.qLANK,rawDiff.qRANK);
+        out.qAnkleRMSE = sqrt(nanmean(d.^2,3));
         
         d = [rawDiff.qLHIP-valMean.qLHIP rawDiff.qRHIP-valMean.qRHIP ...
              rawDiff.qLKNE(:,2)-valMean.qLKNE(2) ...
@@ -92,6 +94,8 @@ function out = calcRMSEvsTime(obj1, obj2, includeRoot, targetSeg)
         out.qHipRMSEnobias = sqrt(nanmean(d.^2,3));
         d = cat(3,rawDiff.qLKNE-valMean.qLKNE,rawDiff.qRKNE-valMean.qRKNE);
         out.qKneeRMSEnobias = sqrt(nanmean(d.^2,3));
+        d = cat(3,rawDiff.qLANK-valMean.qLANK,rawDiff.qRANK-valMean.qRANK);
+        out.qAnkleRMSEnobias = sqrt(nanmean(d.^2,3));
         
         out.dOri = obj1.calcDOri(obj2,targetSeg);
         [out.dOrinobias, out.dOribias] = obj1.calcDOrinobias(obj2,targetSeg);
