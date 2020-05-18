@@ -58,6 +58,7 @@ classdef XsensBody < matlab.mixin.Copyable
         out = exportRawMeasurementAsStruct(obj, seg, segAlias);
         out = getSubset(obj, idx);
         out = toViconFrame(obj, qR);
+        out = adjustFrame(obj, qR1, qR2)
         initializetoIdentity(obj);
         saveCalibCSV(obj, fname);
     end
