@@ -23,7 +23,9 @@ classdef XsensBody < matlab.mixin.Copyable
         L_UpLeg
         R_UpLeg
         L_LowLeg
+        L_LowLeg2
         R_LowLeg
+        R_LowLeg2
         L_Foot
         R_Foot
     end
@@ -32,7 +34,7 @@ classdef XsensBody < matlab.mixin.Copyable
 		% segment property list
         segList = {'Head', 'Sternum', 'Pelvis', 'L_UpArm', 'R_UpArm', ...
             'L_LowArm', 'R_LowArm', 'L_UpLeg', 'R_UpLeg', ...
-            'L_LowLeg', 'R_LowLeg', 'L_Foot', 'R_Foot'};
+            'L_LowLeg', 'L_LowLeg2', 'R_LowLeg', 'R_LowLeg2', 'L_Foot', 'R_Foot'};
     end
     
     methods
@@ -58,9 +60,12 @@ classdef XsensBody < matlab.mixin.Copyable
         out = exportRawMeasurementAsStruct(obj, seg, segAlias);
         out = getSubset(obj, idx);
         out = toViconFrame(obj, qR);
-        out = adjustFrame(obj, qR1, qR2)
+        out = adjustFrame(obj, qR1, qR2, orionly);
+        out = calcGfrAcc(obj);
+        out = conj(obj);
         initializetoIdentity(obj);
         saveCalibCSV(obj, fname);
+        exportCSVs(obj, fname, info)
     end
     
     methods (Hidden, Static)
@@ -74,5 +79,6 @@ classdef XsensBody < matlab.mixin.Copyable
         obj = loadMVNX(fname, options)
         obj = loadCalibSensorW2V(viconFName, xsensFName, options, idx)
         obj = loadCalibCSV(obj, fname)
+        [obj, idx] = loadCSVs(fname)
     end
 end

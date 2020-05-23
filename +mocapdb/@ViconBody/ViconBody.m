@@ -76,12 +76,14 @@ classdef ViconBody < matlab.mixin.Copyable
         
         out = togrBody(obj, idx, args);
         startIdx = getStartIndex(obj);
-        endIdx = getEndIndex(obj);
+        endIdx = getEndIndex(obj, untilfirstnan);
         out = getSubset(obj, idx);
         out = changePosUnit(obj, newUnit, update);
+        exportCSV(obj, fname, info);
     end
     
     methods (Static)
         obj = loadViconMat(fname)
+        [obj, idx] = loadCSV(fname)
     end
 end

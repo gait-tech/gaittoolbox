@@ -20,8 +20,11 @@ function out = calcCalibSB(obj, refBody, sIdx)
                             'frame', 'calib');
     
     %% Calculation
-    key = {'Pelvis', 'L_UpLeg', 'R_UpLeg', 'L_LowLeg', 'R_LowLeg', 'L_Foot', 'R_Foot'};
-    val = {'qRPV', 'qLTH', 'qRTH', 'qLSK', 'qRSK', 'qLFT', 'qRFT'};
+    key = {'Pelvis', 'L_UpLeg', 'R_UpLeg', ...
+           'L_LowLeg', 'R_LowLeg', 'L_LowLeg2', 'R_LowLeg2', ...
+           'L_Foot', 'R_Foot'};
+    val = {'qRPV', 'qLTH', 'qRTH', 'qLSK', 'qRSK', 'qLSK', 'qRSK', ...
+           'qLFT', 'qRFT'};
     n = length(key);
     
     for i=1:n
