@@ -28,7 +28,7 @@ dataListN = length(dataList);
 for i = 1:dataListN
     n = dataList{i};
     name = sprintf("%s-%s", n.subj, n.act);
-    fprintf("Data %3d/%3d: %s\n", i, dataListN, data.name);
+    fprintf("Data %3d/%3d: %s\n", i, dataListN, name);
         
     %% Load trial data
     % vicon body in world frame
@@ -62,7 +62,6 @@ for i = 1:dataListN
     % load step detect data
     revStepDetect = readtable(sprintf('%s/step-detect/%s-revStepDetect.csv', ...
                     dir, name));
-    revStepDetect = revStepDetect(idx(1):idx(2),:);
                 
     % calculate minimum knee angle from actual data.
     % since the person is assumed to be standing straight at start, we set

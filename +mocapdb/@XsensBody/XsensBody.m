@@ -59,6 +59,7 @@ classdef XsensBody < matlab.mixin.Copyable
         out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV);
         out = exportRawMeasurementAsStruct(obj, seg, segAlias);
         out = getSubset(obj, idx);
+        out = getSegSubset(obj, segList);
         out = toViconFrame(obj, qR);
         out = adjustFrame(obj, qR1, qR2, orionly);
         out = calcGfrAcc(obj);
