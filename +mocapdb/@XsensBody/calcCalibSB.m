@@ -1,11 +1,7 @@
 function out = calcCalibSB(obj, refBody, sIdx)
-<<<<<<< HEAD
-	% Calculate the calibration between sensor frame to body frame
-=======
 	% Calculate the calibration between sensor frame to body frame from one
 	% frame (usually first frame).
 	% 
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 	%
 	% :param refBody: grBody class in world frame. (use data at index 1)
 	% :param sIdx: index of obj to be used
@@ -24,16 +20,11 @@ function out = calcCalibSB(obj, refBody, sIdx)
                             'frame', 'calib');
     
     %% Calculation
-<<<<<<< HEAD
-    key = {'Pelvis', 'L_UpLeg', 'R_UpLeg', 'L_LowLeg', 'R_LowLeg', 'L_Foot', 'R_Foot'};
-    val = {'qRPV', 'qLTH', 'qRTH', 'qLSK', 'qRSK', 'qLFT', 'qRFT'};
-=======
     key = {'Pelvis', 'L_UpLeg', 'R_UpLeg', ...
            'L_LowLeg', 'R_LowLeg', 'L_LowLeg2', 'R_LowLeg2', ...
            'L_Foot', 'R_Foot'};
     val = {'qRPV', 'qLTH', 'qRTH', 'qLSK', 'qRSK', 'qLSK', 'qRSK', ...
            'qLFT', 'qRFT'};
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
     n = length(key);
     
     for i=1:n

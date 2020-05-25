@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-function endIdx = getEndIndex(obj)
-	% Get end index
-	%
-	% :return: endIdx - last index
-	%
-	% .. Author: - Luke Sy (UNSW GSBME)
-    endIdx = length(obj.PELV(:,1));
-=======
 function endIdx = getEndIndex(obj, untilfirstnan)
 	% Get end index
 	%
@@ -43,5 +34,4 @@ function endIdx = getEndIndex(obj, untilfirstnan)
             end
         end
     end
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 end

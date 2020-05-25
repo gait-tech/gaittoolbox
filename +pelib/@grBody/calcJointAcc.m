@@ -18,10 +18,6 @@ function out = calcJointAcc(obj, pts)
     
     out = {}; fs = obj.fs;
     for i=1:length(pts)
-<<<<<<< HEAD
-        n = pts{i};
-        out.(n) = [0 0 0; diff(obj.(n), 2, 1)*fs*fs];
-=======
         buf = diff(obj.(pts{i}), 2, 1)*fs*fs;
         out.(pts{i}) = [0 0 0; buf; buf(end,:)];
 %         buf1 = obj.(pts{i});
@@ -30,6 +26,5 @@ function out = calcJointAcc(obj, pts)
 %             buf2(:,j) = gradient(gradient(buf1(:,j)));
 %         end
 %         out.(pts{i}) = buf2*fs*fs;
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
-    end
+   end
 end

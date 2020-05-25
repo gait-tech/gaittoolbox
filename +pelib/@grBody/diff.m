@@ -28,14 +28,6 @@ function out = diff(obj1, obj2, seq)
     eul1 = [r1 r2 r3];
     [r1 r2 r3] = quat2angle(obj2.qRPV, seq);
     eul2 = [r1 r2 r3];
-<<<<<<< HEAD
-    out.qRPV = (eul1 - eul2)*180/pi;   
-    out.qLHIP = (obj1.calcJointAnglesLHip() - obj2.calcJointAnglesLHip())*180/pi;
-    out.qRHIP = (obj1.calcJointAnglesRHip() - obj2.calcJointAnglesRHip())*180/pi;
-    out.qLKNE = (obj1.calcJointAnglesLKnee() - obj2.calcJointAnglesLKnee())*180/pi;
-    out.qRKNE = (obj1.calcJointAnglesRKnee() - obj2.calcJointAnglesRKnee())*180/pi;
-    
-=======
 %     out.qRPV = (eul1 - eul2)*180/pi;   
 %     out.qLHIP = (obj1.calcJointAnglesLHip() - obj2.calcJointAnglesLHip())*180/pi;
 %     out.qRHIP = (obj1.calcJointAnglesRHip() - obj2.calcJointAnglesRHip())*180/pi;
@@ -51,7 +43,6 @@ function out = diff(obj1, obj2, seq)
     out.qLANK = diffnull(obj1.calcJointAnglesLAnkle(),obj2.calcJointAnglesLAnkle())*180/pi;
     out.qRANK = diffnull(obj1.calcJointAnglesRAnkle(),obj2.calcJointAnglesRAnkle())*180/pi;
 
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 %     oriList = obj1.oriList;
 %     for i=1:length(oriList)
 %         if length(obj1.(oriList{i})) == 0 || length(obj2.(oriList{i})) == 0
@@ -69,8 +60,7 @@ function out = diff(obj1, obj2, seq)
 %             end
 %         end
 %     end
-<<<<<<< HEAD
-=======
+
 end
 
 function dx = diffnull(x1, x2)
@@ -79,5 +69,4 @@ function dx = diffnull(x1, x2)
     else
         dx = x1 - x2;
     end
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 end

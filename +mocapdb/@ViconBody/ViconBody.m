@@ -57,11 +57,7 @@ classdef ViconBody < matlab.mixin.Copyable
         posList = {'PELV', 'LFEP', 'LFEO', 'LTIO', 'LTOE', ...
             'RFEP', 'RFEO', 'RTIO', 'RTOE'};
 		% orientation property list
-<<<<<<< HEAD
-        oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK'};
-=======
         oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK', 'qRFT', 'qLFT'};
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
     end
     methods
         % Class constructor
@@ -80,23 +76,14 @@ classdef ViconBody < matlab.mixin.Copyable
         
         out = togrBody(obj, idx, args);
         startIdx = getStartIndex(obj);
-<<<<<<< HEAD
-        endIdx = getEndIndex(obj);
-        out = getSubset(obj, idx);
-        out = changePosUnit(obj, newUnit, update);
-=======
         endIdx = getEndIndex(obj, untilfirstnan);
         out = getSubset(obj, idx);
         out = changePosUnit(obj, newUnit, update);
         exportCSV(obj, fname, info);
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
     end
     
     methods (Static)
         obj = loadViconMat(fname)
-<<<<<<< HEAD
-=======
         [obj, idx] = loadCSV(fname)
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
     end
 end

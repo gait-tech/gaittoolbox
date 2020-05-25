@@ -4,16 +4,6 @@ Data Set
 Neura Sparse Dataset
 --------------------
 
-<<<<<<< HEAD
-Refer to the following papers for description:
-:cite:`sy2019ckf`
-:cite:`sy2019lgcekf`.
-
-Installation
-~~~~~~~~~~~~
-#. Download `neura-sparse01.zip` from `Harvard Dataverse <https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/9QDD5J>`_.
-#. Extract to `data/neura-sparse01`
-=======
 Setup
 ^^^^^
 The experiment had nine healthy subjects (7 men and 2 women, weight :math:`63.0 \pm 6.8` kg, height :math:`1.70 \pm 0.06` m, age :math:`24.6 \pm 3.9` years old), with no known gait or lower body biomechanical abnormalities.
@@ -146,4 +136,3 @@ calib
 """""
 
 TODO: to be added. For now, see the calibration loader code from github.
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583

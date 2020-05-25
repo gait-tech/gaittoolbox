@@ -24,10 +24,6 @@ function obj = loadBVHFile(fname, unit)
     
     qTCD2BM = rotm2quat([0 -1 0; -1 0 0; 0 0 -1]);
     for i=1:n
-<<<<<<< HEAD
-        if isprop(obj, bvh_data(i).name)
-            v1 = bvh_data(i).name;
-=======
         if length(bvh_data(i).name) >= 4 && strncmpi(bvh_data(i).name(end-3:end), 'base', 4)
             basename = bvh_data(i).name(1:end-4);
         else
@@ -35,7 +31,6 @@ function obj = loadBVHFile(fname, unit)
         end
         if isprop(obj, basename)
             v1 = basename;
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
             v2 = strcat('q', v1);
             
             if unit == "mm"

@@ -12,13 +12,11 @@ classdef grBody < matlab.mixin.Copyable
         fs = 60
         % frame: vicon / world / MIDPEL
         frame
-<<<<<<< HEAD
-=======
+
         % full trial start index
         ftStartIndex
         % full trial end index
         ftEndIndex
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
         
         % Plot specifications
         posUnit = 'mm';
@@ -59,17 +57,10 @@ classdef grBody < matlab.mixin.Copyable
         % left tibia orientation (n x 4), z = along tibia, x = forward, y towards left
         qLSK
         % right foot orientation (n x 4) following Vicon convention, 
-<<<<<<< HEAD
-        % z = toe to heel vector projected to the floor, x = upward, y = towards left
-        qRFT
-        % left foot orientation (n x 4) following Vicon convention
-        % z = toe to heel vector projected to the floor, x = upward, y = towards left
-=======
         % z = toe to ankle joint center, x = downward, y = towards left, tibia y axis
         qRFT
         % left foot orientation (n x 4) following Vicon convention
         % z = toe to ankle joint center, x = downward, y = towards left, tibia y axis
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
         qLFT
     end
     
@@ -222,9 +213,6 @@ classdef grBody < matlab.mixin.Copyable
             theta = theta(:, [2 1 3]);
         end
         
-<<<<<<< HEAD
-        function d = getPelvisLength(obj, idx)
-=======
         function theta = calcJointAnglesLAnkle(obj, idx)
 			% Calculate left ankle joint angles (seq: YXZ)
 			%
@@ -264,7 +252,6 @@ classdef grBody < matlab.mixin.Copyable
         end
         
         function d = calcPelvisLength(obj, idx)
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 			% Calculate pelvis length
 			%
 			% :param obj: this object class
@@ -275,12 +262,6 @@ classdef grBody < matlab.mixin.Copyable
 			% .. Author: - Luke Sy (UNSW GSBME)
 			
             if nargin <= 1, idx = 1; end
-<<<<<<< HEAD
-            d = norm(obj.LFEP(idx, :) - obj.RFEP(idx, :));
-        end
-        
-        function d = getLShankLength(obj, idx)
-=======
             if isempty(obj.LFEP) || isempty(obj.RFEP)
                 d = nan;
             else
@@ -289,7 +270,6 @@ classdef grBody < matlab.mixin.Copyable
         end
         
         function d = calcLShankLength(obj, idx)
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 			% Calculate left shank length
 			%
 			% :param obj: this object class
@@ -300,12 +280,6 @@ classdef grBody < matlab.mixin.Copyable
 			% .. Author: - Luke Sy (UNSW GSBME)
 			
             if nargin <= 1, idx = 1; end
-<<<<<<< HEAD
-            d = norm(obj.LFEO(idx, :) - obj.LTIO(idx, :));
-        end
-        
-        function d = getRShankLength(obj, idx)
-=======
             if isempty(obj.LFEO) || isempty(obj.LTIO)
                 d = nan;
             else
@@ -314,7 +288,6 @@ classdef grBody < matlab.mixin.Copyable
         end
         
         function d = calcRShankLength(obj, idx)
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 			% Calculate right shank length
 			%
 			% :param obj: this object class
@@ -325,12 +298,6 @@ classdef grBody < matlab.mixin.Copyable
 			% .. Author: - Luke Sy (UNSW GSBME)
 			
             if nargin <= 1, idx = 1; end
-<<<<<<< HEAD
-            d = norm(obj.RFEO(idx, :) - obj.RTIO(idx, :));
-        end
-        
-        function d = calcLFemurLength(obj)
-=======
             if isempty(obj.RFEO) || isempty(obj.RTIO)
                 d = nan;
             else
@@ -339,7 +306,6 @@ classdef grBody < matlab.mixin.Copyable
         end
         
         function d = calcLFemurLength(obj, idx)
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 			% Calculate left femur length
 			%
 			% :param obj: this object class
@@ -348,13 +314,6 @@ classdef grBody < matlab.mixin.Copyable
 			% :return: d - body segment length (n x 1)
 			%
 			% .. Author: - Luke Sy (UNSW GSBME)
-<<<<<<< HEAD
-			
-            d = vecnorm(obj.LFEP - obj.LFEO, 2, 2);
-        end
-        
-        function d = calcRFemurLength(obj)
-=======
 			if nargin <= 1, idx = 1; end
             if isempty(obj.LFEP) || isempty(obj.LFEO)
                 d = nan;
@@ -364,7 +323,6 @@ classdef grBody < matlab.mixin.Copyable
         end
         
         function d = calcRFemurLength(obj, idx)
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 			% Calculate right femur length
 			%
 			% :param obj: this object class
@@ -373,10 +331,6 @@ classdef grBody < matlab.mixin.Copyable
 			% :return: d - body segment length (n x 1)
 			%
 			% .. Author: - Luke Sy (UNSW GSBME)
-<<<<<<< HEAD
-			
-            d = vecnorm(obj.RFEP - obj.RFEO, 2, 2);
-=======
 			if nargin <= 1, idx = 1; end
             if isempty(obj.RFEP) || isempty(obj.RFEO)
                 d = nan;
@@ -417,22 +371,11 @@ classdef grBody < matlab.mixin.Copyable
             else
                 d = vecnorm(obj.RTIO(idx, :) - obj.RTOE(idx, :), 2, 2);
             end
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
         end
         
         out = calcJointVel(obj, pts);
         out = calcSegAngVel(obj, pts, frame);
         out = calcJointAcc(obj, pts);
-<<<<<<< HEAD
-        out = calcDOri(obj, ref);
-        [out1, out2] = calcDOrinobias(obj, ref);
-        out = calcDPos(obj, ref);
-        out = calcMPLARAdist(obj);
-        
-        out = diff(obj1, obj2, seq);
-        out = diffRMSE(obj1, obj2, seq);
-        out = diffRMSEandMean(obj1, obj2);
-=======
         out = calcSegAngAcc(obj, pts, frame);
         out = calcDOri(obj, ref, targetSeg);
         [out1, out2] = calcDOrinobias(obj, ref, targetSeg);
@@ -445,15 +388,11 @@ classdef grBody < matlab.mixin.Copyable
         out = diff(obj1, obj2, seq);
         out = diffRMSE(obj1, obj2, seq);
         out = diffRMSEandMean(obj1, obj2, includeRoot, targetSeg);
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
         out = toWorldFrame(obj, pos, ori);
         out = changePosUnit(obj, newUnit, update);
 		out = changeRefFrame(obj, ref)
         out = getSubset(obj, idx);
-<<<<<<< HEAD
-=======
         out = repelem(obj, n);
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
         out = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
                         extraMarkers, oriMode, spevents);
     end

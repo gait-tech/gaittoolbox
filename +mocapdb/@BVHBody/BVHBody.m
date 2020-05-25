@@ -105,12 +105,8 @@ classdef BVHBody < matlab.mixin.Copyable
             end
         end
         
-<<<<<<< HEAD
-        out = togrBody(obj, varargin)
-=======
         out = togrBody(obj, idx, varargin)
         out = toViconBody(obj, idx, varargin)
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
     end
     
     methods (Hidden, Static)

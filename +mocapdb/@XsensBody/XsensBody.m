@@ -23,13 +23,9 @@ classdef XsensBody < matlab.mixin.Copyable
         L_UpLeg
         R_UpLeg
         L_LowLeg
-<<<<<<< HEAD
-        R_LowLeg
-=======
         L_LowLeg2
         R_LowLeg
         R_LowLeg2
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
         L_Foot
         R_Foot
     end
@@ -38,11 +34,7 @@ classdef XsensBody < matlab.mixin.Copyable
 		% segment property list
         segList = {'Head', 'Sternum', 'Pelvis', 'L_UpArm', 'R_UpArm', ...
             'L_LowArm', 'R_LowArm', 'L_UpLeg', 'R_UpLeg', ...
-<<<<<<< HEAD
-            'L_LowLeg', 'R_LowLeg', 'L_Foot', 'R_Foot'};
-=======
             'L_LowLeg', 'L_LowLeg2', 'R_LowLeg', 'R_LowLeg2', 'L_Foot', 'R_Foot'};
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
     end
     
     methods
@@ -59,9 +51,6 @@ classdef XsensBody < matlab.mixin.Copyable
             end
         end
         
-<<<<<<< HEAD
-        out = calcCalibSB(obj, refBody, sIdx);
-=======
         function out = copyinfo(obj)
             out = mocapdb.XsensBody('srcFileName', obj.srcFileName, ...
                     'frame', obj.frame, 'nSamples', obj.nSamples, ...
@@ -70,18 +59,12 @@ classdef XsensBody < matlab.mixin.Copyable
         
         out = calcCalibSB(obj, refBody, sIdx);
         out = calcCalibSBFromMean(obj, refBody);
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
         out = calcCalibAnkleSensorW2PelvisWFromAcc(obj, idx);
         out = calcCalibAnkleSensorW2PelvisWFromROM(obj, calibS2B, DEGRANGE);
         out = calcCalibAnkleSensorW2PelvisWFromGyroSkewness(obj, DEGRANGE);
         out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV);
         out = exportRawMeasurementAsStruct(obj, seg, segAlias);
         out = getSubset(obj, idx);
-<<<<<<< HEAD
-        out = toViconFrame(obj, qR);
-        initializetoIdentity(obj);
-        saveCalibCSV(obj, fname);
-=======
         out = getSegSubset(obj, segList);
         out = toViconFrame(obj, qR);
         out = adjustFrame(obj, qR1, qR2, orionly);
@@ -90,7 +73,6 @@ classdef XsensBody < matlab.mixin.Copyable
         initializetoIdentity(obj);
         saveCalibCSV(obj, fname);
         exportCSVs(obj, fname, info)
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
     end
     
     methods (Hidden, Static)
@@ -104,9 +86,6 @@ classdef XsensBody < matlab.mixin.Copyable
         obj = loadMVNX(fname, options)
         obj = loadCalibSensorW2V(viconFName, xsensFName, options, idx)
         obj = loadCalibCSV(obj, fname)
-<<<<<<< HEAD
-=======
         [obj, idx] = loadCSVs(fname)
->>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
     end
 end
