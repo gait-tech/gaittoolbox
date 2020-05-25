@@ -1,34 +1,26 @@
-function data = loadNeuRaTrialData(dataDir, subjName, actName, ns, usebuffer)
+function data = loadNeuRaTrialData(dataDir, subjName, actName, usebuffer, prefix)
     % Load data for selected movement trial
     % 
     % :param dataDir: data directory path
     % :param subjName: subject name of trial movement
     % :param actName: action name of trial movement
-    % :param ns: yaw offset calibration mode. 
-    %            NS1 = use yaw offset from ROM
-    %            NS2 = use yaw offset from Vicon
     % :param usebuffer: [optional] use buffer .mat if available
-    % :param options: [optional] id to body mapping. By default uses the 
-    %                 map specified in https://gait-tech.github.io/gaittoolbox/data.html.
+    % :param prefix: prefix to name
     % 
     % :return: struct data with trial data inside
     %
-    % .. Author: - Luke Wicent Sy (GSBME, Modified 2020 May 8)
+    % .. Author: - Luke Wicent Sy (GSBME, Modified 2020 May 25)
+    
     if nargin <= 3
-        ns = '';
-    end
-    if nargin <= 4
         usebuffer = true;
     end
-    
-    if strcmp(ns, "")
-        name = sprintf("%s-%s", subjName, actName);
-    else
-        name = sprintf("%s-%s-%s", ns, subjName, actName);
+    if nargin <= 4
+        prefix = '';
     end
     
-    dataPath = sprintf('%s/mat/%s-%s-%s-buffer.mat', dataDir, ...
-                        extractBetween(ns,1,3), subjName, actName);
+    name = sprintf("%s%s-%s", prefix, subjName, actName);
+    dataPath = sprintf('%s/mat/%s%s-%s-buffer.mat', dataDir, ...
+                        prefix, subjName, actName);
     if usebuffer && exist(dataPath, 'file')
         load(dataPath, 'data');
     else
@@ -42,7 +34,7 @@ function data = loadNeuRaTrialData(dataDir, subjName, actName, ns, usebuffer)
             'calibFnameSensorW2V', ...
             sprintf('%s/calib/%s-Calib-SensorW2V.txt', dataDir, subjName), ...
             'fnameRevStepDetect', ...
-            sprintf('%s/rawstep-detect/%s-%s-revStepDetect.csv', ...
+            sprintf('%s/step-detect/%s-%s-revStepDetect.csv', ...
                     dataDir, subjName, actName));
 
         data.dataV = mocapdb.ViconBody.loadCSV(data.fnameV); 
@@ -54,7 +46,7 @@ function data = loadNeuRaTrialData(dataDir, subjName, actName, ns, usebuffer)
         % transformation to express dataX in biomechanical convention
         % x = forward, z = upward, y = left
         qXsens2BMC = rotm2quat([0 0 1; 1 0 0; 0 1 0]);
-        data.dataX = dataX.getSubset(data.idx(1):data.idx(2)) ...
+        data.dataX = data.dataX.getSubset(data.idx(1):data.idx(2)) ...
                             .toWorldFrame(qXsens2BMC) ...
                             .changePosUnit('m');
 
@@ -63,6 +55,13 @@ function data = loadNeuRaTrialData(dataDir, subjName, actName, ns, usebuffer)
         data.bias = struct('w__v', zeros(1, 3), 'v__v', zeros(1, 3), ...
                            'w__x', zeros(1, 3));
         data.revStepDetect = readtable(data.fnameRevStepDetect);
+        
+        if exist(dataDir, 'dir')
+            if ~exist(sprintf('dataDir/mat'), 'dir')
+                mkdir(sprintf('dataDir/mat'));
+            end
+            save(dataPath, 'data');
+        end
     end
 end
 

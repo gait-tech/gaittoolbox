@@ -51,6 +51,12 @@ classdef XsensBody < matlab.mixin.Copyable
             end
         end
         
+        function out = copyinfo(obj)
+            out = mocapdb.XsensBody('srcFileName', obj.srcFileName, ...
+                    'frame', obj.frame, 'nSamples', obj.nSamples, ...
+                    'fs', obj.fs);
+        end
+        
         out = calcCalibSB(obj, refBody, sIdx);
         out = calcCalibSBFromMean(obj, refBody);
         out = calcCalibAnkleSensorW2PelvisWFromAcc(obj, idx);

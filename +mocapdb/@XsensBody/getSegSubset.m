@@ -11,7 +11,7 @@ function out = getSegSubset(obj, segList)
 	%
 	% .. Author: - Luke Sy (UNSW GSBME) - 9/20/18
     
-    out = obj.copy();
+    out = obj.copyinfo();
     for i=1:length(segList)
         out.(segList{i}) = obj.(segList{i});
     end

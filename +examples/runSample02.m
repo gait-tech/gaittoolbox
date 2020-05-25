@@ -51,7 +51,7 @@ for i = 1:dataListN
     % dataB.Pelvis.ori = body in world frame
     % dataB.Pelvis.acc, gyr, mag = in body frame
     dataB = dataS.adjustFrame(calibYawFix, calibS2B.conj());
-    % solve for gravity
+    % solve for body acceleration minus gravity
     gfrAcc = dataB.calcGfrAcc();
     
     %% 1. ckf-3imu vs vicon system

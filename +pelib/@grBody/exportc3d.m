@@ -154,7 +154,7 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     setEvents(acq, false, (idx-1)/fs, 'General', '', '', 'End');
     
     % save c3d file
-    btkWriteAcquisition(acq, fname);
+    btkWriteAcquisition(acq, char(fname));
 end
 
 function setEvents(acq, step, idx, context, subject, desc, label)
