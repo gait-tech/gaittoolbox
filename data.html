@@ -92,12 +92,18 @@
 <li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#movements">Movements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#description">Description</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#description-base">Description (base)</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#imu">imu</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#vicon">vicon</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#xsens">xsens</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#step-detect">step-detect</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#calib">calib</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#description-raw">Description (raw)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rawvicon">rawvicon</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rawimu">rawimu</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rawstep-detect">rawstep-detect</a></li>
 </ul>
 </li>
 </ul>
@@ -250,15 +256,148 @@ The experiment was approved by the Human Research Ethics Board of the University
 <div class="section" id="installation">
 <h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
-<li><p>Download <cite>neura-sparse01.7z</cite> from <a class="reference external" href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/9QDD5J">Harvard Dataverse</a>.</p></li>
+<li><p>Download <cite>neura-sparse01.zip</cite> from <a class="reference external" href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/9QDD5J">Harvard Dataverse</a>.</p></li>
 <li><p>Extract to <cite>data/neura-sparse01</cite></p></li>
 </ol>
 </div>
-<div class="section" id="description">
-<h3>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="description-base">
+<h3>Description (base)<a class="headerlink" href="#description-base" title="Permalink to this headline">¶</a></h3>
 <p>&lt;Subject ID&gt;-Trial-&lt;Movement Type&gt;.&lt;Extension&gt;</p>
+<p>Note that imu, vicon, and step-detect are all aligned, and are with respest the world frame.</p>
 <div class="section" id="imu">
 <h4>imu<a class="headerlink" href="#imu" title="Permalink to this headline">¶</a></h4>
+<p>File name is &lt;Subject ID&gt;-Trial-&lt;Movement Type&gt;-&lt;BodyPart&gt;.csv.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 73%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Body Segment</p></td>
+<td><p>Sensor Location</p></td>
+</tr>
+<tr class="row-even"><td><p>Pelvis</p></td>
+<td><p>Pelvis  backside</p></td>
+</tr>
+<tr class="row-odd"><td><p>L_UpLeg</p></td>
+<td><p>Left thigh</p></td>
+</tr>
+<tr class="row-even"><td><p>R_UpLeg</p></td>
+<td><p>Right thigh</p></td>
+</tr>
+<tr class="row-odd"><td><p>L_LowLeg</p></td>
+<td><p>Left ankle (slightly above)</p></td>
+</tr>
+<tr class="row-even"><td><p>R_LowLeg</p></td>
+<td><p>Right ankle (slightly above)</p></td>
+</tr>
+<tr class="row-odd"><td><p>L_LowLeg2</p></td>
+<td><p>Left shanks</p></td>
+</tr>
+<tr class="row-even"><td><p>R_LowLeg2</p></td>
+<td><p>Right shanks</p></td>
+</tr>
+<tr class="row-odd"><td><p>L_Foot</p></td>
+<td><p>Left foot  (w/ shoes)</p></td>
+</tr>
+<tr class="row-even"><td><p>R_Foot</p></td>
+<td><p>Right foot (w/ shoes)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Column Description:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 10%" />
+<col style="width: 68%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Column</p></td>
+<td><p>Type</p></td>
+<td><p>Description</p></td>
+</tr>
+<tr class="row-even"><td><p>Acc_X/Y/Z</p></td>
+<td><p>Float</p></td>
+<td><p>Measured acceleration in sensor frame</p></td>
+</tr>
+<tr class="row-odd"><td><p>Gyr_X/Y/Z</p></td>
+<td><p>Float</p></td>
+<td><p>Measured angular velocity in sensor frame</p></td>
+</tr>
+<tr class="row-even"><td><p>Mag_X/Y/Z</p></td>
+<td><p>Float</p></td>
+<td><p>Measured magnetic field in sensor frame</p></td>
+</tr>
+<tr class="row-odd"><td><p>ori_q0-4</p></td>
+<td><p>Float</p></td>
+<td><p>Orientation of sensor in world frame (w,x,y,z)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PacketCounter</span><span class="p">,</span><span class="n">SampleTimeFine</span><span class="p">,</span><span class="n">Acc_X</span><span class="p">,</span><span class="n">Acc_Y</span><span class="p">,</span><span class="n">Acc_Z</span><span class="p">,</span><span class="n">Gyr_X</span><span class="p">,</span><span class="n">Gyr_Y</span><span class="p">,</span><span class="n">Gyr_Z</span><span class="p">,</span><span class="n">Mag_X</span><span class="p">,</span><span class="n">Mag_Y</span><span class="p">,</span><span class="n">Mag_Z</span><span class="p">,</span><span class="n">Quat_q0</span><span class="p">,</span><span class="n">Quat_q1</span><span class="p">,</span><span class="n">Quat_q2</span><span class="p">,</span><span class="n">Quat_q3</span>
+<span class="mi">27626</span><span class="p">,,</span><span class="mf">8.696773</span><span class="p">,</span><span class="mf">0.341363</span><span class="p">,</span><span class="mf">4.715198</span><span class="p">,</span><span class="mf">0.015417</span><span class="p">,</span><span class="mf">0.009366</span><span class="p">,</span><span class="o">-</span><span class="mf">0.011596</span><span class="p">,</span><span class="mf">0.886719</span><span class="p">,</span><span class="mf">0.420898</span><span class="p">,</span><span class="mf">0.468506</span><span class="p">,</span><span class="mf">0.651925</span><span class="p">,</span><span class="o">-</span><span class="mf">0.318177</span><span class="p">,</span><span class="o">-</span><span class="mf">0.399341</span><span class="p">,</span><span class="o">-</span><span class="mf">0.560611</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="vicon">
+<h4>vicon<a class="headerlink" href="#vicon" title="Permalink to this headline">¶</a></h4>
+<p>CSV export of ViconBody. Contains marker and joint centre positions of the movement trial.</p>
+</div>
+<div class="section" id="xsens">
+<h4>xsens<a class="headerlink" href="#xsens" title="Permalink to this headline">¶</a></h4>
+<p>Pose reconstruction by the Xsens system. Specifically, bvh files of the movement trial generated by the MVN Studio 4.4 software. Note that its index are not aligned with vicon and imu (haven’t edited them yet). Data loader code for imu should return the corresponding index that must be used. This data is for comparing with the xsens MVN black box output.</p>
+</div>
+<div class="section" id="step-detect">
+<h4>step-detect<a class="headerlink" href="#step-detect" title="Permalink to this headline">¶</a></h4>
+<p>Indicate if step is detected. Reviewed manually.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 15%" />
+<col style="width: 72%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Column</p></td>
+<td><p>Type</p></td>
+<td><p>Description</p></td>
+</tr>
+<tr class="row-even"><td><p>stepL</p></td>
+<td><p>Boolean</p></td>
+<td><p>1 if left foot step is detected, 0 if not</p></td>
+</tr>
+<tr class="row-odd"><td><p>stepR</p></td>
+<td><p>Boolean</p></td>
+<td><p>1 if left foot step is detected, 0 if not</p></td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stepL</span><span class="p">,</span><span class="n">stepR</span>
+<span class="mi">1</span><span class="p">,</span><span class="mi">1</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="calib">
+<h4>calib<a class="headerlink" href="#calib" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>&lt;Subject ID&gt;-Trial-&lt;Movement&gt;-Calib-SensorYawFixWorldFrame.txt: Contains yaw offset calibration for pelvis, ankle, and foot IMUs. Only important file in the folder.</p></li>
+<li><p>&lt;Subject ID&gt;-Calib-V2W-Compass.mat and &lt;Subject ID&gt;-Calib-V2W-Pendumum.mat: used to calculate Vicon to World rotation matrix. Only used in raw processing.</p></li>
+<li><p>&lt;Subject ID&gt;-Calib-W2V.txt: Description to follow. Did not use in the dataset.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="description-raw">
+<h3>Description (raw)<a class="headerlink" href="#description-raw" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="rawvicon">
+<h4>rawvicon<a class="headerlink" href="#rawvicon" title="Permalink to this headline">¶</a></h4>
+<p>CSV export from vicon but converted to .mat file. Contains marker and joint centre positions of the movement trial.</p>
+</div>
+<div class="section" id="rawimu">
+<h4>rawimu<a class="headerlink" href="#rawimu" title="Permalink to this headline">¶</a></h4>
 <p>File name is &lt;Subject ID&gt;-Trial-&lt;Movement Type&gt;-&lt;Sensor ID&gt;.txt.</p>
 <p>Sensor ID to body segment table:</p>
 <table class="docutils align-default">
@@ -284,6 +423,12 @@ The experiment was approved by the Human Research Ethics Board of the University
 </tr>
 <tr class="row-even"><td><p>R_LowLeg</p></td>
 <td><p>00B40C47</p></td>
+</tr>
+<tr class="row-odd"><td><p>L_LowLeg2</p></td>
+<td><p>00B40BA5</p></td>
+</tr>
+<tr class="row-even"><td><p>R_LowLeg2</p></td>
+<td><p>00B40C35</p></td>
 </tr>
 <tr class="row-odd"><td><p>L_Foot</p></td>
 <td><p>00B40C55</p></td>
@@ -338,48 +483,9 @@ The experiment was approved by the Human Research Ethics Board of the University
 </pre></div>
 </div>
 </div>
-<div class="section" id="vicon">
-<h4>vicon<a class="headerlink" href="#vicon" title="Permalink to this headline">¶</a></h4>
-<p>CSV export from vicon but converted to .mat file. Contains marker and joint centre positions of the movement trial.</p>
-</div>
-<div class="section" id="xsens">
-<h4>xsens<a class="headerlink" href="#xsens" title="Permalink to this headline">¶</a></h4>
-<p>Pose reconstruction by the Xsens system. Specifically, bvh files of the movement trial generated by the MVN Studio 4.4 software.</p>
-</div>
-<div class="section" id="step-detect">
-<h4>step-detect<a class="headerlink" href="#step-detect" title="Permalink to this headline">¶</a></h4>
-<p>Indicate if step is detected. Reviewed manually.</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 13%" />
-<col style="width: 15%" />
-<col style="width: 72%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p>Column</p></td>
-<td><p>Type</p></td>
-<td><p>Description</p></td>
-</tr>
-<tr class="row-even"><td><p>stepL</p></td>
-<td><p>Boolean</p></td>
-<td><p>1 if left foot step is detected, 0 if not</p></td>
-</tr>
-<tr class="row-odd"><td><p>stepR</p></td>
-<td><p>Boolean</p></td>
-<td><p>1 if left foot step is detected, 0 if not</p></td>
-</tr>
-</tbody>
-</table>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stepL</span><span class="p">,</span><span class="n">stepR</span>
-<span class="mi">1</span><span class="p">,</span><span class="mi">1</span>
-<span class="o">...</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="calib">
-<h4>calib<a class="headerlink" href="#calib" title="Permalink to this headline">¶</a></h4>
-<p>TODO: to be added. For now, see the calibration loader code from github.</p>
+<div class="section" id="rawstep-detect">
+<h4>rawstep-detect<a class="headerlink" href="#rawstep-detect" title="Permalink to this headline">¶</a></h4>
+<p>Indicate if step is detected for the whole raw trial. Reviewed manually.</p>
 </div>
 </div>
 </div>

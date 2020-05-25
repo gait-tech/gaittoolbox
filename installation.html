@@ -193,11 +193,28 @@
 <li><p>Download the btk toolbox for MATLAB <a class="reference external" href="https://code.google.com/archive/p/b-tk/downloads">here</a> (e.g., btk-0.3.0_Win7_MatlabR2009b_64bit.zip).</p></li>
 <li><p>Export to a directory and add the said directory to the MATLAB path. See <a class="reference external" href="https://au.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html">tutorial here</a>.</p></li>
 </ol>
+<p>After running the code and exporting the C3D, you can visualize the c3d file via the following steps.</p>
+<ol class="arabic">
+<li><p>Download <a class="reference external" href="https://biomechanical-toolkit.github.io/mokka/">Mokka</a> and install.</p></li>
+<li><p>Download and load the corresponding <strong>.mvc</strong> file from <a class="reference external" href="https://github.com/gait-tech/gaittoolbox/tree/master/mod-lib/Mokka">gtb Mokka</a> (see steps in image below). Without loading this config, you will only see the dots but without the colored lines and planes.</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/mokka-config.png"><img alt="Load config to Mokka." class="align-center" src="_images/mokka-config.png" style="width: 500px;" /></a>
+</div></blockquote>
+</li>
+<li><p>See sample output below.</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/sample-c3d.PNG"><img alt="Sample c3d output" class="align-center" src="_images/sample-c3d.PNG" style="width: 500px;" /></a>
+</div></blockquote>
+</li>
+</ol>
 </div>
 </div>
 <div class="section" id="minimal-example">
 <h2>Minimal Example<a class="headerlink" href="#minimal-example" title="Permalink to this headline">¶</a></h2>
-<p>See <a class="reference external" href="https://github.com/gait-tech/gaittoolbox/tree/master/%2Bexamples">sample code</a>.</p>
+<ul class="simple">
+<li><p>See <a class="reference external" href="https://github.com/gait-tech/gaittoolbox/tree/master/%2Bexamples">sample code</a>.</p></li>
+<li><p>Specially recommend checking <a class="reference external" href="https://github.com/gait-tech/gaittoolbox/blob/master/%2Bexamples/runSample02.m">runSample02.m</a> which contains a simple step by step explanation of how to get body imu measurements with respect the world frame, and then feed it into the CKF filter.</p></li>
+</ul>
 </div>
 </div>
 
