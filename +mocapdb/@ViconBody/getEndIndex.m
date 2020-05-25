@@ -13,17 +13,24 @@ function endIdx = getEndIndex(obj, untilfirstnan)
     end
     
     endIdx = length(obj.PELV(:,1));
-    if untilfirstnan        
+    if untilfirstnan
+        startIdx = obj.getStartIndex();
         for i=1:length(obj.posList)
-            idx = find(any(isnan(obj.(obj.posList{i})), 2), 1);
-            if ~isempty(idx)
-                endIdx = min(idx(1)-1, endIdx);
+            buf = obj.(obj.posList{i});
+            if ~isempty(buf)
+                idx = find(any(isnan(buf(startIdx:end,:)), 2), 1);
+                if ~isempty(idx)
+                    endIdx = min(idx(1)-2+startIdx, endIdx);
+                end
             end
         end
         for i=1:length(obj.oriList)
-            idx = find(any(isnan(obj.(obj.oriList{i})), 2), 1);
-            if ~isempty(idx)
-                endIdx = min(idx(1)-1, endIdx);
+            buf = obj.(obj.oriList{i});
+            if ~isempty(buf)
+                idx = find(any(isnan(buf(startIdx:end,:)), 2), 1);
+                if ~isempty(idx)
+                    endIdx = min(idx(1)-2+startIdx, endIdx);
+                end
             end
         end
     end
