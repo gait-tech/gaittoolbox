@@ -38,14 +38,15 @@ classdef XsensBody < matlab.mixin.Copyable
     end
     
     methods
-        % Class constructor
-        %
-        % :param varargin: param1 (string), val1, param2 (string), val2, ...
-        %
-        % :return: instance of BVHBody class.
-        %
-		% .. Author: - Luke Sy (UNSW GSBME)
         function obj = XsensBody(varargin)
+            % Class constructor
+            %
+            % :param varargin: param1 (string), val1, param2 (string), val2, ...
+            %
+            % :return: instance of BVHBody class.
+            %
+            % .. Author: - Luke Sy (UNSW GSBME)
+        
             for i = 1:2:nargin
                obj.(varargin{i}) = varargin{i+1};
             end

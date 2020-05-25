@@ -2,8 +2,7 @@ function endIdx = getEndIndex(obj, untilfirstnan)
 	% Get end index
 	%
     % :param obj: this ViconBody
-    % :param untilfirstnan: default False. if True, return end index at
-    % first Nan
+    % :param untilfirstnan: default False. if True, return end index at first Nan
     %
 	% :return: endIdx - last index
 	%

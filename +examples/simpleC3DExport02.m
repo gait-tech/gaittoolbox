@@ -6,7 +6,7 @@ dir = 'data/sample';
 n = struct('subj', 'S02', 'act', 'Trial-Walk-1');
 
 dataV = mocapdb.ViconBody.loadViconMat( ...
-            sprintf('%s/vicon/%s-%s.mat', dir, n.subj, n.act));           
+            sprintf('%s/rawvicon/%s-%s.mat', dir, n.subj, n.act));           
 dataX = mocapdb.BVHBody.loadXsensBVHFile( ...
             sprintf('%s/xsens/%s-%s.bvh', dir, n.subj, n.act), 'mm');
 fs = dataV.fs;

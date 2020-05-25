@@ -1,4 +1,4 @@
-function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
+function out = calcCalibYawOffsetFromViconBody(obj, dataV)
 	% Calculate yaw offset from vicon data
 	% 
 	% :param obj: this XsensBody
