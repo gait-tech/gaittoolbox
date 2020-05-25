@@ -10,7 +10,11 @@ function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
     DEGRANGE = (0:0.1:359) - 180;
     out = mocapdb.XsensBody();
     
+<<<<<<< HEAD
     segList = {'Pelvis', 'L_LowLeg', 'R_LowLeg'};
+=======
+    segList = ["Pelvis", "L_LowLeg", "R_LowLeg", "L_Foot", "R_Foot"];
+>>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
     
     nSamples = min(dataV.nSamples, obj.nSamples);
     sIdx = max(dataV.getStartIndex()+1, 100);
@@ -21,6 +25,7 @@ function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
                              'lnSymbol', '-', 'ptSymbol', '*', 'fs', dataV.fs, ...
                              'xyzColor', {'m', 'y', 'c'}});  
     refAcc = viconBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
+<<<<<<< HEAD
     refAcc.MIDPEL = refAcc.MIDPEL(sIdx:eIdx,:);
     refAcc.LTIO = refAcc.LTIO(sIdx:eIdx,:);
     refAcc.RTIO = refAcc.RTIO(sIdx:eIdx,:);
@@ -47,6 +52,24 @@ function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
     out.Pelvis.ori = axang2quat([0 0 1 deg2rad(-DEGRANGE(peakIdxP))]);
     out.L_LowLeg.ori = axang2quat([0 0 1 deg2rad(-DEGRANGE(peakIdxL))]);
     out.R_LowLeg.ori = axang2quat([0 0 1 deg2rad(-DEGRANGE(peakIdxR))]);
+=======
+    refAcc.Pelvis = refAcc.MIDPEL(sIdx:eIdx,:);
+    refAcc.L_LowLeg = refAcc.LTIO(sIdx:eIdx,:);
+    refAcc.R_LowLeg = refAcc.RTIO(sIdx:eIdx,:);
+    refAcc.L_Foot = refAcc.LTIO(sIdx:eIdx,:);
+    refAcc.R_Foot = refAcc.RTIO(sIdx:eIdx,:);
+
+    estAcc = {};
+    for i = segList
+        estAcc.(i) = quatrotate(quatconj(obj.(i).ori), ...
+                            obj.(i).acc) - [0 0 9.81];
+        estAcc.(i) = estAcc.(i)(sIdx:eIdx,:);
+
+        [theta, err] = findOptimalThetaBrute(refAcc.(i), estAcc.(i));
+        [~, peakIdx] = min(abs(DEGRANGE-theta)); 
+        out.(i).ori = axang2quat([0 0 1 deg2rad(-DEGRANGE(peakIdx))]);
+    end
+>>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 end
 
 function [theta, err] = findOptimalThetaBrute(refAcc, estAcc)

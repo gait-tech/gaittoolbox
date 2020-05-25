@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 function [out1, out2] = calcDOrinobias(obj, ref)
+=======
+function [out1, out2] = calcDOrinobias(obj, ref, targetSeg)
+>>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 	% Calculate d_ori of lower body grBody as defined in the Marcard paper
 	% 
 	% T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
@@ -7,12 +11,17 @@ function [out1, out2] = calcDOrinobias(obj, ref)
 	%
 	% :param obj: this grBody
 	% :param ref: reference grBody to be compared with
+<<<<<<< HEAD
+=======
+    % :param targetSeg: segments to be computed (usually occluded)
+>>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 	%
 	% :return: out1 - array of d_ori no bias with respect to time
 	% :return: out2 - array of bias
 	%
 	% .. Author: - Luke Sy (UNSW GSBME) - 12/07/18
 
+<<<<<<< HEAD
     nameList = {'qLTH', 'qRTH'};
     doriList = {};
     rN = size(obj.qLTH, 1); cN = length(nameList);
@@ -27,6 +36,25 @@ function [out1, out2] = calcDOrinobias(obj, ref)
     end
     out1 = mean(dori, 2);
     out2 = mean(bias, 1);
+=======
+    if nargin <= 2, targetSeg = {'qLTH', 'qRTH'}; end
+    rN = size(obj.qLTH, 1); cN = length(targetSeg);
+    dori = zeros(rN, cN);
+    bias = zeros(cN, 3);
+    
+    cIdx = 0;
+    for i=1:cN
+        n = targetSeg{i};
+        if (isempty(obj.(n)) || isempty(ref.(n))), continue; end
+        
+        buf = calcEul(quat2rotm(quatmultiply(obj.(n), quatconj(ref.(n)))));
+        cIdx = cIdx+1;
+        bias(cIdx, :) = mean(buf, 1);
+        dori(:, cIdx) = vecnorm(rad2deg(buf-bias(cIdx,:)), 2, 2);
+    end
+    out1 = mean(dori(:,1:cIdx), 2);
+    out2 = mean(bias(1:cIdx,:), 1);
+>>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 end
 
 function eul = calcEul(R)

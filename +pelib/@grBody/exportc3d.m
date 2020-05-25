@@ -154,7 +154,11 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     setEvents(acq, false, (idx-1)/fs, 'General', '', '', 'End');
     
     % save c3d file
+<<<<<<< HEAD
     btkWriteAcquisition(acq, fname);
+=======
+    btkWriteAcquisition(acq, char(fname));
+>>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 end
 
 function setEvents(acq, step, idx, context, subject, desc, label)
@@ -187,6 +191,19 @@ function addAngles(obj, acq, suffix)
     btkAppendPoint(acq, 'angle', sprintf('RKneeAngles%s', suffix), ...
                    obj.calcJointAnglesRKnee()*180/pi, ...
                    zeroRes, 'Right knee angles X, Y, Z');
+<<<<<<< HEAD
+=======
+    if ~isempty(obj.qLFT)
+        btkAppendPoint(acq, 'angle', sprintf('LAnkleAngles%s', suffix), ...
+                   obj.calcJointAnglesLAnkle()*180/pi, ...
+                   zeroRes, 'Left ankle angles X, Y, Z');
+    end
+    if ~isempty(obj.qRFT)
+        btkAppendPoint(acq, 'angle', sprintf('RAnkleAngles%s', suffix), ...
+                   obj.calcJointAnglesRAnkle()*180/pi, ...
+                   zeroRes, 'Right ankle angles X, Y, Z');
+    end
+>>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 
     [r2 r1 r3] = quat2angle(obj.qLTH, seq); eul = rad2deg([r1 r2 r3]);
     btkAppendPoint(acq, 'angle', sprintf('LThighAngles%s', suffix), eul, ...

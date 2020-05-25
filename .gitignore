@@ -4,4 +4,8 @@ data/sample/mat/*.mat
 data/totalcapture/*
 data/neura-sparse01/*
 docs/build/*
+<<<<<<< HEAD
+=======
+mod-lib/btk/*
+>>>>>>> 8860699ab93014d7c72b14f3600fe1b99132d583
 explore_output/
