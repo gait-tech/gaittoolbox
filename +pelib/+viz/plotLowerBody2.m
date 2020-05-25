@@ -1,4 +1,4 @@
-function p = plotLowerBody(body, t)    
+function p = plotLowerBody2(body, t)    
 	% Plot the lower body using the orientations (checking purposing)
 	% 
 	% :param body: Body instance to be plotted
