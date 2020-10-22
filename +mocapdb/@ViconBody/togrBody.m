@@ -38,4 +38,6 @@ function out = togrBody(obj, idx, args)
     out.fs = obj.fs;
     out.nSamples = length(idx);
     out.frame = obj.frame;
+    out.ftStartIndex = obj.ftStartIndex;
+    out.ftEndIndex = obj.ftEndIndex;
 end

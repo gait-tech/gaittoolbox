@@ -40,9 +40,9 @@ function out = toViconBody(obj, idx, args)
     out.PELV = [mean([obj.LeftUpLeg(idx,1) obj.RightUpLeg(idx,1)], 2),...
                 mean([obj.LeftUpLeg(idx,2) obj.RightUpLeg(idx,2)], 2),...
                 mean([obj.LeftUpLeg(idx,3) obj.RightUpLeg(idx,3)], 2)];
-              
+    
+    out.nSamples = length(idx);    
     out.posUnit = obj.posUnit;
     out.frame = obj.frame;
     out.fs = obj.fs;
-    out.nSamples = length(idx);
 end

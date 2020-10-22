@@ -114,9 +114,9 @@ classdef BVHBody < matlab.mixin.Copyable
     end
     
     methods (Static)
-        obj = loadXsensBVHFile(fname, unit)
-        obj = loadBVHFile(fname, unit)
-        obj = loadOriPosFile(fname_ori, fname_pos, unit)
+        obj = loadXsensBVHFile(fname, unit);
+        obj = loadBVHFile(fname, unit);
+        obj = loadOriPosFile(fname_ori, fname_pos, unit);
     end
     
     methods
@@ -125,5 +125,6 @@ classdef BVHBody < matlab.mixin.Copyable
         out = getStartIndex(obj)
         out = getEndIndex(obj)
         out = changePosUnit(obj, newUnit, update)
+        out = adjustFootFrame2BMC(obj)
     end
 end

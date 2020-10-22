@@ -60,7 +60,6 @@ function out = diff(obj1, obj2, seq)
 %             end
 %         end
 %     end
-
 end
 
 function dx = diffnull(x1, x2)

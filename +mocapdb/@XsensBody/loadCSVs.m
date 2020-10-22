@@ -36,4 +36,6 @@ function [obj, idx] = loadCSVs(fname)
             fclose(fid);
         end
     end
+    obj.ftStartIndex = idx(1);
+    obj.ftEndIndex = idx(2);
 end

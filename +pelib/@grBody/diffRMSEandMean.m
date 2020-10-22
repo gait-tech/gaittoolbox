@@ -38,6 +38,7 @@ function out = diffRMSEandMean(obj1, obj2, includeRoot, targetSeg)
         out.oriMeanMean = nan;
         out.dOri = nan;
         out.dOrinobias = nan;
+        out.dOribias = [nan nan nan];
         out.dPos = nan;
     else
         rawDiff = obj1.diff(obj2, seq);

@@ -10,8 +10,13 @@ function obj = loadCalibCSV(fname)
     
     obj = mocapdb.XsensBody();
     for i=1:size(T, 1)
-        n = T.name(i); n = n{1};
+        n = T.name{i};
         obj.(n) = table;
-        obj.(n).ori = T{i,2:5};
+        if ismember('q_ori_1', T.Properties.VariableNames)
+            obj.(n).ori = T{i,{'q_ori_1', 'q_ori_2', 'q_ori_3', 'q_ori_4'}};
+        end
+        if ismember('acc_1', T.Properties.VariableNames)
+            obj.(n).acc = T{i,{'acc_1', 'acc_2', 'acc_3'}};
+        end
     end
 end

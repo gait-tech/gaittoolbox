@@ -38,8 +38,8 @@ assert(dataV2.posUnit == 'm');
 dataV = mocapdb.ViconBody.loadViconMat('+unittest/grBodyData/S03-Trial-002.mat');
 dataV = dataV.togrBody(1:dataV.nSamples, {});
 
-vel = dataV.calcJointVel();
-acc = dataV.calcJointAcc();
+W_p_LF = (dataV.LTIO+dataV.LTOE)/2;
+W_p_RF = (dataV.RTIO+dataV.RTOE)/2;
 
 fs = dataV.fs;
 
@@ -49,18 +49,48 @@ gfr_vel_LA = diff(dataV.LTIO, 1, 1)*fs;
 gfr_vel_LA = [gfr_vel_LA(1,:); gfr_vel_LA];
 gfr_vel_RA = diff(dataV.RTIO, 1, 1)*fs;
 gfr_vel_RA = [gfr_vel_RA(1,:); gfr_vel_RA];
+gfr_vel_LF = diff(W_p_LF, 1, 1)*fs;
+gfr_vel_LF = [gfr_vel_LF(1,:); gfr_vel_LF];
+gfr_vel_RF = diff(W_p_RF, 1, 1)*fs;
+gfr_vel_RF = [gfr_vel_RF(1,:); gfr_vel_RF];
 
-assert(all(all((gfr_vel_MP-vel.MIDPEL) == 0)));
-assert(all(all((gfr_vel_LA-vel.LTIO) == 0)));
-assert(all(all((gfr_vel_RA-vel.RTIO) == 0)));
 
 gfr_acc_MP = [0 0 0; diff(dataV.MIDPEL, 2, 1)*fs*fs];
 gfr_acc_LA = [0 0 0; diff(dataV.LTIO, 2, 1)*fs*fs];
 gfr_acc_RA = [0 0 0; diff(dataV.RTIO, 2, 1)*fs*fs];
+gfr_acc_LF = [0 0 0; diff(W_p_LF, 2, 1)*fs*fs];
+gfr_acc_RF = [0 0 0; diff(W_p_RF, 2, 1)*fs*fs];
 
-assert(all(all((gfr_acc_MP-acc.MIDPEL) == 0)));
-assert(all(all((gfr_acc_LA-acc.LTIO) == 0)));
-assert(all(all((gfr_acc_RA-acc.RTIO) == 0)));
+% cell array input test
+vel = dataV.calcJointVel();
+acc = dataV.calcJointAcc();
+assert(all(all((gfr_vel_MP-vel.MIDPEL) == 0)));
+assert(all(all((gfr_vel_LA-vel.LTIO) == 0)));
+assert(all(all((gfr_vel_RA-vel.RTIO) == 0)));
+assert(all(all((gfr_acc_MP-acc.MIDPEL(1:end-1,:)) == 0)));
+assert(all(all((gfr_acc_LA-acc.LTIO(1:end-1,:)) == 0)));
+assert(all(all((gfr_acc_RA-acc.RTIO(1:end-1,:)) == 0)));
+
+% struct array input test
+LFA_p_LF = zeros(dataV.nSamples, 4); LFA_p_LF(:,4) = 1;
+LFA_p_LF(:,3) = 0.5*dataV.calcLFootLength(1:dataV.nSamples);
+RFA_p_RF = zeros(dataV.nSamples, 4); RFA_p_RF(:,4) = 1;
+RFA_p_RF(:,3) = 0.5*dataV.calcRFootLength(1:dataV.nSamples);
+pts = struct('MIDPEL', [0 0 0 1], 'LTIO', [0 0 0 1], 'RTIO', [0 0 0 1], ...
+             'LFT', LFA_p_LF, 'RFT', RFA_p_RF );
+vel = dataV.calcJointVel(pts);
+acc = dataV.calcJointAcc(pts);
+
+assert(all(all((gfr_vel_MP-vel.MIDPEL) == 0)));
+assert(all(all((gfr_vel_LA-vel.LTIO) == 0)));
+assert(all(all((gfr_vel_RA-vel.RTIO) == 0)));
+assert(all(all((gfr_vel_LF-vel.LFT) < 1e-5)));
+assert(all(all((gfr_vel_RF-vel.RFT) < 1e-5)));
+assert(all(all((gfr_acc_MP-acc.MIDPEL(1:end-1,:)) == 0)));
+assert(all(all((gfr_acc_LA-acc.LTIO(1:end-1,:)) == 0)));
+assert(all(all((gfr_acc_RA-acc.RTIO(1:end-1,:)) == 0)));
+assert(all(all((gfr_acc_LF-acc.LFT(1:end-1,:)) < 1e-5)));
+assert(all(all((gfr_acc_RF-acc.RFT(1:end-1,:)) < 1e-5)));
 
 %% Test joint angles
 dataV = mocapdb.ViconBody.loadViconMat('+unittest/grBodyData/S03-Trial-002.mat');
@@ -190,3 +220,16 @@ assert(all(all(rad2deg(LHipAngle-LHipAngle2) < THRESHOLD)));
 assert(all(all(rad2deg(RHipAngle-RHipAngle2) < THRESHOLD)));
 assert(all(all(rad2deg(LKneeAngle-LKneeAngle2) < THRESHOLD)));
 assert(all(all(rad2deg(RKneeAngle-RKneeAngle2) < THRESHOLD)));
+
+%% Test getTMatrix
+dataV = mocapdb.ViconBody.loadViconMat('+unittest/grBodyData/S03-Trial-002.mat');
+vb = dataV.togrBody(1:dataV.nSamples, {});
+
+idx = 200:500;
+T = vb.getTMatrix('LFT', idx);
+TRef = zeros(4,4,length(idx));
+TRef(1:3,1:3,:) = quat2rotm(vb.qLFT(idx,:));
+TRef(1:3,4,:) = vb.LTIO(idx,:)';
+TRef(4,4,:) = 1;
+
+assert(all(all(all(abs(T-TRef) < 1e-8))));

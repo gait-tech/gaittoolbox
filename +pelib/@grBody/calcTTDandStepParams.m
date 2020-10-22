@@ -15,17 +15,19 @@ function out = calcTTDandStepParams(obj1, obj2, intervals, baseStruct)
     else, out = baseStruct; end
     
     posFields = ["MIDPEL", "LTIO", "RTIO"];
-    intervals2 = struct();
-    for i=posFields
-        buf = intervals.(i);
-        buf([1, end]) = true;
-        event = buf - buf([1, 1:end-1]);
-        [idx, val] = find(event == 1);
-        intervals2.(i) = idx;
+    if ~(~isobject(obj2) && isnan(obj2))
+        intervals2 = struct();
+        for i=posFields
+            buf = intervals.(i);
+            buf([1, end]) = true;
+            event = buf - buf([1, 1:end-1]);
+            [idx, val] = find(event == 1);
+            intervals2.(i) = idx;
+        end
     end
     
     for i=posFields
-        if isempty(intervals2.(i))
+        if (~isobject(obj2) && isnan(obj2)) || isempty(intervals2.(i))
             time = nan;
             totaltime = nan;
             dist1 = nan;

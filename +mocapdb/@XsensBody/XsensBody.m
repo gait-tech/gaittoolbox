@@ -11,22 +11,41 @@ classdef XsensBody < matlab.mixin.Copyable
         % number of samples
         nSamples
         % sampling frequency
-        fs = 100;
+        fs = 100
+        % full trial start index
+        ftStartIndex = 1
+        % full trial end index
+        ftEndIndex = inf
         
+        % Head
         Head
+        % Sternum
         Sternum
+        % Pelvis
         Pelvis
+        % Left upper arm
         L_UpArm
+        % Right upper arm
         R_UpArm
+        % Left low arm
         L_LowArm
+        % Right low arm
         R_LowArm
+        % Left thigh
         L_UpLeg
+        % Right thigh
         R_UpLeg
+        % Left shanks (near ankles)
         L_LowLeg
+        % Left shanks (middle)
         L_LowLeg2
+        % Right shanks (near ankles)
         R_LowLeg
+        % Right shanks (middle)
         R_LowLeg2
+        % Left foot
         L_Foot
+        % Right foot
         R_Foot
     end
     
@@ -41,7 +60,7 @@ classdef XsensBody < matlab.mixin.Copyable
         function obj = XsensBody(varargin)
             % Class constructor
             %
-            % :param varargin: param1 (string), val1, param2 (string), val2, ...
+            % :param varargin: param1 (string), val1, param2 (string), val2
             %
             % :return: instance of BVHBody class.
             %
@@ -67,13 +86,18 @@ classdef XsensBody < matlab.mixin.Copyable
         out = exportRawMeasurementAsStruct(obj, seg, segAlias);
         out = getSubset(obj, idx);
         out = getSegSubset(obj, segList);
+        out = getMean(obj);
+        out = getNonemptySeg(obj);
+        out = calcSegMeanRot(obj, seg, roty, idx);
         out = toViconFrame(obj, qR);
         out = adjustFrame(obj, qR1, qR2, orionly);
         out = calcGfrAcc(obj);
         out = conj(obj);
+        out = removeAccBias(obj, bias);
+        [out, bias] = normalizeAcc(obj, acc_norm);
         initializetoIdentity(obj);
-        saveCalibCSV(obj, fname);
-        exportCSVs(obj, fname, info)
+        saveCalibCSV(obj, fname, mode);
+        exportCSVs(obj, fname, info);
     end
     
     methods (Hidden, Static)

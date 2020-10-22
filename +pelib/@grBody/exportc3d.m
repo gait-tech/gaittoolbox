@@ -10,18 +10,25 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
 	%      out = obj.exportc3d(fname, sensors, refBody);
 	%
 	% :param obj: grBody (self)
+    % :type obj: :class:`+pelib.@grBody`
 	% :param fname: output file name
-	% :param sensors: [Optional] struct {'label': (n x 1) values to be saved as analog
+	% :param sensors: {'label': (n x 1) values to be saved as analog
 	%        signals ... } (e.g. raw acc, gyro, magnetometer) 
-	% :param refBody: [Optional] reference grBody class
-	% :param lsteps: [Optional] (n x 1) logical where it is true during left foot step detection
-	% :param rsteps: [Optional] (n x 1) logical where it is true during right foot step detection
+    % :type sensors: Optional, struct.
+	% :param refBody: reference grBody class
+    % :type refBody: Optional, :class:`+pelib.@grBody` or array of :class:`+pelib.@grBody`
+	% :param lsteps: (n x 1) logical where it is true during left foot step detection
+    % :type lsteps: Optional, logical array
+	% :param rsteps: (n x 1) logical where it is true during right foot step detection
+    % :type rsteps: Optional, logical array
 	% :param extraMarkers: [Optional] extra markers of format struct 
 	%                      {'label': (n x 3) position values
-	% :param oriMode: [Optional] 01: refBody axis on refBody. obj axis on obj.
-	%                           02: refBody and obj axis on obj.
-	%                           03: refBody and obj axis on refBody.
-	% :param spevents: (Optional) (n x 1) logical where special event happens
+	% :param oriMode: 01 - refBody axis on refBody. obj axis on obj.
+	%                 02 - refBody and obj axis on obj.
+	%                 03 - refBody and obj axis on refBody.
+    % :param oriMode: Optional, integer. Default to 1.
+	% :param spevents: (n x 1) logical when general event happens
+    % :param spevents: Optional, logical array
 	% :return: acq - handle pointer to new btk c3d
 	%
 	% .. Author: - Luke Sy (UNSW GSBME) - 9/09/18
@@ -29,7 +36,13 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     if nargin <= 2, sensors = struct(); 
     else, validateattributes(sensors, {'struct', 'logical'}, {}); end
     if nargin <= 3, refBody = false; 
-    else, validateattributes(refBody, {'pelib.grBody', 'logical'}, {}); end
+    else, validateattributes(refBody, {'pelib.grBody', 'logical', 'cell'}, {}); end
+    if islogical(refBody)
+        refBody = {};
+    elseif iscell(refBody)
+    else
+        refBody = {refBody};
+    end
     
     %% c3d file initializations and metadata
     n = obj.nSamples; fs = obj.fs;
@@ -70,10 +83,11 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
                            desc.(ptName));
         end
         % only put in reference point if the main point exists
-        if(~isempty(obj.(ptName)) && ~islogical(refBody) && ...
-           ~isempty(refBody.(ptName)))
-            btkAppendPoint(acq, 'marker', sprintf('%sRef', ptName), ...
-                           refBody.(ptName), zeroRes, desc.(ptName));
+        for j = 1:length(refBody)
+            if(~isempty(refBody{j}.(ptName)))
+                btkAppendPoint(acq, 'marker', sprintf('%s%s', ptName, getPostfix(j)), ...
+                               refBody{j}.(ptName), zeroRes, desc.(ptName));
+            end
         end
     end
 
@@ -87,19 +101,25 @@ function acq = exportc3d(obj, fname, sensors, refBody, lsteps, rsteps, ...
     switch (oriMode)
         case 1
             addAxis(obj, obj, acq, '');
-            if ~islogical(refBody), addAxis(refBody, refBody, acq, 'Ref'); end
+            for j=1:length(refBody)
+                addAxis(refBody{j}, refBody{j}, acq, getPostfix(j)); 
+            end
         case 2
             addAxis(obj, obj, acq, '');
-            if ~islogical(refBody), addAxis(refBody, obj, acq, 'Ref'); end
+            for j=1:length(refBody)
+                addAxis(refBody{j}, obj, acq, getPostfix(j)); 
+            end
         case 3
             addAxis(obj, refBody, acq, '');
-            if ~islogical(refBody), addAxis(refBody, refBody, acq, 'Ref'); end
+            for j=1:length(refBody)
+                addAxis(refBody{j}, refBody{j}, acq, getPostfix(j)); 
+            end
     end
     
     % add joint angles
     addAngles(obj, acq, '');
-    if ~islogical(refBody)
-        addAngles(refBody, acq, 'Ref');
+    for j=1:length(refBody)
+        addAngles(refBody{j}, acq, getPostfix(j));
     end
     
     % add sensor signals
@@ -187,7 +207,6 @@ function addAngles(obj, acq, suffix)
     btkAppendPoint(acq, 'angle', sprintf('RKneeAngles%s', suffix), ...
                    obj.calcJointAnglesRKnee()*180/pi, ...
                    zeroRes, 'Right knee angles X, Y, Z');
-
     if ~isempty(obj.qLFT)
         btkAppendPoint(acq, 'angle', sprintf('LAnkleAngles%s', suffix), ...
                    obj.calcJointAnglesLAnkle()*180/pi, ...
@@ -232,5 +251,13 @@ function addAxis(body1, body2, acq, suffix)
             btkAppendPoint(acq, 'marker', sprintf('%sZ%s', v, suffix), ...
                            body2.(k)+d*squeeze(R(:,3,:))' );
         end
+    end
+end
+
+function out = getPostfix(idx)
+    if idx == 1
+        out = 'Ref';
+    else
+        out = sprintf('%d', idx);
     end
 end

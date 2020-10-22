@@ -24,6 +24,7 @@ function data = loadRawNeuRaTrialData(dataDir, subjName, actName, ns, override, 
                         'L_LowLeg2', '00B40BA5', 'R_LowLeg2', '00B40C35', ...
                         'L_Foot', '00B40C55', 'R_Foot', '00B40C48');
     end    
+    ns = char(ns);
     DEGRANGE = (0:0.1:359) - 180;
 
 
@@ -35,13 +36,20 @@ function data = loadRawNeuRaTrialData(dataDir, subjName, actName, ns, override, 
         'calibFnameSensorYawFixWorldFrame', ...
         sprintf('%s/calib/%s-%s-Calib-SensorYawFixWorldFrame.txt', ...
                 dataDir, subjName, actName), ...
+        'calibFnameSensorYawFixWorldFrameKFM', ...
+        sprintf('%s/calib/%s-%s-Calib-SensorYawFixWorldFrameKFM.txt', ...
+                dataDir, subjName, actName), ...
         'calibFnameSensorW2V', ...
         sprintf('%s/calib/%s-Calib-SensorW2V.txt', dataDir, subjName), ...
+        'calibFnameSensorAccBias', ...
+        sprintf('%s/calib/%s-%s-Calib-SensorAccBias.txt', dataDir, subjName, actName), ...
         'fnameRevStepDetect', ...
         sprintf('%s/rawstep-detect/%s-%s-revStepDetect.csv', ...
                 dataDir, subjName, actName));
 
-    data.dataV = mocapdb.ViconBody.loadViconMat(data.fnameV);           
+    data.dataV = mocapdb.ViconBody.loadViconMat(data.fnameV);     
+    % kinematic fitted model
+    data.dataVKFM = mocapdb.ViconBody.loadViconMat(data.fnameV, false);
     data.dataX = mocapdb.BVHBody.loadXsensBVHFile(data.fnameX, "mm");
     data.dataS = mocapdb.XsensBody.loadMTExport(data.fnameS, options);
     data.dataS.fs = 100;
@@ -83,6 +91,22 @@ function data = loadRawNeuRaTrialData(dataDir, subjName, actName, ns, override, 
         data.calibYawFix = struct();
         for j = ["Pelvis", "L_LowLeg", "R_LowLeg", "L_Foot", "R_Foot"]
             data.calibYawFix.(j).ori = [1 0 0 0];
+        end
+    end
+    
+    %% NS5
+    if all(all(isnan(data.dataVKFM.PELV)))
+        % all is nan
+        data.calibYawFixKFM = [];
+        fprintf('%s-%s KFM is NaN. Skipping generating SensorYawFixWorldFrame', subjName, actName);
+    else
+        if ~override && exist(data.calibFnameSensorYawFixWorldFrameKFM, 'file')
+            data.calibYawFixKFM = mocapdb.XsensBody.loadCalibCSV(data.calibFnameSensorYawFixWorldFrameKFM);
+        else
+            W__dataV = data.dataVKFM.toWorldFrame(data.calibV2W);
+            W__dataV.changePosUnit('m', true);
+            data.calibYawFixKFM = data.dataS.calcCalibAnkleSensorW2PelvisWFromVicon(W__dataV);
+            data.calibYawFixKFM.saveCalibCSV(data.calibFnameSensorYawFixWorldFrameKFM);
         end
     end
     
@@ -131,10 +155,9 @@ function data = loadRawNeuRaTrialData(dataDir, subjName, actName, ns, override, 
 %                                 1, -1);
 %         data.bias
 %     else
-    data.bias = struct('w__v', zeros(1, 3), 'v__v', zeros(1, 3), ...
-              'w__x', zeros(1, 3));
+%    data.bias = struct('w__v', zeros(1, 3), 'v__v', zeros(1, 3), ...
+%              'w__x', zeros(1, 3));
 %     end
-
     data.revStepDetect = readtable(data.fnameRevStepDetect);
 end
 

@@ -9,6 +9,7 @@ function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
 
     DEGRANGE = (0:0.1:359) - 180;
     out = mocapdb.XsensBody();
+    
     segList = ["Pelvis", "L_LowLeg", "R_LowLeg", "L_Foot", "R_Foot"];
     
     nSamples = min(dataV.nSamples, obj.nSamples);
@@ -19,12 +20,15 @@ function out = calcCalibAnkleSensorW2PelvisWFromVicon(obj, dataV)
     viconBody = dataV.togrBody(1:nSamples, {'name', 'act', 'oriUnit', 'deg', ...
                              'lnSymbol', '-', 'ptSymbol', '*', 'fs', dataV.fs, ...
                              'xyzColor', {'m', 'y', 'c'}});  
-    refAcc = viconBody.calcJointAcc({'MIDPEL', 'LTIO', 'RTIO'});
+    refAcc = viconBody.calcJointAcc(struct('MIDPEL', [0 0 0 1], ...
+        'LTIO', [0 0 0 1], 'RTIO', [0 0 0 1], ...
+        'LFT', [0 0 0.5*viconBody.calcLFootLength(sIdx) 1], ...
+        'RFT', [0 0 0.5*viconBody.calcRFootLength(sIdx) 1] ));
     refAcc.Pelvis = refAcc.MIDPEL(sIdx:eIdx,:);
     refAcc.L_LowLeg = refAcc.LTIO(sIdx:eIdx,:);
     refAcc.R_LowLeg = refAcc.RTIO(sIdx:eIdx,:);
-    refAcc.L_Foot = refAcc.LTIO(sIdx:eIdx,:);
-    refAcc.R_Foot = refAcc.RTIO(sIdx:eIdx,:);
+    refAcc.L_Foot = refAcc.LFT(sIdx:eIdx,:);
+    refAcc.R_Foot = refAcc.RFT(sIdx:eIdx,:);
 
     estAcc = {};
     for i = segList

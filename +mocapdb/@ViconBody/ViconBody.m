@@ -14,6 +14,10 @@ classdef ViconBody < matlab.mixin.Copyable
         posUnit = 'mm'
         % number of samples
         nSamples
+        % full trial start index
+        ftStartIndex = 1
+        % full trial end index
+        ftEndIndex = inf
         
 		% Positions:
         % pelvis position
@@ -59,6 +63,7 @@ classdef ViconBody < matlab.mixin.Copyable
 		% orientation property list
         oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK', 'qRFT', 'qLFT'};
     end
+    
     methods
         % Class constructor
         %
@@ -83,7 +88,7 @@ classdef ViconBody < matlab.mixin.Copyable
     end
     
     methods (Static)
-        obj = loadViconMat(fname)
+        obj = loadViconMat(fname, plugingait)
         [obj, idx] = loadCSV(fname)
     end
 end

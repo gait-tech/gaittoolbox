@@ -12,11 +12,10 @@ classdef grBody < matlab.mixin.Copyable
         fs = 60
         % frame: vicon / world / MIDPEL
         frame
-
         % full trial start index
-        ftStartIndex
+        ftStartIndex = 1
         % full trial end index
-        ftEndIndex
+        ftEndIndex = inf
         
         % Plot specifications
         posUnit = 'mm';
@@ -56,11 +55,9 @@ classdef grBody < matlab.mixin.Copyable
         qRSK
         % left tibia orientation (n x 4), z = along tibia, x = forward, y towards left
         qLSK
-        % right foot orientation (n x 4) following Vicon convention, 
-        % z = toe to ankle joint center, x = downward, y = towards left, tibia y axis
+        % right foot orientation (n x 4) following Vicon convention, z = toe to ankle joint center, x = downward, y = towards left, tibia y axis
         qRFT
-        % left foot orientation (n x 4) following Vicon convention
-        % z = toe to ankle joint center, x = downward, y = towards left, tibia y axis
+        % left foot orientation (n x 4) following Vicon convention, z = toe to ankle joint center, x = downward, y = towards left, tibia y axis
         qLFT
     end
     
@@ -70,6 +67,22 @@ classdef grBody < matlab.mixin.Copyable
                    'RFEP', 'RFEO', 'RTIO', 'RTOE'};
 	    % orientation property list
         oriList = {'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK', 'qRFT', 'qLFT'};
+        
+        % transformation matrix
+        TMap = struct('MIDPEL', struct('ori', 'qRPV', 'trans', 'MIDPEL'), ...
+                     'LFEO', struct('ori', 'qLTH', 'trans', 'LFEO'), ...
+                     'LTIO', struct('ori', 'qLSK', 'trans', 'LTIO'), ...
+                     'RFEO', struct('ori', 'qRTH', 'trans', 'RFEO'), ...
+                     'RTIO', struct('ori', 'qRSK', 'trans', 'RTIO'), ...
+                     'LFT', struct('ori', 'qLFT', 'trans', 'LTIO'), ...
+                     'RFT', struct('ori', 'qRFT', 'trans', 'RTIO'), ...
+                     'qRPV', struct('ori', 'qRPV', 'trans', 'MIDPEL'), ...
+                     'qLTH', struct('ori', 'qLTH', 'trans', 'LFEO'), ...
+                     'qLSK', struct('ori', 'qLSK', 'trans', 'LTIO'), ...
+                     'qRTH', struct('ori', 'qRTH', 'trans', 'RFEO'), ...
+                     'qRSK', struct('ori', 'qRSK', 'trans', 'RTIO'), ...
+                     'qLFT', struct('ori', 'qLFT', 'trans', 'LTIO'), ...
+                     'qRFT', struct('ori', 'qRFT', 'trans', 'RTIO') );
     end
     
     methods (Static)
@@ -373,6 +386,8 @@ classdef grBody < matlab.mixin.Copyable
             end
         end
         
+        out = applyTMatrix(obj, pts);
+        out = getTMatrix(obj, pts, idx);
         out = calcJointVel(obj, pts);
         out = calcSegAngVel(obj, pts, frame);
         out = calcJointAcc(obj, pts);
@@ -389,6 +404,7 @@ classdef grBody < matlab.mixin.Copyable
         out = diffRMSE(obj1, obj2, seq);
         out = diffRMSEandMean(obj1, obj2, includeRoot, targetSeg);
         out = toWorldFrame(obj, pos, ori);
+        out = translateRoot(obj, pos);
         out = changePosUnit(obj, newUnit, update);
 		out = changeRefFrame(obj, ref)
         out = getSubset(obj, idx);
