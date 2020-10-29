@@ -5,19 +5,13 @@ classdef BVHBody < matlab.mixin.Copyable
 	% :param frame: data are in this frame of reference (Vicon or IMU)
 	
     properties
-        % body is loaded from this source file name
-        srcFileName
-        % data are in this frame of reference (Vicon or IMU)
-        frame
-		% position unit
-        posUnit = 'mm'
-        % number of samples
-        nSamples
-        % sampling frequency
-        fs
+        srcFileName % body is loaded from this source file name
+        frame % data are in this frame of reference (Vicon or IMU)
+        posUnit = 'mm' % position unit
+        nSamples % number of samples
+        fs % sampling frequency
         
-        % similar to MIDPEL
-        Hips
+        Hips % similar to MIDPEL
         Spine
         Spine1
         Spine2
@@ -32,23 +26,16 @@ classdef BVHBody < matlab.mixin.Copyable
         LeftArm
         LeftForeArm
         LeftHand
-        % similar to RFEP
-        RightUpLeg
-        % similar to RFEO
-        RightLeg
-        % similar to RTIO
-        RightFoot
-        RightToe
-        % similar to LFEP
-        LeftUpLeg
-        % similar to LFEO
-        LeftLeg
-        % similar to LTIO
-        LeftFoot
-        LeftToe
+        RightUpLeg % similar to RFEP
+        RightLeg % similar to RFEO
+        RightFoot % similar to RTIO
+        RightToe % similar to RTOE
+        LeftUpLeg % similar to LFEP
+        LeftLeg % similar to LFEO
+        LeftFoot % similar to LTIO
+        LeftToe % similar to LTOE
         
-        % hip orientation (n x 4)
-        qHips
+        qHips % hip orientation (n x 4)
         qSpine
         qSpine1
         qSpine2

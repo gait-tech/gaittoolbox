@@ -4,56 +4,33 @@ classdef ViconBody < matlab.mixin.Copyable
 	% .. Author: - Luke Sy (UNSW GSBME)
 	
     properties
-        % body is loaded from this source file name
-        srcFileName
-        % data are in this frame of reference (Vicon or IMU)
-        frame
-        % sampling rate
-        fs
-		% position unit
-        posUnit = 'mm'
-        % number of samples
-        nSamples
-        % full trial start index
-        ftStartIndex = 1
-        % full trial end index
-        ftEndIndex = inf
+        srcFileName % body is loaded from this source file name
+        frame % data are in this frame of reference (Vicon or IMU)
+        fs % sampling rate
+        posUnit = 'mm' % position unit
+        nSamples % number of samples
+        ftStartIndex = 1 % full trial start index
+        ftEndIndex = inf % full trial end index
         
-		% Positions:
-        % pelvis position
-        PELV
-		% left hip position
-        LFEP
-		% left knee position
-        LFEO
-		% left ankle position
-        LTIO
-		% left toe position
-        LTOE
-		% right hip position
-        RFEP
-		% right knee position
-        RFEO
-		% right ankle position
-        RTIO
-		% right toe position
-        RTOE
+        %% Position:
+        PELV % pelvis position
+        LFEP % left hip position
+        LFEO % left knee position
+        LTIO % left ankle position
+        LTOE % left toe position
+        RFEP % right hip position
+        RFEO % right knee position
+        RTIO % right ankle position
+        RTOE % right toe position
         
-        % Orientation:
-        % pelvis orientation (n x 4 OR 3 x 3 x n)
-        qRPV
-        % right femur orientation (n x 4 OR 3 x 3 x n)
-        qRTH
-        % left femur orientation (n x 4 OR 3 x 3 x n)
-        qLTH
-        % right tibia orientation (n x 4 OR 3 x 3 x n)
-        qRSK
-        % left tibia orientation (n x 4 OR 3 x 3 x n)
-        qLSK
-        % right foot orientation (n x 4 OR 3 x 3 x n)
-        qRFT
-        % left foot orientation (n x 4 OR 3 x 3 x n)
-        qLFT
+        %% Orientation:
+        qRPV % pelvis orientation (n x 4 OR 3 x 3 x n)
+        qRTH % right femur orientation (n x 4 OR 3 x 3 x n)
+        qLTH % left femur orientation (n x 4 OR 3 x 3 x n)
+        qRSK % right tibia orientation (n x 4 OR 3 x 3 x n)
+        qLSK % left tibia orientation (n x 4 OR 3 x 3 x n)
+        qRFT % right foot orientation (n x 4 OR 3 x 3 x n)
+        qLFT % left foot orientation (n x 4 OR 3 x 3 x n)
     end
     
     properties (Hidden)

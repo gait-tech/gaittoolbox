@@ -4,49 +4,29 @@ classdef XsensBody < matlab.mixin.Copyable
 	% .. Author: - Luke Sy (UNSW GSBME)
 
     properties
-        % body is loaded from this source file name
-        srcFileName
-        % data are in this frame of reference (Vicon or World or Calib)
-        frame
-        % number of samples
-        nSamples
-        % sampling frequency
-        fs = 100
-        % full trial start index
-        ftStartIndex = 1
-        % full trial end index
-        ftEndIndex = inf
+        srcFileName % body is loaded from this source file name
+        frame % data are in this frame of reference (Vicon or World or Calib)
+        nSamples % number of samples
+        fs = 100 % sampling frequency
         
-        % Head
-        Head
-        % Sternum
-        Sternum
-        % Pelvis
-        Pelvis
-        % Left upper arm
-        L_UpArm
-        % Right upper arm
-        R_UpArm
-        % Left low arm
-        L_LowArm
-        % Right low arm
-        R_LowArm
-        % Left thigh
-        L_UpLeg
-        % Right thigh
-        R_UpLeg
-        % Left shanks (near ankles)
-        L_LowLeg
-        % Left shanks (middle)
-        L_LowLeg2
-        % Right shanks (near ankles)
-        R_LowLeg
-        % Right shanks (middle)
-        R_LowLeg2
-        % Left foot
-        L_Foot
-        % Right foot
-        R_Foot
+        ftStartIndex = 1 % full trial start index
+        ftEndIndex = inf % full trial end index
+        
+        Head % Head
+        Sternum % Sternum
+        Pelvis % Pelvis
+        L_UpArm % Left upper arm
+        R_UpArm % Right upper arm
+        L_LowArm % Left low arm
+        R_LowArm % Right low arm
+        L_UpLeg % Left thigh
+        R_UpLeg % Right thigh
+        L_LowLeg % Left shanks (near ankles)
+        L_LowLeg2 % Left shanks (middle)
+        R_LowLeg % Right shanks (near ankles)
+        R_LowLeg2 % Right shanks (middle)
+        L_Foot % Left foot
+        R_Foot % Right foot
     end
     
     properties (Constant)

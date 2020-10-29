@@ -51,14 +51,17 @@ The experiment was approved by the Human Research Ethics Board of the University
 
 Installation
 ^^^^^^^^^^^^
-#. Download `neura-sparse01.zip` from `Harvard Dataverse <https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/9QDD5J>`_.
+#. Download `neura-sparse01.zip` from `Harvard Dataverse <https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/9QDD5J>`_. Refer to :ref:`desc-base` for details.
 #. Extract to `data/neura-sparse01`
+#. If you want the raw recordings (not time aligned, and no calibration done), download `neura-sparse01-raw.zip` from the link above. Refer to :ref:`desc-raw` for details.
+
+.. _desc-base:
 
 Description (base)
 ^^^^^^^^^^^^^^^^^^
 <Subject ID>-Trial-<Movement Type>.<Extension>
 
-Note that imu, vicon, and step-detect are all aligned, and are with respest the world frame.
+Note that imu, vicon, and step-detect are all aligned (time-wise), and are with respect the world frame.
 
 imu
 """
@@ -140,6 +143,8 @@ calib
 - <Subject ID>-Trial-<Movement>-Calib-SensorYawFixWorldFrame.txt: Contains yaw offset calibration for pelvis, ankle, and foot IMUs. Only important file in the folder.
 - <Subject ID>-Calib-V2W-Compass.mat and <Subject ID>-Calib-V2W-Pendumum.mat: used to calculate Vicon to World rotation matrix. Only used in raw processing.
 - <Subject ID>-Calib-W2V.txt: Description to follow. Did not use in the dataset.
+
+.. _desc-raw:
 
 Description (raw)
 ^^^^^^^^^^^^^^^^^
