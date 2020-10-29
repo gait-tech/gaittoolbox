@@ -21,10 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -171,9 +172,37 @@
 <p>Input to estimator are loaded and processed by <a class="reference internal" href="mocapdb.html#module-+mocapdb" title="+mocapdb"><code class="xref mat mat-mod docutils literal notranslate"><span class="pre">+mocapdb</span></code></a>.</p>
 <span class="target" id="module-+pelib"></span><div class="section" id="module-+pelib.&#64;grBody">
 <span id="grbody"></span><h2>grBody<a class="headerlink" href="#module-+pelib.@grBody" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="mat function">
+<dt id="+pelib.&#64;grBody.applyTMatrix">
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">applyTMatrix</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">pts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.applyTMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the transformation matrix of grBody to points</p>
+<p>Example 1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">applyTMatrix</span><span class="p">(</span><span class="n">struct</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;RFEO&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="o">%</span> <span class="n">out</span> <span class="o">=</span> <span class="n">struct</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;RFEO&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">out.LTIO</span></code> will contain <span class="math notranslate nohighlight">\(^{W}_{LS}\mathbf{T}\)</span> * <code class="docutils literal notranslate"><span class="pre">pts.LTIO</span></code>. 
+The same logic applies for the other values (w/ the corresponding 
+body frame) of input cell array <code class="docutils literal notranslate"><span class="pre">pts</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<a class="reference internal" href="#module-+pelib.&#64;grBody" title="+pelib.&#64;grBody"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">+pelib.&#64;grBody</span></code></a>) – this object instance</p></li>
+<li><p><strong>pts</strong> (<em>cell array</em>) – cell array values indicate which body segment (see keys of <a class="reference internal" href="#+pelib.&#64;grBody.grBody.TMap" title="+pelib.&#64;grBody.grBody.TMap"><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">+pelib.&#64;grBody.grBody.TMap</span></code></a>), struct value = 1 x 4 or n x 4 target point (3D homogenous point) wrt reference body</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - struct of points (n x 3)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>struct</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcDOri">
-<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcDOri</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">ref</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDOri" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcDOri</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">ref</em>, <em class="sig-param">targetSeg</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDOri" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate d_ori of lower body grBody as defined in the Marcard paper</p>
 <p>T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
 Sparse Inertial Poser: Automatic 3D Human Pose Estimation from Sparse IMUs. 
@@ -183,6 +212,7 @@ Eurographics, 36(2)</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> – this grBody</p></li>
 <li><p><strong>ref</strong> – reference grBody to be compared with</p></li>
+<li><p><strong>targetSeg</strong> – segments to be computed (usually occluded)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -191,9 +221,9 @@ Eurographics, 36(2)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcDOrinobias">
-<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcDOrinobias</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">ref</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDOrinobias" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcDOrinobias</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">ref</em>, <em class="sig-param">targetSeg</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDOrinobias" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate d_ori of lower body grBody as defined in the Marcard paper</p>
 <p>T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
 Sparse Inertial Poser: Automatic 3D Human Pose Estimation from Sparse IMUs. 
@@ -203,6 +233,7 @@ Eurographics, 36(2)</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> – this grBody</p></li>
 <li><p><strong>ref</strong> – reference grBody to be compared with</p></li>
+<li><p><strong>targetSeg</strong> – segments to be computed (usually occluded)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -214,9 +245,9 @@ Eurographics, 36(2)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcDPos">
-<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcDPos</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">ref</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDPos" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcDPos</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">ref</em>, <em class="sig-param">includeRoot</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDPos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate d_pos of lower body grBody as defined in the Marcard paper</p>
 <p>T. von Marcard, B. Rosenhahn, M. J. Black, G. P.-M. (2017). 
 Sparse Inertial Poser: Automatic 3D Human Pose Estimation from Sparse IMUs. 
@@ -226,6 +257,7 @@ Eurographics, 36(2)</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> – this grBody</p></li>
 <li><p><strong>ref</strong> – reference grBody to be compared with</p></li>
+<li><p><strong>includeRoot</strong> – [boolean] if root/pelvis is included</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -234,7 +266,7 @@ Eurographics, 36(2)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcDistRotm">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcDistRotm</code><span class="sig-paren">(</span><em class="sig-param">prox</em>, <em class="sig-param">angles</em>, <em class="sig-param">seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcDistRotm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the distal segment orientation rotation matrix</p>
@@ -252,29 +284,47 @@ Eurographics, 36(2)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcJointAcc">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcJointAcc</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">pts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcJointAcc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the joint acceleration of grBody</p>
-<dl class="simple">
-<dt>Example: </dt><dd><p>out = obj.calcJointVel(100, {‘LTIO’, ‘RFEO’})
-out = struct(‘LTIO’, n x 3, ‘RFEO’, n x 3)</p>
-</dd>
-</dl>
+<p>Example 1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">calcJointAcc</span><span class="p">({</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="s1">&#39;RFEO&#39;</span><span class="p">})</span>
+<span class="o">%</span> <span class="n">out</span> <span class="o">=</span> <span class="n">struct</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;RFEO&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example 2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">RFA_p_RF</span> <span class="o">=</span> <span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> <span class="n">RFA_p_RF</span><span class="p">(:,</span><span class="mi">4</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+     <span class="n">out</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">calcJointVel</span><span class="p">(</span><span class="n">struct</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;RFT&#39;</span><span class="p">:</span> <span class="n">RFA_p_RF</span><span class="p">))</span>
+     <span class="o">%</span> <span class="n">out</span> <span class="o">=</span> <span class="n">struct</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;RFT&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>the values in the struct denote the position of target point
+with respect the corresponding body frame (i.e., <span class="math notranslate nohighlight">\(^{B}_{TP}p\)</span>).
+For example, <code class="docutils literal notranslate"><span class="pre">out.LTIO</span></code> will contain the acceleration at point 
+<span class="math notranslate nohighlight">\(^{W}_{LS}\mathbf{T}\)</span> * <code class="docutils literal notranslate"><span class="pre">pts.LTIO</span></code> where <span class="math notranslate nohighlight">\(^{W}_{LS}\mathbf{T}\)</span> 
+is the transformation matrix of the left shanks wrt world frame and 
+<code class="docutils literal notranslate"><span class="pre">pts.LTIO</span></code> is the position of the target point wrt the left 
+shank frame, giving us the position of the target point wrt world 
+frame. The same logic applies for the other keys (w/ the 
+corresponding body frame) and values of input struct <code class="docutils literal notranslate"><span class="pre">pts</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> – this grBody</p></li>
-<li><p><strong>pts</strong> – cell array of joints to be calculated (if blank: all joints)</p></li>
+<li><p><strong>obj</strong> (<a class="reference internal" href="#module-+pelib.&#64;grBody" title="+pelib.&#64;grBody"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">+pelib.&#64;grBody</span></code></a>) – this object instance</p></li>
+<li><p><strong>pts</strong> (<em>cell array, struct, optional</em>) – cell array values or struct key indicate which body segment (see keys of <a class="reference internal" href="#+pelib.&#64;grBody.grBody.TMap" title="+pelib.&#64;grBody.grBody.TMap"><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">+pelib.&#64;grBody.grBody.TMap</span></code></a>), struct value = 1 x 4 or n x 4 target point (3D homogenous point) wrt reference body, defaults to cell array with all joints</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>out struct of velocities</p>
+<dd class="field-even"><p>out - struct of acceleration</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>struct</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcJointAngles">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcJointAngles</code><span class="sig-paren">(</span><em class="sig-param">prox</em>, <em class="sig-param">dist</em>, <em class="sig-param">seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcJointAngles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate distal segment rotation matric from proximal segment and joint angle</p>
@@ -292,29 +342,47 @@ out = struct(‘LTIO’, n x 3, ‘RFEO’, n x 3)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcJointVel">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcJointVel</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">pts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcJointVel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the joint velocity of grBody</p>
-<dl class="simple">
-<dt>Example: </dt><dd><p>out = obj.calcJointVel(100, {‘LTIO’, ‘RFEO’})
-out = struct(‘LTIO’, n x 3, ‘RFEO’, n x 3)</p>
-</dd>
-</dl>
+<p>Example 1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">calcJointVel</span><span class="p">({</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="s1">&#39;RFEO&#39;</span><span class="p">})</span>
+<span class="o">%</span> <span class="n">out</span> <span class="o">=</span> <span class="n">struct</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;RFEO&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example 2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">RFA_p_RF</span> <span class="o">=</span> <span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> <span class="n">RFA_p_RF</span><span class="p">(:,</span><span class="mi">4</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+     <span class="n">out</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">calcJointVel</span><span class="p">(</span><span class="n">struct</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;RFT&#39;</span><span class="p">:</span> <span class="n">RFA_p_RF</span><span class="p">))</span>
+     <span class="o">%</span> <span class="n">out</span> <span class="o">=</span> <span class="n">struct</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;RFT&#39;</span><span class="p">,</span> <span class="n">n</span> <span class="n">x</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>the values in the struct denote the position(s) of target point
+with respect the corresponding body frame (i.e., <span class="math notranslate nohighlight">\(^{B}_{TP}p\)</span>).
+For example, <code class="docutils literal notranslate"><span class="pre">out.LTIO</span></code> will contain the velocity at point 
+<span class="math notranslate nohighlight">\(^{W}_{LS}\mathbf{T}\)</span> * <code class="docutils literal notranslate"><span class="pre">pts.LTIO</span></code> where <span class="math notranslate nohighlight">\(^{W}_{LS}\mathbf{T}\)</span> 
+is the transformation matrix of the left shanks wrt world frame and 
+<code class="docutils literal notranslate"><span class="pre">pts.LTIO</span></code> is the position of the target point wrt the left 
+shank frame, giving us the position of the target point wrt world 
+frame. The same logic applies for the other keys (w/ the 
+corresponding body frame) and values of input struct <code class="docutils literal notranslate"><span class="pre">pts</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> – this grBody</p></li>
-<li><p><strong>pts</strong> – cell array of joints to be calculated (if blank: all joints)</p></li>
+<li><p><strong>obj</strong> (<a class="reference internal" href="#module-+pelib.&#64;grBody" title="+pelib.&#64;grBody"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">+pelib.&#64;grBody</span></code></a>) – this object instance</p></li>
+<li><p><strong>pts</strong> (<em>cell array, struct, optional</em>) – cell array values or struct key indicate which body segment (see keys of <a class="reference internal" href="#+pelib.&#64;grBody.grBody.TMap" title="+pelib.&#64;grBody.grBody.TMap"><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">+pelib.&#64;grBody.grBody.TMap</span></code></a>), struct value = 1 x 4 or n x 4 target point (3D homogenous point) wrt reference body, defaults to cell array with all joints</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>out - struct of velocities</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>struct</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcKneeAnglesFromMPLARADist">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcKneeAnglesFromMPLARADist</code><span class="sig-paren">(</span><em class="sig-param">PELV_CS</em>, <em class="sig-param">LTIB_CS</em>, <em class="sig-param">RTIB_CS</em>, <em class="sig-param">dPelvis</em>, <em class="sig-param">dLFemur</em>, <em class="sig-param">dRFemur</em>, <em class="sig-param">dLTibia</em>, <em class="sig-param">dRTibia</em>, <em class="sig-param">dMPLADist</em>, <em class="sig-param">dMPRADist</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcKneeAnglesFromMPLARADist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate knee angle from 3P dist</p>
@@ -332,7 +400,7 @@ out = struct(‘LTIO’, n x 3, ‘RFEO’, n x 3)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcMPLARAdist">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcMPLARAdist</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcMPLARAdist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the midpelvis, left ankle, and right ankle distances of grBody</p>
@@ -351,7 +419,7 @@ out = struct(‘MPLA’, n x 1, ‘MPRA’, n x 1, ‘LARA’, n x 1)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcProxRotm">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcProxRotm</code><span class="sig-paren">(</span><em class="sig-param">dist</em>, <em class="sig-param">angles</em>, <em class="sig-param">seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcProxRotm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the proximal segment orientation rotation matrix</p>
@@ -369,7 +437,49 @@ out = struct(‘MPLA’, n x 1, ‘MPRA’, n x 1, ‘LARA’, n x 1)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
+<dt id="+pelib.&#64;grBody.calcRMSEvsTime">
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcRMSEvsTime</code><span class="sig-paren">(</span><em class="sig-param">obj1</em>, <em class="sig-param">obj2</em>, <em class="sig-param">includeRoot</em>, <em class="sig-param">targetSeg</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcRMSEvsTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the RMSE difference between grBody1 and grBody2 VS time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj1</strong> – grBody 1 (self)</p></li>
+<li><p><strong>obj1</strong> – grBody 2 (other)</p></li>
+<li><p><strong>includeRoot</strong> – [boolean] if root/pelvis is included</p></li>
+<li><p><strong>targetSeg</strong> – segments to be computed (usually occluded)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - struct with the difference of pos and ori parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat function">
+<dt id="+pelib.&#64;grBody.calcSegAngAcc">
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcSegAngAcc</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">segs</em>, <em class="sig-param">frame</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcSegAngAcc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the segment angular acceleration of grBody</p>
+<dl class="simple">
+<dt>Example: </dt><dd><p>out = obj.calcSegAngAcc({‘LTIB’, ‘RTIB’})
+out = struct(‘LTIB’, n x 3, ‘RTIB’, n x 3)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this grBody</p></li>
+<li><p><strong>seg</strong> – cell array of segments to be calculated (if blank: all joints)</p></li>
+<li><p><strong>frame</strong> – out is expressed in this frame. B=body (default) or W=world</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out struct of velocities</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.calcSegAngVel">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcSegAngVel</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">segs</em>, <em class="sig-param">frame</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcSegAngVel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the segment angular velocity of grBody</p>
@@ -392,7 +502,45 @@ out = struct(‘LTIB’, n x 3, ‘RTIB’, n x 3)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
+<dt id="+pelib.&#64;grBody.calcTTD">
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcTTD</code><span class="sig-paren">(</span><em class="sig-param">obj1</em>, <em class="sig-param">obj2</em>, <em class="sig-param">intervals</em>, <em class="sig-param">baseStruct</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcTTD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the RMSE and Mean difference between grBody1 and grBody2</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj1</strong> – grBody 1 (self)</p></li>
+<li><p><strong>obj2</strong> – grBody 2 (other, basis)</p></li>
+<li><p><strong>intervals</strong> – interval when total distance is calculated</p></li>
+<li><p><strong>baseStruct</strong> – [Optional] append input struct if defined</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - struct with the difference of pos and ori parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat function">
+<dt id="+pelib.&#64;grBody.calcTTDandStepParams">
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">calcTTDandStepParams</code><span class="sig-paren">(</span><em class="sig-param">obj1</em>, <em class="sig-param">obj2</em>, <em class="sig-param">intervals</em>, <em class="sig-param">baseStruct</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.calcTTDandStepParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total travelled distance, stride length, and gait speed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj1</strong> – grBody 1 (self)</p></li>
+<li><p><strong>obj2</strong> – grBody 2 (other, basis)</p></li>
+<li><p><strong>intervals</strong> – interval when total distance is calculated</p></li>
+<li><p><strong>baseStruct</strong> – [Optional] append input struct if defined</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - struct with the error report</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.changePosUnit">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">changePosUnit</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">newUnit</em>, <em class="sig-param">update</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.changePosUnit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change position unit of grBody</p>
@@ -414,7 +562,7 @@ out = struct(‘LTIB’, n x 3, ‘RTIB’, n x 3)</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.changeRefFrame">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">changeRefFrame</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">ref</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.changeRefFrame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change reference frame of grBody
@@ -432,7 +580,7 @@ Supported changes are vicon -&gt; MIDPEL</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.diff">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">diff</code><span class="sig-paren">(</span><em class="sig-param">obj1</em>, <em class="sig-param">obj2</em>, <em class="sig-param">seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.diff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the difference between grBody1 and grBody2</p>
@@ -450,7 +598,7 @@ Supported changes are vicon -&gt; MIDPEL</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.diffRMSE">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">diffRMSE</code><span class="sig-paren">(</span><em class="sig-param">obj1</em>, <em class="sig-param">obj2</em>, <em class="sig-param">ref</em>, <em class="sig-param">seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.diffRMSE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the RMSE difference between grBody1 and grBody2</p>
@@ -469,15 +617,17 @@ Supported changes are vicon -&gt; MIDPEL</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.diffRMSEandMean">
-<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">diffRMSEandMean</code><span class="sig-paren">(</span><em class="sig-param">obj1</em>, <em class="sig-param">obj2</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.diffRMSEandMean" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">diffRMSEandMean</code><span class="sig-paren">(</span><em class="sig-param">obj1</em>, <em class="sig-param">obj2</em>, <em class="sig-param">includeRoot</em>, <em class="sig-param">targetSeg</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.diffRMSEandMean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the RMSE and Mean difference between grBody1 and grBody2</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj1</strong> – grBody 1 (self)</p></li>
 <li><p><strong>obj1</strong> – grBody 2 (other)</p></li>
+<li><p><strong>includeRoot</strong> – [boolean] if root/pelvis is included</p></li>
+<li><p><strong>targetSeg</strong> – segments to be computed (usually occluded)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -486,7 +636,23 @@ Supported changes are vicon -&gt; MIDPEL</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
+<dt id="+pelib.&#64;grBody.dumpStepParams">
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">dumpStepParams</code><span class="sig-paren">(</span><em class="sig-param">obj1</em>, <em class="sig-param">obj2</em>, <em class="sig-param">intervals</em>, <em class="sig-param">fname</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.dumpStepParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump each individual stride length and gait speed to a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj1</strong> – grBody 1 (self)</p></li>
+<li><p><strong>obj2</strong> – grBody 2 (other, basis)</p></li>
+<li><p><strong>intervals</strong> – interval when total distance is calculated</p></li>
+<li><p><strong>fname</strong> – output step data to files (fname-&lt;posFieldname&gt;.csv)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.exportc3d">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">exportc3d</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">fname</em>, <em class="sig-param">sensors</em>, <em class="sig-param">refBody</em>, <em class="sig-param">lsteps</em>, <em class="sig-param">rsteps</em>, <em class="sig-param">extraMarkers</em>, <em class="sig-param">oriMode</em>, <em class="sig-param">spevents</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.exportc3d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate c3d file</p>
@@ -500,19 +666,21 @@ refBody = actBody;</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> – grBody (self)</p></li>
+<li><p><strong>obj</strong> (<a class="reference internal" href="#module-+pelib.&#64;grBody" title="+pelib.&#64;grBody"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">+pelib.&#64;grBody</span></code></a>) – grBody (self)</p></li>
 <li><p><strong>fname</strong> – output file name</p></li>
-<li><p><strong>sensors</strong> – [Optional] struct {‘label’: (n x 1) values to be saved as analog
+<li><p><strong>sensors</strong> (<em>Optional, struct.</em>) – {‘label’: (n x 1) values to be saved as analog
 signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
-<li><p><strong>refBody</strong> – [Optional] reference grBody class</p></li>
-<li><p><strong>lsteps</strong> – [Optional] (n x 1) logical where it is true during left foot step detection</p></li>
-<li><p><strong>rsteps</strong> – [Optional] (n x 1) logical where it is true during right foot step detection</p></li>
+<li><p><strong>refBody</strong> (Optional, <a class="reference internal" href="#module-+pelib.&#64;grBody" title="+pelib.&#64;grBody"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">+pelib.&#64;grBody</span></code></a> or array of <a class="reference internal" href="#module-+pelib.&#64;grBody" title="+pelib.&#64;grBody"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">+pelib.&#64;grBody</span></code></a>) – reference grBody class</p></li>
+<li><p><strong>lsteps</strong> (<em>Optional, logical array</em>) – (n x 1) logical where it is true during left foot step detection</p></li>
+<li><p><strong>rsteps</strong> (<em>Optional, logical array</em>) – (n x 1) logical where it is true during right foot step detection</p></li>
 <li><p><strong>extraMarkers</strong> – [Optional] extra markers of format struct 
 {‘label’: (n x 3) position values</p></li>
-<li><p><strong>oriMode</strong> – [Optional] 01: refBody axis on refBody. obj axis on obj.
-02: refBody and obj axis on obj.
-03: refBody and obj axis on refBody.</p></li>
-<li><p><strong>spevents</strong> – (Optional) (n x 1) logical where special event happens</p></li>
+<li><p><strong>oriMode</strong> – 01 - refBody axis on refBody. obj axis on obj.
+02 - refBody and obj axis on obj.
+03 - refBody and obj axis on refBody.</p></li>
+<li><p><strong>oriMode</strong> – Optional, integer. Default to 1.</p></li>
+<li><p><strong>spevents</strong> – (n x 1) logical when general event happens</p></li>
+<li><p><strong>spevents</strong> – Optional, logical array</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -521,7 +689,7 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.generateBodyFromJointAngles">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">generateBodyFromJointAngles</code><span class="sig-paren">(</span><em class="sig-param">posMP</em>, <em class="sig-param">qOriMP</em>, <em class="sig-param">anglesLT</em>, <em class="sig-param">anglesRT</em>, <em class="sig-param">angleLK</em>, <em class="sig-param">angleRK</em>, <em class="sig-param">dPelvis</em>, <em class="sig-param">dLFemur</em>, <em class="sig-param">dRFemur</em>, <em class="sig-param">dLTibia</em>, <em class="sig-param">dRTibia</em>, <em class="sig-param">seq</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.generateBodyFromJointAngles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate grBody from pelvis pos, ori and joint angles</p>
@@ -548,7 +716,7 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.getSubset">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">getSubset</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.getSubset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get subset of grBody</p>
@@ -569,71 +737,127 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="mat function">
+<dt id="+pelib.&#64;grBody.getTMatrix">
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">getTMatrix</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">pts</em>, <em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.getTMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the transformation matrix of grBody</p>
+<p>Example 1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">getTMatrix</span><span class="p">({</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="s1">&#39;RFEO&#39;</span><span class="p">})</span>
+<span class="o">%</span> <span class="n">out</span> <span class="o">=</span> <span class="n">struct</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="mi">4</span> <span class="n">x</span> <span class="mi">4</span> <span class="n">x</span> <span class="n">n</span><span class="p">,</span> <span class="s1">&#39;RFEO&#39;</span><span class="p">,</span> <span class="mi">4</span> <span class="n">x</span> <span class="mi">4</span> <span class="n">x</span> <span class="n">n</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">out.LTIO</span></code> will contain the transformation matrix % <span class="math notranslate nohighlight">\(^{W}_{LS}\mathbf{T}\)</span>
+which containst that orientation of the left shank centered at <code class="docutils literal notranslate"><span class="pre">pts.LTIO</span></code>
+The same logic applies for the other values (w/ the corresponding 
+body frame) of input cell array <code class="docutils literal notranslate"><span class="pre">pts</span></code>.</p>
+<p>Example 2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">getTMatrix</span><span class="p">(</span><span class="s1">&#39;LTIO&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<a class="reference internal" href="#module-+pelib.&#64;grBody" title="+pelib.&#64;grBody"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">+pelib.&#64;grBody</span></code></a>) – this object instance</p></li>
+<li><p><strong>pts</strong> (<em>integer array</em>) – cell array values or characters indicating which body segment (see keys of <a class="reference internal" href="#+pelib.&#64;grBody.grBody.TMap" title="+pelib.&#64;grBody.grBody.TMap"><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">+pelib.&#64;grBody.grBody.TMap</span></code></a>), defaults to cell array with all joints</p></li>
+<li><p><strong>idx</strong> – target indices. defaults to 1:obj.nSamples</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - struct of transformation matrices (4 x 4 x n) or just the transformation matrix</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>struct, matrix</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat class">
 <dt id="+pelib.&#64;grBody.grBody">
 <em class="property">class </em><code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">grBody</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref mat mat-class docutils literal notranslate"><span class="pre">matlab.mixin.Copyable</span></code></p>
 <p>Body class used to animate body and obtain gait parameters</p>
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.LFEO">
 <code class="sig-name descname">LFEO</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.LFEO" title="Permalink to this definition">¶</a></dt>
 <dd><p>Left ankle joint center</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.LFEP">
 <code class="sig-name descname">LFEP</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.LFEP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Left knee joint center</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.LTIO">
 <code class="sig-name descname">LTIO</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.LTIO" title="Permalink to this definition">¶</a></dt>
 <dd><p>Left toe</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.LTOE">
 <code class="sig-name descname">LTOE</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.LTOE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Right hip joint center</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.MIDPEL">
 <code class="sig-name descname">MIDPEL</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.MIDPEL" title="Permalink to this definition">¶</a></dt>
 <dd><p>Left hip joint center</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.RFEO">
 <code class="sig-name descname">RFEO</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.RFEO" title="Permalink to this definition">¶</a></dt>
 <dd><p>Right ankle joint center</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.RFEP">
 <code class="sig-name descname">RFEP</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.RFEP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Right knee joint center</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.RTIO">
 <code class="sig-name descname">RTIO</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.RTIO" title="Permalink to this definition">¶</a></dt>
 <dd><p>Right toe</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.RTOE">
 <code class="sig-name descname">RTOE</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.RTOE" title="Permalink to this definition">¶</a></dt>
 <dd><p>pelvis orientation (n x 4), z = upward, x = forward, y = towards left hip joint center</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
+<dt id="+pelib.&#64;grBody.grBody.TMap">
+<code class="sig-name descname">TMap</code><em class="property"> = &quot;struct('MIDPEL', struct('ori', 'qRPV', 'trans', 'MIDPEL'),                      'LFEO', struct('ori', 'qLTH', 'trans', 'LFEO'),                      'LTIO', struct('ori', 'qLSK', 'trans', 'LTIO'),                      'RFEO', struct('ori', 'qRTH', 'trans', 'RFEO'),                      'RTIO', struct('ori', 'qRSK', 'trans', 'RTIO'),                      'LFT', struct('ori', 'qLFT', 'trans', 'LTIO'),                      'RFT', struct('ori', 'qRFT', 'trans', 'RTIO'),                      'qRPV', struct('ori', 'qRPV', 'trans', 'MIDPEL'),                      'qLTH', struct('ori', 'qLTH', 'trans', 'LFEO'),                      'qLSK', struct('ori', 'qLSK', 'trans', 'LTIO'),                      'qRTH', struct('ori', 'qRTH', 'trans', 'RFEO'),                      'qRSK', struct('ori', 'qRSK', 'trans', 'RTIO'),                      'qLFT', struct('ori', 'qLFT', 'trans', 'LTIO'),                      'qRFT', struct('ori', 'qRFT', 'trans', 'RTIO') )&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.TMap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.axisScale">
 <code class="sig-name descname">axisScale</code><em class="property"> = '0.25'</em><a class="headerlink" href="#+pelib.@grBody.grBody.axisScale" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="mat method">
+<dt id="+pelib.&#64;grBody.grBody.calcJointAnglesLAnkle">
+<code class="sig-name descname">calcJointAnglesLAnkle</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesLAnkle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate left ankle joint angles (seq: YXZ)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this object class</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: all)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>theta - joint angles (n x 3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.calcJointAnglesLHip">
 <code class="sig-name descname">calcJointAnglesLHip</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesLHip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate left hip joint angles (seq: YXZ)</p>
@@ -650,7 +874,7 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.calcJointAnglesLKnee">
 <code class="sig-name descname">calcJointAnglesLKnee</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesLKnee" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate left knee joint angles (seq: YXZ)</p>
@@ -667,7 +891,24 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="mat method">
+<dt id="+pelib.&#64;grBody.grBody.calcJointAnglesRAnkle">
+<code class="sig-name descname">calcJointAnglesRAnkle</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesRAnkle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate right ankle joint angles (seq: YXZ)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this object class</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: all)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>theta - joint angles (n x 3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.calcJointAnglesRHip">
 <code class="sig-name descname">calcJointAnglesRHip</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesRHip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate right hip joint angles (seq: YXZ)</p>
@@ -684,7 +925,7 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.calcJointAnglesRKnee">
 <code class="sig-name descname">calcJointAnglesRKnee</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcJointAnglesRKnee" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate right knee joint angles (seq: YXZ)</p>
@@ -701,9 +942,9 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.calcLFemurLength">
-<code class="sig-name descname">calcLFemurLength</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcLFemurLength" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calcLFemurLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcLFemurLength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate left femur length</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -718,10 +959,10 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="+pelib.&#64;grBody.grBody.calcRFemurLength">
-<code class="sig-name descname">calcRFemurLength</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcRFemurLength" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate right femur length</p>
+<dl class="mat method">
+<dt id="+pelib.&#64;grBody.grBody.calcLFootLength">
+<code class="sig-name descname">calcLFootLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcLFootLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate left foot length</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -735,20 +976,9 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="+pelib.&#64;grBody.grBody.frame">
-<code class="sig-name descname">frame</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.frame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot specifications</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="+pelib.&#64;grBody.grBody.fs">
-<code class="sig-name descname">fs</code><em class="property"> = '60'</em><a class="headerlink" href="#+pelib.@grBody.grBody.fs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="+pelib.&#64;grBody.grBody.getLShankLength">
-<code class="sig-name descname">getLShankLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.getLShankLength" title="Permalink to this definition">¶</a></dt>
+<dl class="mat method">
+<dt id="+pelib.&#64;grBody.grBody.calcLShankLength">
+<code class="sig-name descname">calcLShankLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcLShankLength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate left shank length</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -763,9 +993,9 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="+pelib.&#64;grBody.grBody.getPelvisLength">
-<code class="sig-name descname">getPelvisLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.getPelvisLength" title="Permalink to this definition">¶</a></dt>
+<dl class="mat method">
+<dt id="+pelib.&#64;grBody.grBody.calcPelvisLength">
+<code class="sig-name descname">calcPelvisLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcPelvisLength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate pelvis length</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -780,9 +1010,43 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="+pelib.&#64;grBody.grBody.getRShankLength">
-<code class="sig-name descname">getRShankLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.getRShankLength" title="Permalink to this definition">¶</a></dt>
+<dl class="mat method">
+<dt id="+pelib.&#64;grBody.grBody.calcRFemurLength">
+<code class="sig-name descname">calcRFemurLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcRFemurLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate right femur length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this object class</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>d - body segment length (n x 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt id="+pelib.&#64;grBody.grBody.calcRFootLength">
+<code class="sig-name descname">calcRFootLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcRFootLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate right foot length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – this object class</p></li>
+<li><p><strong>idx</strong> – [OPTIONAL] index to be calculated (default: 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>d - body segment length (n x 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt id="+pelib.&#64;grBody.grBody.calcRShankLength">
+<code class="sig-name descname">calcRShankLength</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.calcRShankLength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate right shank length</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -797,7 +1061,28 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="mat attribute">
+<dt id="+pelib.&#64;grBody.grBody.frame">
+<code class="sig-name descname">frame</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>full trial start index</p>
+</dd></dl>
+
+<dl class="mat attribute">
+<dt id="+pelib.&#64;grBody.grBody.fs">
+<code class="sig-name descname">fs</code><em class="property"> = '60'</em><a class="headerlink" href="#+pelib.@grBody.grBody.fs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="mat attribute">
+<dt id="+pelib.&#64;grBody.grBody.ftEndIndex">
+<code class="sig-name descname">ftEndIndex</code><em class="property"> = 'inf'</em><a class="headerlink" href="#+pelib.@grBody.grBody.ftEndIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="mat attribute">
+<dt id="+pelib.&#64;grBody.grBody.ftStartIndex">
+<code class="sig-name descname">ftStartIndex</code><em class="property"> = '1'</em><a class="headerlink" href="#+pelib.@grBody.grBody.ftStartIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.grBody">
 <code class="sig-name descname">grBody</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.grBody" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class constructor</p>
@@ -811,124 +1096,147 @@ signals … } (e.g. raw acc, gyro, magnetometer)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.groundCoordinates">
 <code class="sig-name descname">groundCoordinates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.groundCoordinates" title="Permalink to this definition">¶</a></dt>
 <dd><p>xVector = obj.RTIO(1,:) - obj.LTIO(1,:);
 xVector = xVector / norm(xVector);</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.lnSymbol">
 <code class="sig-name descname">lnSymbol</code><em class="property"> = &quot;'-'&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.lnSymbol" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.nSamples">
 <code class="sig-name descname">nSamples</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.nSamples" title="Permalink to this definition">¶</a></dt>
 <dd><p>sampling frequency</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.name">
 <code class="sig-name descname">name</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>number of samples</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat method">
+<dt id="+pelib.&#64;grBody.grBody.obj">
+<code class="sig-name descname">obj</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.obj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.oriList">
 <code class="sig-name descname">oriList</code><em class="property"> = &quot;{'qRPV', 'qRTH', 'qLTH', 'qRSK', 'qLSK', 'qRFT', 'qLFT'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.oriList" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.oriUnit">
 <code class="sig-name descname">oriUnit</code><em class="property"> = &quot;'deg'&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.oriUnit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.posList">
 <code class="sig-name descname">posList</code><em class="property"> = &quot;{'MIDPEL', 'LFEP', 'LFEO', 'LTIO', 'LTOE',                    'RFEP', 'RFEO', 'RTIO', 'RTOE'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.posList" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.posUnit">
 <code class="sig-name descname">posUnit</code><em class="property"> = &quot;'mm'&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.posUnit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.ptSymbol">
 <code class="sig-name descname">ptSymbol</code><em class="property"> = &quot;'.'&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.ptSymbol" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.qLFT">
 <code class="sig-name descname">qLFT</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qLFT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.qLSK">
 <code class="sig-name descname">qLSK</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qLSK" title="Permalink to this definition">¶</a></dt>
-<dd><p>right foot orientation (n x 4) following Vicon convention,</p>
+<dd><p>right foot orientation (n x 4) following Vicon convention, z = toe to ankle joint center, x = downward, y = towards left, tibia y axis</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.qLTH">
 <code class="sig-name descname">qLTH</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qLTH" title="Permalink to this definition">¶</a></dt>
 <dd><p>right tibia orientation (n x 4), z = along tibia, x = forward, y towards left</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.qRFT">
 <code class="sig-name descname">qRFT</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRFT" title="Permalink to this definition">¶</a></dt>
-<dd><p>left foot orientation (n x 4) following Vicon convention</p>
+<dd><p>left foot orientation (n x 4) following Vicon convention, z = toe to ankle joint center, x = downward, y = towards left, tibia y axis</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.qRPV">
 <code class="sig-name descname">qRPV</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRPV" title="Permalink to this definition">¶</a></dt>
 <dd><p>right femur orientation (n x 4), z = along thigh, x = forward, y towards left</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.qRSK">
 <code class="sig-name descname">qRSK</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRSK" title="Permalink to this definition">¶</a></dt>
 <dd><p>left tibia orientation (n x 4), z = along tibia, x = forward, y towards left</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.qRTH">
 <code class="sig-name descname">qRTH</code><em class="property"> = None</em><a class="headerlink" href="#+pelib.@grBody.grBody.qRTH" title="Permalink to this definition">¶</a></dt>
 <dd><p>left femur orientation (n x 4), z = along thigh, x = forward, y towards left</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.rplColor">
 <code class="sig-name descname">rplColor</code><em class="property"> = &quot;{'r', 'g', 'b'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.rplColor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.xlim">
 <code class="sig-name descname">xlim</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.xlim" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="mat attribute">
 <dt id="+pelib.&#64;grBody.grBody.xyzColor">
 <code class="sig-name descname">xyzColor</code><em class="property"> = &quot;{'r', 'g', 'b'}&quot;</em><a class="headerlink" href="#+pelib.@grBody.grBody.xyzColor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.ylim">
 <code class="sig-name descname">ylim</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.ylim" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
+<dl class="mat method">
 <dt id="+pelib.&#64;grBody.grBody.zlim">
 <code class="sig-name descname">zlim</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.grBody.zlim" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
+<dt id="+pelib.&#64;grBody.repelem">
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">repelem</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.repelem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replicate the elements of grBody</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – class grBody (self)</p></li>
+<li><p><strong>n</strong> – Each element of obj is repeated n (scalar) times. 
+The new length will be length(obj.element)*n.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out grBody class whose element is repeated n times</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat function">
 <dt id="+pelib.&#64;grBody.toWorldFrame">
 <code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">toWorldFrame</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">pos</em>, <em class="sig-param">ori</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.toWorldFrame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change reference frame of grBody from MIDPEL frame to world frame
@@ -947,10 +1255,28 @@ Supported changes are vicon -&gt; MIDPEL</p>
 </dl>
 </dd></dl>
 
+<dl class="mat function">
+<dt id="+pelib.&#64;grBody.translateRoot">
+<code class="sig-prename descclassname">+pelib.&#64;grBody.</code><code class="sig-name descname">translateRoot</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">pos</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.@grBody.translateRoot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate body</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – grBody (self)</p></li>
+<li><p><strong>pos</strong> – 3d translation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>out - new grBody in world frame</p>
+</dd>
+</dl>
+<p>%rtype: <a class="reference internal" href="#module-+pelib.&#64;grBody" title="+pelib.&#64;grBody"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">+pelib.&#64;grBody</span></code></a></p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-+pelib.+est">
 <span id="est"></span><h2>est<a class="headerlink" href="#module-+pelib.+est" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+est.ckf_3imus">
 <code class="sig-prename descclassname">+pelib.+est.</code><code class="sig-name descname">ckf_3imus</code><span class="sig-paren">(</span><em class="sig-param">x0</em>, <em class="sig-param">P0</em>, <em class="sig-param">gfrAccMP</em>, <em class="sig-param">bIsStatMP</em>, <em class="sig-param">qMP</em>, <em class="sig-param">gfrAccLA</em>, <em class="sig-param">bIsStatLA</em>, <em class="sig-param">qLA</em>, <em class="sig-param">gfrAccRA</em>, <em class="sig-param">bIsStatRA</em>, <em class="sig-param">qRA</em>, <em class="sig-param">dPelvis</em>, <em class="sig-param">dLFemur</em>, <em class="sig-param">dRFemur</em>, <em class="sig-param">dLTibia</em>, <em class="sig-param">dRTibia</em>, <em class="sig-param">options</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+est.ckf_3imus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constrained Kalman Filter for performing sensor fusion on the trajectory of
@@ -1023,18 +1349,18 @@ performed by using psuedo-zero velocity measurements</p>
 </div>
 <div class="section" id="module-+pelib.+viz">
 <span id="viz"></span><h2>viz<a class="headerlink" href="#module-+pelib.+viz" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.UKF_Rel_LPVA_plot">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">UKF_Rel_LPVA_plot</code><span class="sig-paren">(</span><em class="sig-param">N_MP</em>, <em class="sig-param">fs</em>, <em class="sig-param">actBody</em>, <em class="sig-param">estBody</em>, <em class="sig-param">pIntS</em>, <em class="sig-param">plotRes</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.UKF_Rel_LPVA_plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>close all</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.UKF_plotAccel">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">UKF_plotAccel</code><span class="sig-paren">(</span><em class="sig-param">pIntS</em>, <em class="sig-param">tru_Acc_GFR</em>, <em class="sig-param">est_Acc_GFR</em>, <em class="sig-param">N_MP</em>, <em class="sig-param">fs</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.UKF_plotAccel" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.animViconMarkersV2">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">animViconMarkersV2</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.animViconMarkersV2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Quickly visualise the vicon markers
@@ -1055,7 +1381,27 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
+<dt id="+pelib.+viz.plotChainSegments">
+<code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotChainSegments</code><span class="sig-paren">(</span><em class="sig-param">Ts</em>, <em class="sig-param">p</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotChainSegments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Suppose Ts = [T_1, T_2, T_3, ….] 
+where T_i is a 4 x 4 homogenous matrix</p>
+<p>This function draws line between the translation components of
+T_1, T_1*T_2, T_1*T_2*T_3, …</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Ts</strong> – 4 x 4 x n array of homogenenous matrices</p></li>
+<li><p><strong>p</strong> – [Optional] plot object, if available, will only update the line instead of creating a new one</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>p - plot object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat function">
 <dt id="+pelib.+viz.plotComparison">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotComparison</code><span class="sig-paren">(</span><em class="sig-param">data1</em>, <em class="sig-param">data2</em>, <em class="sig-param">fs</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotComparison" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot comparison between data1 and data2</p>
@@ -1070,7 +1416,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotJointAngles">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotJointAngles</code><span class="sig-paren">(</span><em class="sig-param">bodys</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotJointAngles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot joint angles</p>
@@ -1084,7 +1430,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotLowerBody">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotLowerBody</code><span class="sig-paren">(</span><em class="sig-param">body</em>, <em class="sig-param">t</em>, <em class="sig-param">showOrientation</em>, <em class="sig-param">showGround</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotLowerBody" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the lower body using the joint positions</p>
@@ -1103,7 +1449,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotLowerBody2">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotLowerBody2</code><span class="sig-paren">(</span><em class="sig-param">body</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotLowerBody2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the lower body using the orientations (checking purposing)</p>
@@ -1121,7 +1467,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotLowerBodySegmentLengthError">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotLowerBodySegmentLengthError</code><span class="sig-paren">(</span><em class="sig-param">body</em>, <em class="sig-param">hips</em>, <em class="sig-param">lfemur</em>, <em class="sig-param">rfemur</em>, <em class="sig-param">ltibia</em>, <em class="sig-param">rtibia</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotLowerBodySegmentLengthError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot lower body segment length error</p>
@@ -1142,7 +1488,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotMeanCovSamples">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotMeanCovSamples</code><span class="sig-paren">(</span><em class="sig-param">MU</em>, <em class="sig-param">SIGMA</em>, <em class="sig-param">N</em>, <em class="sig-param">setup</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotMeanCovSamples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot dots based on mean MU and covariance SIGMA</p>
@@ -1161,7 +1507,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotOrientation">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotOrientation</code><span class="sig-paren">(</span><em class="sig-param">bodys</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotOrientation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot body orientation</p>
@@ -1175,7 +1521,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotOrientationDiff">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotOrientationDiff</code><span class="sig-paren">(</span><em class="sig-param">body1</em>, <em class="sig-param">body2</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotOrientationDiff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot body orientation (body2 - body1)</p>
@@ -1190,7 +1536,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotPosOri">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotPosOri</code><span class="sig-paren">(</span><em class="sig-param">pos</em>, <em class="sig-param">ori</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotPosOri" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot point with axis</p>
@@ -1204,7 +1550,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotPosition">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotPosition</code><span class="sig-paren">(</span><em class="sig-param">bodys</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotPosition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot body position</p>
@@ -1218,7 +1564,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotPositionDiff">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotPositionDiff</code><span class="sig-paren">(</span><em class="sig-param">body1</em>, <em class="sig-param">body2</em>, <em class="sig-param">parts</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotPositionDiff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot body position difference (body2 - body1)</p>
@@ -1233,7 +1579,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotQuaternion">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotQuaternion</code><span class="sig-paren">(</span><em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotQuaternion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot s0 s1 s2 s3 of quaternion</p>
@@ -1244,7 +1590,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotR">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotR</code><span class="sig-paren">(</span><em class="sig-param">R</em>, <em class="sig-param">origin</em>, <em class="sig-param">color</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot rotation matrix column basis</p>
@@ -1255,7 +1601,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotStateComparison">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotStateComparison</code><span class="sig-paren">(</span><em class="sig-param">estStateData</em>, <em class="sig-param">actStateData</em>, <em class="sig-param">stateIdx</em>, <em class="sig-param">fs</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotStateComparison" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compare the state across time</p>
@@ -1270,7 +1616,7 @@ performed by using psuedo-zero velocity measurements</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="mat function">
 <dt id="+pelib.+viz.plotXYZ">
 <code class="sig-prename descclassname">+pelib.+viz.</code><code class="sig-name descname">plotXYZ</code><span class="sig-paren">(</span><em class="sig-param">fs</em>, <em class="sig-param">varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#+pelib.+viz.plotXYZ" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot x y z of inputs</p>

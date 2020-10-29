@@ -22,10 +22,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -209,10 +210,16 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="functions/pelib.html#+pelib.+viz.animViconMarkersV2">animViconMarkersV2() (in module +pelib.+viz)</a>
+      <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.adjustFootFrame2BMC">adjustFootFrame2BMC() (in module +mocapdb.@BVHBody)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.adjustFrame">adjustFrame() (in module +mocapdb.@XsensBody)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/pelib.html#+pelib.+viz.animViconMarkersV2">animViconMarkersV2() (in module +pelib.+viz)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.applyTMatrix">applyTMatrix() (in module +pelib.@grBody)</a>
+</li>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.axisScale">axisScale (+pelib.@grBody.grBody attribute)</a>
 </li>
   </ul></td>
@@ -243,6 +250,10 @@
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.calcCalibSB">calcCalibSB() (in module +mocapdb.@XsensBody)</a>
 </li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.calcCalibSBFromMean">calcCalibSBFromMean() (in module +mocapdb.@XsensBody)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.calcCalibYawOffsetFromViconBody">calcCalibYawOffsetFromViconBody() (in module +mocapdb.@XsensBody)</a>
+</li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcDistRotm">calcDistRotm() (in module +pelib.@grBody)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcDOri">calcDOri() (in module +pelib.@grBody)</a>
@@ -251,33 +262,59 @@
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcDPos">calcDPos() (in module +pelib.@grBody)</a>
 </li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.calcGfrAcc">calcGfrAcc() (in module +mocapdb.@XsensBody)</a>
+</li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcJointAcc">calcJointAcc() (in module +pelib.@grBody)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcJointAngles">calcJointAngles() (in module +pelib.@grBody)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcJointAnglesLAnkle">calcJointAnglesLAnkle() (+pelib.@grBody.grBody method)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcJointAnglesLHip">calcJointAnglesLHip() (+pelib.@grBody.grBody method)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcJointAnglesLKnee">calcJointAnglesLKnee() (+pelib.@grBody.grBody method)</a>
 </li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcJointAnglesRAnkle">calcJointAnglesRAnkle() (+pelib.@grBody.grBody method)</a>
+</li>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcJointAnglesRHip">calcJointAnglesRHip() (+pelib.@grBody.grBody method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcJointAnglesRKnee">calcJointAnglesRKnee() (+pelib.@grBody.grBody method)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcJointVel">calcJointVel() (in module +pelib.@grBody)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcKneeAnglesFromMPLARADist">calcKneeAnglesFromMPLARADist() (in module +pelib.@grBody)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcLFemurLength">calcLFemurLength() (+pelib.@grBody.grBody method)</a>
 </li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcLFootLength">calcLFootLength() (+pelib.@grBody.grBody method)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcLShankLength">calcLShankLength() (+pelib.@grBody.grBody method)</a>
+</li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcMPLARAdist">calcMPLARAdist() (in module +pelib.@grBody)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcPelvisLength">calcPelvisLength() (+pelib.@grBody.grBody method)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcProxRotm">calcProxRotm() (in module +pelib.@grBody)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcRFemurLength">calcRFemurLength() (+pelib.@grBody.grBody method)</a>
 </li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcRFootLength">calcRFootLength() (+pelib.@grBody.grBody method)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.calcRMSEvsTime">calcRMSEvsTime() (in module +pelib.@grBody)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.calcRShankLength">calcRShankLength() (+pelib.@grBody.grBody method)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.calcSegAngAcc">calcSegAngAcc() (in module +pelib.@grBody)</a>
+</li>
       <li><a href="functions/pelib.html#+pelib.@grBody.calcSegAngVel">calcSegAngVel() (in module +pelib.@grBody)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.calcSegMeanRot">calcSegMeanRot() (in module +mocapdb.@XsensBody)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.calcTTD">calcTTD() (in module +pelib.@grBody)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.calcTTDandStepParams">calcTTDandStepParams() (in module +pelib.@grBody)</a>
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.changeFS">changeFS() (in module +mocapdb.@ViconBody)</a>
 </li>
@@ -293,6 +330,10 @@
 </li>
       <li><a href="functions/pelib.html#+pelib.+est.ckf_3imus">ckf_3imus() (in module +pelib.+est)</a>
 </li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.conj">conj() (in module +mocapdb.@XsensBody)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.copyinfo">copyinfo() (+mocapdb.@XsensBody.XsensBody method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -301,11 +342,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/pelib.html#+pelib.@grBody.diff">diff() (in module +pelib.@grBody)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/pelib.html#+pelib.@grBody.diffRMSE">diffRMSE() (in module +pelib.@grBody)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/pelib.html#+pelib.@grBody.diffRMSEandMean">diffRMSEandMean() (in module +pelib.@grBody)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.dumpStepParams">dumpStepParams() (in module +pelib.@grBody)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -315,8 +358,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/pelib.html#+pelib.@grBody.exportc3d">exportc3d() (in module +pelib.@grBody)</a>
 </li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.exportCSV">exportCSV() (in module +mocapdb.@ViconBody)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.exportCSVs">exportCSVs() (in module +mocapdb.@XsensBody)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.exportRawMeasurementAsStruct">exportRawMeasurementAsStruct() (in module +mocapdb.@XsensBody)</a>
 </li>
   </ul></td>
@@ -335,8 +382,6 @@
         <li><a href="functions/pelib.html#+pelib.@grBody.grBody.frame">(+pelib.@grBody.grBody attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.fs">fs (+mocapdb.@BVHBody.BVHBody attribute)</a>
 
       <ul>
@@ -345,6 +390,24 @@
         <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.fs">(+mocapdb.@XsensBody.XsensBody attribute)</a>
 </li>
         <li><a href="functions/pelib.html#+pelib.@grBody.grBody.fs">(+pelib.@grBody.grBody attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.ViconBody.ftEndIndex">ftEndIndex (+mocapdb.@ViconBody.ViconBody attribute)</a>
+
+      <ul>
+        <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.ftEndIndex">(+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+        <li><a href="functions/pelib.html#+pelib.@grBody.grBody.ftEndIndex">(+pelib.@grBody.grBody attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.ViconBody.ftStartIndex">ftStartIndex (+mocapdb.@ViconBody.ViconBody attribute)</a>
+
+      <ul>
+        <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.ftStartIndex">(+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+        <li><a href="functions/pelib.html#+pelib.@grBody.grBody.ftStartIndex">(+pelib.@grBody.grBody attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -361,11 +424,11 @@
         <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.getEndIndex">(in module +mocapdb.@ViconBody)</a>
 </li>
       </ul></li>
-      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.getLShankLength">getLShankLength() (+pelib.@grBody.grBody method)</a>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.getMean">getMean() (in module +mocapdb.@XsensBody)</a>
 </li>
-      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.getPelvisLength">getPelvisLength() (+pelib.@grBody.grBody method)</a>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.getNonemptySeg">getNonemptySeg() (in module +mocapdb.@XsensBody)</a>
 </li>
-      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.getRShankLength">getRShankLength() (+pelib.@grBody.grBody method)</a>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.getSegSubset">getSegSubset() (in module +mocapdb.@XsensBody)</a>
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.getStartIndex">getStartIndex() (in module +mocapdb.@BVHBody)</a>
 
@@ -385,6 +448,8 @@
         <li><a href="functions/pelib.html#+pelib.@grBody.getSubset">(in module +pelib.@grBody)</a>
 </li>
       </ul></li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.getTMatrix">getTMatrix() (in module +pelib.@grBody)</a>
+</li>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody">grBody (class in +pelib.@grBody)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.grBody">grBody() (+pelib.@grBody.grBody method)</a>
@@ -401,6 +466,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.Hidden">Hidden() (+mocapdb.@XsensBody.XsensBody method)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.Hips">Hips (+mocapdb.@BVHBody.BVHBody attribute)</a>
 </li>
   </ul></td>
@@ -417,9 +484,23 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.L_Foot">L_Foot (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.L_LowArm">L_LowArm (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.L_LowLeg">L_LowLeg (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.L_LowLeg2">L_LowLeg2 (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.L_UpArm">L_UpArm (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.L_UpLeg">L_UpLeg (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.LeftFoot">LeftFoot (+mocapdb.@BVHBody.BVHBody attribute)</a>
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.LeftLeg">LeftLeg (+mocapdb.@BVHBody.BVHBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.LeftToe">LeftToe (+mocapdb.@BVHBody.BVHBody attribute)</a>
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.LeftUpLeg">LeftUpLeg (+mocapdb.@BVHBody.BVHBody attribute)</a>
 </li>
@@ -443,23 +524,33 @@
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.loadBVHFile">loadBVHFile() (in module +mocapdb.@BVHBody)</a>
 </li>
-      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.loadCalib">loadCalib() (in module +mocapdb.@XsensBody)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.loadCalib">loadCalib() (in module +mocapdb.@XsensBody)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.loadCalibCSV">loadCalibCSV() (in module +mocapdb.@XsensBody)</a>
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.loadCalibSensorW2V">loadCalibSensorW2V() (in module +mocapdb.@XsensBody)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.loadCSV">loadCSV() (in module +mocapdb.@ViconBody)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.loadCSVs">loadCSVs() (in module +mocapdb.@XsensBody)</a>
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.loadMTExport">loadMTExport() (in module +mocapdb.@XsensBody)</a>
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.loadMVNX">loadMVNX() (in module +mocapdb.@XsensBody)</a>
 </li>
+      <li><a href="functions/mocapdb.html#+mocapdb.loadNeuRaTrialData">loadNeuRaTrialData() (in module +mocapdb)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.loadOriPosFile">loadOriPosFile() (in module +mocapdb.@BVHBody)</a>
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.loadPendulumCompassMat">loadPendulumCompassMat() (in module +mocapdb)</a>
 </li>
+      <li><a href="functions/mocapdb.html#+mocapdb.loadRawNeuRaTrialData">loadRawNeuRaTrialData() (in module +mocapdb)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.loadSensorFile">loadSensorFile() (in module +mocapdb.@XsensBody)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.loadTCDTrialData">loadTCDTrialData() (in module +mocapdb)</a>
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.loadViconMat">loadViconMat() (in module +mocapdb.@ViconBody)</a>
 </li>
@@ -493,6 +584,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.name">name (+pelib.@grBody.grBody attribute)</a>
 </li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.normalizeAcc">normalizeAcc() (in module +mocapdb.@XsensBody)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.nSamples">nSamples (+mocapdb.@BVHBody.BVHBody attribute)</a>
 
       <ul>
@@ -509,10 +602,16 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.oriList">oriList (+pelib.@grBody.grBody attribute)</a>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.obj">obj() (+mocapdb.@XsensBody.XsensBody method)</a>
+
+      <ul>
+        <li><a href="functions/pelib.html#+pelib.@grBody.grBody.obj">(+pelib.@grBody.grBody method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.oriList">oriList (+pelib.@grBody.grBody attribute)</a>
+</li>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.oriUnit">oriUnit (+pelib.@grBody.grBody attribute)</a>
 </li>
   </ul></td>
@@ -522,6 +621,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.ViconBody.PELV">PELV (+mocapdb.@ViconBody.ViconBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.Pelvis">Pelvis (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.+viz.plotChainSegments">plotChainSegments() (in module +pelib.+viz)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.+viz.plotComparison">plotComparison() (in module +pelib.+viz)</a>
 </li>
@@ -539,10 +642,10 @@
 </li>
       <li><a href="functions/pelib.html#+pelib.+viz.plotOrientationDiff">plotOrientationDiff() (in module +pelib.+viz)</a>
 </li>
-      <li><a href="functions/pelib.html#+pelib.+viz.plotPosition">plotPosition() (in module +pelib.+viz)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/pelib.html#+pelib.+viz.plotPosition">plotPosition() (in module +pelib.+viz)</a>
+</li>
       <li><a href="functions/pelib.html#+pelib.+viz.plotPositionDiff">plotPositionDiff() (in module +pelib.+viz)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.+viz.plotPosOri">plotPosOri() (in module +pelib.+viz)</a>
@@ -593,14 +696,14 @@
         <li><a href="functions/pelib.html#+pelib.@grBody.grBody.qLTH">(+pelib.@grBody.grBody attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.ViconBody.qRFT">qRFT (+mocapdb.@ViconBody.ViconBody attribute)</a>
 
       <ul>
         <li><a href="functions/pelib.html#+pelib.@grBody.grBody.qRFT">(+pelib.@grBody.grBody attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.ViconBody.qRPV">qRPV (+mocapdb.@ViconBody.ViconBody attribute)</a>
 
       <ul>
@@ -619,18 +722,38 @@
         <li><a href="functions/pelib.html#+pelib.@grBody.grBody.qRTH">(+pelib.@grBody.grBody attribute)</a>
 </li>
       </ul></li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.qSpine">qSpine (+mocapdb.@BVHBody.BVHBody attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.R_Foot">R_Foot (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.R_LowArm">R_LowArm (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.R_LowLeg">R_LowLeg (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.R_LowLeg2">R_LowLeg2 (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.R_UpArm">R_UpArm (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.R_UpLeg">R_UpLeg (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.removeAccBias">removeAccBias() (in module +mocapdb.@XsensBody)</a>
+</li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.repelem">repelem() (in module +pelib.@grBody)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.ViconBody.RFEO">RFEO (+mocapdb.@ViconBody.ViconBody attribute)</a>
 
       <ul>
         <li><a href="functions/pelib.html#+pelib.@grBody.grBody.RFEO">(+pelib.@grBody.grBody attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.ViconBody.RFEP">RFEP (+mocapdb.@ViconBody.ViconBody attribute)</a>
 
       <ul>
@@ -641,9 +764,7 @@
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.RightLeg">RightLeg (+mocapdb.@BVHBody.BVHBody attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.RightUpLeg">RightUpLeg (+mocapdb.@BVHBody.BVHBody attribute)</a>
+      <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.RightToe">RightToe (+mocapdb.@BVHBody.BVHBody attribute)</a>
 </li>
       <li><a href="functions/pelib.html#+pelib.@grBody.grBody.rplColor">rplColor (+pelib.@grBody.grBody attribute)</a>
 </li>
@@ -669,6 +790,8 @@
 </li>
       <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.segList">segList (+mocapdb.@XsensBody.XsensBody attribute)</a>
 </li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.Spine">Spine (+mocapdb.@BVHBody.BVHBody attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.BVHBody.srcFileName">srcFileName (+mocapdb.@BVHBody.BVHBody attribute)</a>
@@ -679,22 +802,28 @@
         <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.srcFileName">(+mocapdb.@XsensBody.XsensBody attribute)</a>
 </li>
       </ul></li>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.XsensBody.Sternum">Sternum (+mocapdb.@XsensBody.XsensBody attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/pelib.html#+pelib.@grBody.grBody.TMap">TMap (+pelib.@grBody.grBody attribute)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.togrBody">togrBody() (in module +mocapdb.@BVHBody)</a>
 
       <ul>
         <li><a href="functions/mocapdb.html#+mocapdb.@ViconBody.togrBody">(in module +mocapdb.@ViconBody)</a>
 </li>
       </ul></li>
-      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.toViconFrame">toViconFrame() (in module +mocapdb.@XsensBody)</a>
+      <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.toViconBody">toViconBody() (in module +mocapdb.@BVHBody)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="functions/mocapdb.html#+mocapdb.@XsensBody.toViconFrame">toViconFrame() (in module +mocapdb.@XsensBody)</a>
+</li>
       <li><a href="functions/mocapdb.html#+mocapdb.@BVHBody.toWorldFrame">toWorldFrame() (in module +mocapdb.@BVHBody)</a>
 
       <ul>
@@ -703,6 +832,8 @@
         <li><a href="functions/pelib.html#+pelib.@grBody.toWorldFrame">(in module +pelib.@grBody)</a>
 </li>
       </ul></li>
+      <li><a href="functions/pelib.html#+pelib.@grBody.translateRoot">translateRoot() (in module +pelib.@grBody)</a>
+</li>
   </ul></td>
 </tr></table>
 
