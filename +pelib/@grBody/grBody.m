@@ -111,8 +111,10 @@ classdef grBody < matlab.mixin.Copyable
             
             for i=1:length(obj.posList)
                 data = obj.(obj.posList{i});
-                low = min([low; data(:,idx)]);
-                high = max([high; data(:,idx)]);
+                if ~isempty(data)
+                    low = min([low; data(:,idx)]);
+                    high = max([high; data(:,idx)]);
+                end
             end
             
             out = [low high];

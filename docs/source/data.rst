@@ -18,7 +18,7 @@ seven MTx units attached to the pelvis, thighs, shanks, and feet according to st
 The MTx units were all factory calibrated. 
 
 Refer to the following papers for examples on how the dataset can be used:
-:cite:`sy2019ckf`
+:cite:`syckf2020`
 :cite:`sy2019lgcekf`.
     
 Movements

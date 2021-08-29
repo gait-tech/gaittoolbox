@@ -27,13 +27,13 @@ matlab_src_dir = os.path.abspath(os.path.join('..', '..'))
 # -- Project information -----------------------------------------------------
 
 project = u'Gait Reconstruction Toolbox'
-copyright = u'2019, Luke Sy'
+copyright = u'2021, Luke Sy'
 author = u'Luke Sy'
 
 # The short X.Y version
-version = u'v 1.0'
+version = u'v 1.2'
 # The full version, including alpha/beta/rc tags
-release = u'v 1.0'
+release = u'v 1.2'
 
 
 # -- General configuration ---------------------------------------------------
@@ -113,7 +113,7 @@ html_theme_options = {
     # Toc options
     'collapse_navigation': True,
     'sticky_navigation': True,
-    'navigation_depth': 4,
+    'navigation_depth': 5,
     'includehidden': True,
     'titles_only': False,
 }

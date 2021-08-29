@@ -12,9 +12,7 @@ Welcome to Gait Toolbox's documentation!
    installation
    data
    cite
-   paper
    functions/index.rst   
-   references
 	  
 Indices and tables
 ==================

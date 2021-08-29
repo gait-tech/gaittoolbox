@@ -15,6 +15,8 @@ Libraries
 ---------
 - At least MATLAB 2019
 - `MATLAB Aerospace toolbox <https://au.mathworks.com/help/aerotbx/index.html?s_tid=CRUX_lftnav>`_.
+- Lie Group SE(3) library (already in repo ```mod-lib/liese3lib```) by `Barfoot and Furgale <http://asrl.utias.utoronto.ca/code/>`_ `doi:10.1109/TRO.2014.2298059 <http://dx.doi.org/10.1109/TRO.2014.2298059>`_
+- [Optional] btk toolbox to enable C3D export `Enable C3D Export`_
 
 Enable C3D Export
 ^^^^^^^^^^^^^^^^^
